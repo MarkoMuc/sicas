@@ -143,9 +143,9 @@ int main() {
   init(&vec);
 
   fill(f, &vec);
-
+#ifdef DEBUG_MODE
   printv(&vec);
-
+#endif
   free_vec(&vec);
   fclose(f);
   exit(0);
