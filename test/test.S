@@ -1,4 +1,5 @@
-lda a, 11
+.adsadsdasdsads
+LDA a, 11
 add a, 2
-mul a, b
+MUL A, b
 sta a, 1313231

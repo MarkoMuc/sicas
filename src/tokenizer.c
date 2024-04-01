@@ -1,12 +1,12 @@
 #include "tokenizer.h"
+#include <stdint.h>
+#include <stdlib.h>
 
-// TODO: ADD hexa(and maybe even octa) numbers
-//   - ADD .equ and other possible commands
-//   - ADD comments
-//   - ADD ignore case
+// TODO:
+//   - ADD hexa(and maybe even octa) numbers
 //   - ADD better location information for debug
-//   - ADD error message for illegal symbols
-//   - ADD how is address offset handled?
+//   - ADD should address offsets be handled?
+//   - ADD preprocessing
 
 Token gen_token(char *str, Location loc) {
   Token token = {};
@@ -35,8 +35,9 @@ void fill(FILE *f, Vector *vec) {
   long row = 0;
   long col = 0;
   int index = 0;
-  int num = 0;
-  int identf = 0;
+  uint8_t num = 0;
+  uint8_t identf = 0;
+  uint8_t comment = 0;
   char *buffer;
   char *str;
   long s_row = -1;
@@ -56,18 +57,34 @@ void fill(FILE *f, Vector *vec) {
 
   while ((read_c = fread(buffer, sizeof(char), 256, f)) > 1) {
     for (int i = 0; i < read_c; i++) {
+      char c = buffer[i];
       col++;
       index++;
 
-      if (buffer[i] >= 'a' && buffer[i] <= 'z') {
+      if (c >= 'A' && c <= 'Z') {
+        c = c + 32;
+      }
+
+      if (c == '.') {
+        comment = 1;
+      } else if (c != '\n' && comment) {
+        continue;
+      }
+
+      if (!comment && !num && ((c >= 'a' && c <= 'z') || c == '_')) {
         if (s_row == -1) {
           s_row = row;
           s_col = col;
           index = 0;
         }
-        str[index] = buffer[i];
+
+        str[index] = c;
         identf = 1;
       } else if (identf) {
+        // if (!(c >= 'a' && c <= 'z') && c != '_') {
+        //   printf("Illegal identifier at position %ld:%ld", row, col);
+        //   exit(1);
+        // }
         str[index] = '\0';
         Location loc = {
             .s_col = s_col, .s_row = s_row, .e_col = col, .e_row = row};
@@ -83,15 +100,16 @@ void fill(FILE *f, Vector *vec) {
         index = 0;
       }
 
-      if (!identf && buffer[i] >= '0' && buffer[i] <= '9') {
+      if (!comment && !identf && c >= '0' && c <= '9') {
         if (s_row == -1) {
           s_row = row;
           s_col = col;
           index = 0;
         }
-        str[index] = buffer[i];
+        str[index] = c;
         num = 1;
       } else if (num) {
+
         str[index] = '\0';
         Token el = {
             .type = NUM,
@@ -113,18 +131,23 @@ void fill(FILE *f, Vector *vec) {
         index = 0;
         num = 0;
       }
-      if (buffer[i] == ' ') {
+
+      if (c == ' ') {
         continue;
-      } else if (buffer[i] == ',') {
+      } else if (c == ',') {
         Token el = {
             .type = COMMA,
             .str = NULL,
             .location = {
                 .s_col = col, .s_row = row, .e_col = col, .e_row = row}};
         add_el(vec, &el);
-      } else if (buffer[i] == '\n') {
+      } else if (c == '\n') {
+        comment = 0;
         row += 1;
         col = 0;
+      } else if (!comment && !num && !identf) {
+        printf("[%ld:%ld] Illegal symbol %c\n", row, col, c);
+        exit(1);
       }
     }
   }

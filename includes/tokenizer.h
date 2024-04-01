@@ -14,8 +14,8 @@
 #include <string.h>
 #endif
 
-// TODO: add additional assembler keywards like .equ
 enum ttype {
+  // -- CPU Instructions
   ADD,
   ADDF,
   ADDR,
@@ -75,6 +75,14 @@ enum ttype {
   TIX,
   TIXR,
   WD,
+  // -- ASSEMBLER DIRECTIVES
+  START,
+  END,
+  BYTE,
+  WORD,
+  RESB,
+  RESW,
+  // -- ADDITIONAL
   COMMA,
   ID,
   NUM
