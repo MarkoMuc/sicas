@@ -65,6 +65,10 @@ WORD
 RESB
 RESW
 . -- ADDITIONAL
-COMMA
+,
+#1232313
++
+-
 ID
-1111111
+X'1Ad233fee'
+C'asdsad!EOF!EOFsaasd'
