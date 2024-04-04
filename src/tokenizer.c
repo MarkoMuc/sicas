@@ -1,4 +1,3 @@
-#include <stdint.h>
 #ifndef TOKENIZER
 #include "tokenizer.h"
 #endif
@@ -19,13 +18,13 @@ void fill(FILE *f, Vector *vec) {
 
   buffer = malloc(sizeof((*buffer)) * 256);
   if (buffer == NULL) {
-    printf("Error during buffer malloc.");
+    LOG_ERR("Error during inital buffer alloc for token.\n");
     exit(1);
   }
 
   str = malloc(sizeof((*str)) * 128);
   if (str == NULL) {
-    printf("Error during str malloc.");
+    LOG_ERR("Error during inital string alloc for token.\n");
     exit(1);
   }
 
@@ -54,7 +53,6 @@ void fill(FILE *f, Vector *vec) {
       if (special == 2 || special == 4) {
         if (c == '\'') {
           str[index - 1] = '\0';
-          printf("HERE: %s [%ld, %ld]\n", str, row, col);
           Location loc = {
               .s_col = s_col, .s_row = s_row, .e_col = col, .e_row = row};
           Token el = {
@@ -64,7 +62,9 @@ void fill(FILE *f, Vector *vec) {
           if (el.str != NULL) {
             str = malloc(sizeof((*str)) * 128);
             if (str == NULL) {
-              printf("Error allocating str after HEX or STRING.\n");
+              LOG_ERR(
+                  "[%ld, %ld]:[%ld, %ld] Error allocating string for token.\n",
+                  s_row, s_col, row, col);
               exit(1);
             }
           }
@@ -76,8 +76,8 @@ void fill(FILE *f, Vector *vec) {
         } else {
           if (special == 2 && !(c >= '0' && c <= '9') &&
               !(c >= 'a' && c <= 'f')) {
-            printf("Not a valid hex. [%ld, %ld] [%ld, %ld] = %c\n", s_row,
-                   s_col, row, col, buffer[i]);
+            LOG_ERR("[%ld, %ld]:[%ld, %ld] %c is not a valid hex symbol.\n",
+                    s_row, s_col, row, col, buffer[i]);
             exit(1);
           }
           str[index - 1] = buffer[i];
@@ -109,7 +109,7 @@ void fill(FILE *f, Vector *vec) {
           if (el.str != NULL) {
             str = malloc(sizeof((*str)) * 128);
             if (str == NULL) {
-              printf("Error allocating str after num token");
+              LOG_ERR("Error during string alloc after identifer.\n");
               exit(1);
             }
           }
@@ -145,7 +145,7 @@ void fill(FILE *f, Vector *vec) {
           if (str != NULL) {
             str = malloc(sizeof((*str)) * 128);
             if (str == NULL) {
-              printf("Error allocating str after num token");
+              LOG_ERR("Error during string alloc after number.\n");
               exit(1);
             }
           }
@@ -217,7 +217,7 @@ void fill(FILE *f, Vector *vec) {
       }
       default:
         if (!comment) {
-          printf("[%ld:%ld] Illegal symbol %c\n", row, col, c);
+          LOG_ERR("[%ld:%ld] %c is an illegal symbol.\n", row, col, buffer[i]);
           exit(1);
         }
         break;
@@ -231,7 +231,7 @@ void fill(FILE *f, Vector *vec) {
 
 void free_vec(Vector *v) {
   if (v == NULL) {
-    printf("Error during vector free.");
+    LOG_ERR("Error while deallocating the vector.\n");
     exit(1);
   }
   for (int i = 0; i < v->count; i++) {
@@ -245,7 +245,7 @@ void free_vec(Vector *v) {
 
 void add_el(Vector *v, Token *el) {
   if (v == NULL || el == NULL) {
-    printf("Error adding element.");
+    LOG_ERR("Error while adding an elemnt to the vector.\n");
     exit(1);
   }
 
@@ -253,7 +253,8 @@ void add_el(Vector *v, Token *el) {
     v->capacity *= 2;
     v->items = realloc(v->items, sizeof(*v->items) * v->capacity);
     if (v->items == NULL) {
-      printf("Error expanding vector.");
+      LOG_ERR("Error while expanding the vector from %ld to %ld.\n", v->count,
+              v->capacity);
       exit(1);
     }
   }
@@ -267,7 +268,7 @@ void init(Vector *v) {
   v->items = malloc(sizeof(*v->items) * v->capacity);
 
   if (v->items == NULL) {
-    printf("Error during vector init.");
+    LOG_ERR("Error during vector init.\n");
     exit(1);
   }
 }
@@ -277,7 +278,9 @@ Token gen_token(char *str, Location loc) {
   uint8_t not_keyword = 0;
   enum ttype typ;
   if (!strncmp(str, "a", 1)) {
-    if (!strcmp(str, "add")) {
+    if (strlen(str) == 1) {
+      typ = A;
+    } else if (!strcmp(str, "add")) {
       typ = ADD;
     } else if (!strcmp(str, "addf")) {
       typ = ADDF;
@@ -288,6 +291,8 @@ Token gen_token(char *str, Location loc) {
     } else {
       not_keyword = 1;
     }
+  } else if (!strncmp(str, "b", 1)) {
+    typ = B;
   } else if (!strncmp(str, "c", 1)) {
     if (!strcmp(str, "clear")) {
       typ = CLEAR;
@@ -297,6 +302,8 @@ Token gen_token(char *str, Location loc) {
       typ = COMPF;
     } else if (!strcmp(str, "compr")) {
       typ = COMPR;
+    } else if (!strcmp(str, "cc")) {
+      typ = CC;
     } else {
       not_keyword = 1;
     }
@@ -311,7 +318,9 @@ Token gen_token(char *str, Location loc) {
       not_keyword = 1;
     }
   } else if (!strncmp(str, "f", 1)) {
-    if (!strcmp(str, "fix")) {
+    if (strlen(str) == 1) {
+      typ = F;
+    } else if (!strcmp(str, "fix")) {
       typ = FIX;
     } else if (!strcmp(str, "float")) {
       typ = FLOAT;
@@ -370,6 +379,8 @@ Token gen_token(char *str, Location loc) {
     typ = NORM;
   } else if (!strcmp(str, "or")) {
     typ = OR;
+  } else if (!strcmp(str, "pc")) {
+    typ = PC;
   } else if (!strncmp(str, "r", 1)) {
     if (!strcmp(str, "rd")) {
       typ = RD;
@@ -385,7 +396,11 @@ Token gen_token(char *str, Location loc) {
       not_keyword = 1;
     }
   } else if (!strncmp(str, "s", 1)) {
-    if (!strcmp(str, "shiftl")) {
+    if (strlen(str) == 1) {
+      typ = S;
+    } else if (!strncmp(str, "sw", 2)) {
+      typ = SW;
+    } else if (!strcmp(str, "shiftl")) {
       typ = SHIFTL;
     } else if (!strcmp(str, "shiftr")) {
       typ = SHIFTR;
@@ -427,7 +442,9 @@ Token gen_token(char *str, Location loc) {
       not_keyword = 1;
     }
   } else if (!strncmp(str, "t", 1)) {
-    if (!strcmp(str, "td")) {
+    if (strlen(str) == 1) {
+      typ = T;
+    } else if (!strcmp(str, "td")) {
       typ = TD;
     } else if (!strcmp(str, "tio")) {
       typ = TIO;
@@ -440,6 +457,8 @@ Token gen_token(char *str, Location loc) {
     }
   } else if (!strcmp(str, "wd")) {
     typ = WD;
+  } else if (!strcmp(str, "x")) {
+    typ = X;
   } else if (!strcmp(str, "end")) {
     typ = END;
   } else if (!strcmp(str, "byte")) {
@@ -760,6 +779,42 @@ void printv(Vector *v) {
       break;
     case AT:
       printf("AT [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
+             t.location.e_row, t.location.e_col);
+      break;
+    case A:
+      printf("A [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
+             t.location.e_row, t.location.e_col);
+      break;
+    case X:
+      printf("X [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
+             t.location.e_row, t.location.e_col);
+      break;
+    case B:
+      printf("B [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
+             t.location.e_row, t.location.e_col);
+      break;
+    case S:
+      printf("S [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
+             t.location.e_row, t.location.e_col);
+      break;
+    case T:
+      printf("T [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
+             t.location.e_row, t.location.e_col);
+      break;
+    case F:
+      printf("F [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
+             t.location.e_row, t.location.e_col);
+      break;
+    case CC:
+      printf("CC [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
+             t.location.e_row, t.location.e_col);
+      break;
+    case PC:
+      printf("PC [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
+             t.location.e_row, t.location.e_col);
+      break;
+    case SW:
+      printf("SW [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
              t.location.e_row, t.location.e_col);
       break;
     default:

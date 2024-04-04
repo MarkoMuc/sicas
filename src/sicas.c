@@ -1,6 +1,4 @@
-#ifndef TOKENIZER
-#include <tokenizer.h>
-#endif
+#include <sicas.h>
 
 int main(int argc, char **argv) {
   if (argc == 1) {

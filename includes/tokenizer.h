@@ -14,6 +14,10 @@
 #include <string.h>
 #endif
 
+#ifndef LOGGER
+#include "logger.h"
+#endif
+
 enum ttype {
   // -- CPU Instructions
   ADD,
@@ -82,6 +86,16 @@ enum ttype {
   WORD,
   RESB,
   RESW,
+  // -- Registers
+  A,
+  X,
+  B,
+  S,
+  T,
+  F,
+  CC,
+  PC,
+  SW,
   // -- ADDITIONAL
   AT,
   STRING,
