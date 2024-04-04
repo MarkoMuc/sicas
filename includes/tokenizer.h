@@ -87,15 +87,7 @@ enum ttype {
   RESB,
   RESW,
   // -- Registers
-  A,
-  X,
-  B,
-  S,
-  T,
-  F,
-  CC,
-  PC,
-  SW,
+  REGISTER,
   // -- ADDITIONAL
   AT,
   STRING,

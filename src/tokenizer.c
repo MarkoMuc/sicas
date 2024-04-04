@@ -279,7 +279,8 @@ Token gen_token(char *str, Location loc) {
   enum ttype typ;
   if (!strncmp(str, "a", 1)) {
     if (strlen(str) == 1) {
-      typ = A;
+      typ = REGISTER;
+      token.str = str;
     } else if (!strcmp(str, "add")) {
       typ = ADD;
     } else if (!strcmp(str, "addf")) {
@@ -291,8 +292,9 @@ Token gen_token(char *str, Location loc) {
     } else {
       not_keyword = 1;
     }
-  } else if (!strncmp(str, "b", 1)) {
-    typ = B;
+  } else if (!strcmp(str, "b")) {
+    typ = REGISTER;
+    token.str = str;
   } else if (!strncmp(str, "c", 1)) {
     if (!strcmp(str, "clear")) {
       typ = CLEAR;
@@ -303,7 +305,8 @@ Token gen_token(char *str, Location loc) {
     } else if (!strcmp(str, "compr")) {
       typ = COMPR;
     } else if (!strcmp(str, "cc")) {
-      typ = CC;
+      typ = REGISTER;
+      token.str = str;
     } else {
       not_keyword = 1;
     }
@@ -319,7 +322,8 @@ Token gen_token(char *str, Location loc) {
     }
   } else if (!strncmp(str, "f", 1)) {
     if (strlen(str) == 1) {
-      typ = F;
+      typ = REGISTER;
+      token.str = str;
     } else if (!strcmp(str, "fix")) {
       typ = FIX;
     } else if (!strcmp(str, "float")) {
@@ -380,7 +384,8 @@ Token gen_token(char *str, Location loc) {
   } else if (!strcmp(str, "or")) {
     typ = OR;
   } else if (!strcmp(str, "pc")) {
-    typ = PC;
+    typ = REGISTER;
+    token.str = str;
   } else if (!strncmp(str, "r", 1)) {
     if (!strcmp(str, "rd")) {
       typ = RD;
@@ -397,9 +402,11 @@ Token gen_token(char *str, Location loc) {
     }
   } else if (!strncmp(str, "s", 1)) {
     if (strlen(str) == 1) {
-      typ = S;
+      typ = REGISTER;
+      token.str = str;
     } else if (!strncmp(str, "sw", 2)) {
-      typ = SW;
+      typ = REGISTER;
+      token.str = str;
     } else if (!strcmp(str, "shiftl")) {
       typ = SHIFTL;
     } else if (!strcmp(str, "shiftr")) {
@@ -443,7 +450,8 @@ Token gen_token(char *str, Location loc) {
     }
   } else if (!strncmp(str, "t", 1)) {
     if (strlen(str) == 1) {
-      typ = T;
+      typ = REGISTER;
+      token.str = str;
     } else if (!strcmp(str, "td")) {
       typ = TD;
     } else if (!strcmp(str, "tio")) {
@@ -458,7 +466,8 @@ Token gen_token(char *str, Location loc) {
   } else if (!strcmp(str, "wd")) {
     typ = WD;
   } else if (!strcmp(str, "x")) {
-    typ = X;
+    typ = REGISTER;
+    token.str = str;
   } else if (!strcmp(str, "end")) {
     typ = END;
   } else if (!strcmp(str, "byte")) {
@@ -777,44 +786,12 @@ void printv(Vector *v) {
       printf("STRING: %s [%d:%d] [%d:%d]\n", t.str, t.location.s_row,
              t.location.s_col, t.location.e_row, t.location.e_col);
       break;
+    case REGISTER:
+      printf("REGISTER: %s [%d:%d] [%d:%d]\n", t.str, t.location.s_row,
+             t.location.s_col, t.location.e_row, t.location.e_col);
+      break;
     case AT:
       printf("AT [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
-             t.location.e_row, t.location.e_col);
-      break;
-    case A:
-      printf("A [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
-             t.location.e_row, t.location.e_col);
-      break;
-    case X:
-      printf("X [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
-             t.location.e_row, t.location.e_col);
-      break;
-    case B:
-      printf("B [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
-             t.location.e_row, t.location.e_col);
-      break;
-    case S:
-      printf("S [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
-             t.location.e_row, t.location.e_col);
-      break;
-    case T:
-      printf("T [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
-             t.location.e_row, t.location.e_col);
-      break;
-    case F:
-      printf("F [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
-             t.location.e_row, t.location.e_col);
-      break;
-    case CC:
-      printf("CC [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
-             t.location.e_row, t.location.e_col);
-      break;
-    case PC:
-      printf("PC [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
-             t.location.e_row, t.location.e_col);
-      break;
-    case SW:
-      printf("SW [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
              t.location.e_row, t.location.e_col);
       break;
     default:
