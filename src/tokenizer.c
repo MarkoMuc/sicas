@@ -27,7 +27,6 @@ void fill(FILE *f, Vector *vec) {
     LOG_ERR("Error during inital string alloc for token.\n");
     exit(1);
   }
-
   while ((read_c = fread(buffer, sizeof(char), 256, f)) > 1) {
     for (int i = 0; i < read_c; i++) {
       char c = buffer[i];
