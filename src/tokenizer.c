@@ -303,6 +303,21 @@ Token *get(TokenVector *v, size_t index) {
   return &(v->items[index]);
 }
 
+void *rm_at(TokenVector *v, size_t index) {
+  if (v == NULL || index < 0) {
+    LOG_ERR("Error while adding an element to the vector.\n");
+    exit(1);
+  }
+
+  if (index >= v->capacity) {
+    LOG_ERR("Error while getting from index %ld capacity is %ld.\n", index,
+            v->capacity);
+    exit(1);
+  }
+
+  v->items[index] = NULL;
+}
+
 Token gen_token(char *str, Location loc) {
   Token token = {};
   uint8_t not_keyword = 0;

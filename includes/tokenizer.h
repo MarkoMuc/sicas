@@ -124,9 +124,10 @@ void fill(FILE *f, TokenVector *vec);
 
 void add_el(TokenVector *v, Token *el);
 void add_at(TokenVector *v, Token *el, size_t index);
+Token *get(TokenVector *v, size_t index);
+void rm_at(TokenVector *v, size_t index);
 void init(TokenVector *v);
 void free_vec(TokenVector *v);
-Token *get(TokenVector *v, size_t index);
 
 #ifdef DEBUG_MODE
 void printv(TokenVector *v);
