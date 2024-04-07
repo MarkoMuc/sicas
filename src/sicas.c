@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
       exit(1);
     }
 
-    Vector vec = {};
+    TokenVector vec = {};
     init(&vec);
 
     fill(f, &vec);
