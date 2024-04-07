@@ -126,6 +126,7 @@ void add_el(TokenVector *v, Token *el);
 void add_at(TokenVector *v, Token *el, size_t index);
 Token *get(TokenVector *v, size_t index);
 void rm_at(TokenVector *v, size_t index);
+size_t vec_size(TokenVector *v);
 void init(TokenVector *v);
 void free_vec(TokenVector *v);
 

@@ -322,6 +322,8 @@ void rm_at(TokenVector *v, size_t index) {
   v->count -= 1;
 }
 
+size_t vec_size(TokenVector *v) { return v->count - 1; }
+
 Token gen_token(char *str, Location loc) {
   Token token = {};
   uint8_t not_keyword = 0;
