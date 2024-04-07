@@ -1,4 +1,3 @@
-#include <strings.h>
 #ifndef TOKENIZER
 #include "tokenizer.h"
 #endif
