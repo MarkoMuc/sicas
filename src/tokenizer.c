@@ -1,8 +1,9 @@
+#include <strings.h>
 #ifndef TOKENIZER
 #include "tokenizer.h"
 #endif
 
-void fill(FILE *f, Vector *vec) {
+void fill(FILE *f, TokenVector *vec) {
   int read_c;
   char *buffer;
   char *str;
@@ -228,7 +229,7 @@ void fill(FILE *f, Vector *vec) {
   free(buffer);
 }
 
-void free_vec(Vector *v) {
+void free_vec(TokenVector *v) {
   if (v == NULL) {
     LOG_ERR("Error while deallocating the vector.\n");
     exit(1);
@@ -242,7 +243,7 @@ void free_vec(Vector *v) {
   free(v->items);
 }
 
-void add_el(Vector *v, Token *el) {
+void add_el(TokenVector *v, Token *el) {
   if (v == NULL || el == NULL) {
     LOG_ERR("Error while adding an elemnt to the vector.\n");
     exit(1);
@@ -261,7 +262,22 @@ void add_el(Vector *v, Token *el) {
   v->count++;
 }
 
-void init(Vector *v) {
+void add_at(TokenVector *v, Token *el, size_t index) {
+  if (v == NULL || el == NULL || index < 0) {
+    LOG_ERR("Error while adding an element to the vector.\n");
+    exit(1);
+  }
+
+  if (index >= v->capacity) {
+    LOG_ERR("Error while adding at index %ld capacity is %ld.\n", index,
+            v->capacity);
+    exit(1);
+  }
+
+  v->items[index] = *el;
+}
+
+void init(TokenVector *v) {
   v->count = 0;
   v->capacity = 256;
   v->items = malloc(sizeof(*v->items) * v->capacity);
@@ -270,6 +286,21 @@ void init(Vector *v) {
     LOG_ERR("Error during vector init.\n");
     exit(1);
   }
+}
+
+Token *get(TokenVector *v, size_t index) {
+  if (v == NULL || index < 0) {
+    LOG_ERR("Error while adding an element to the vector.\n");
+    exit(1);
+  }
+
+  if (index >= v->capacity) {
+    LOG_ERR("Error while getting from index %ld capacity is %ld.\n", index,
+            v->capacity);
+    exit(1);
+  }
+
+  return &(v->items[index]);
 }
 
 Token gen_token(char *str, Location loc) {
@@ -489,7 +520,7 @@ Token gen_token(char *str, Location loc) {
 }
 
 #ifdef DEBUG_MODE
-void printv(Vector *v) {
+void printv(TokenVector *v) {
   for (int i = 0; i < v->count; i++) {
     Token t = v->items[i];
     switch (t.type) {
