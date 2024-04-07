@@ -3,8 +3,6 @@
 #endif
 
 typedef struct {
-  size_t count;
-  size_t capacity;
   TokenVector *vec;
 } TokenStack;
 
