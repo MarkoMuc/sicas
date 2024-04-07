@@ -131,4 +131,5 @@ void free_vec(TokenVector *v);
 
 #ifdef DEBUG_MODE
 void printv(TokenVector *v);
+void printt(Token t);
 #endif
