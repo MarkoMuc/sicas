@@ -2,6 +2,17 @@
 #include <tokenizer.h>
 #endif
 
+enum itype { LOAD, STORE, ARIT, LOGI, JUMP, DEV, REG, MISC };
+enum ftype { ONE, TWO, THREE, FOUR };
+
+typedef struct {
+  enum itype type;
+  enum ftype format;
+  long size;
+  long opcode;
+  TokenVector *vec;
+} Instruction;
+
 typedef struct {
   TokenVector *vec;
 } TokenStack;

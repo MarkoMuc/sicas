@@ -4,12 +4,14 @@
 
 long builder(TokenVector *tokens, TokenVector *instr, TokenVector *sym,
              long index) {
+
   return index;
 }
 
 void parse_vector(TokenVector *vec, TokenVector *instr, TokenVector *sym) {
   long vec_size = vec->count;
   for (long i = 0; i < vec_size; i++) {
+    i = builder(vec, instr, sym, i);
   }
 }
 
