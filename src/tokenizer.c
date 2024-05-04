@@ -1,5 +1,5 @@
 #ifndef TOKENIZER
-#include "tokenizer.h"
+#include "../includes/tokenizer.h"
 #endif
 
 void fill(FILE *f, TokenVector *vec) {
@@ -56,7 +56,7 @@ void fill(FILE *f, TokenVector *vec) {
               .s_col = s_col, .s_row = s_row, .e_col = col, .e_row = row};
           Token el = {
               .str = str, .type = special == 4 ? STRING : HEX, .location = loc};
-          add_el(vec, &el);
+          tokvec_add(vec, &el);
 
           if (el.str != NULL) {
             str = malloc(sizeof((*str)) * 128);
@@ -103,7 +103,7 @@ void fill(FILE *f, TokenVector *vec) {
           Location loc = {
               .s_col = s_col, .s_row = s_row, .e_col = col, .e_row = row};
           Token el = gen_token(str, loc);
-          add_el(vec, &el);
+          tokvec_add(vec, &el);
 
           if (el.str != NULL) {
             str = malloc(sizeof((*str)) * 128);
@@ -139,7 +139,7 @@ void fill(FILE *f, TokenVector *vec) {
               .str = str,
               .location = {
                   .s_col = s_col, .s_row = s_row, .e_col = col, .e_row = row}};
-          add_el(vec, &el);
+          tokvec_add(vec, &el);
 
           if (str != NULL) {
             str = malloc(sizeof((*str)) * 128);
@@ -169,7 +169,7 @@ void fill(FILE *f, TokenVector *vec) {
             .str = NULL,
             .location = {
                 .s_col = col, .s_row = row, .e_col = col, .e_row = row}};
-        add_el(vec, &el);
+        tokvec_add(vec, &el);
         break;
       }
       case '#': {
@@ -178,7 +178,7 @@ void fill(FILE *f, TokenVector *vec) {
             .str = NULL,
             .location = {
                 .s_col = col, .s_row = row, .e_col = col, .e_row = row}};
-        add_el(vec, &el);
+        tokvec_add(vec, &el);
         break;
       }
       case '\n': {
@@ -193,7 +193,7 @@ void fill(FILE *f, TokenVector *vec) {
             .str = NULL,
             .location = {
                 .s_col = col, .s_row = row, .e_col = col, .e_row = row}};
-        add_el(vec, &el);
+        tokvec_add(vec, &el);
         break;
       }
       case '-': {
@@ -202,7 +202,7 @@ void fill(FILE *f, TokenVector *vec) {
             .str = NULL,
             .location = {
                 .s_col = col, .s_row = row, .e_col = col, .e_row = row}};
-        add_el(vec, &el);
+        tokvec_add(vec, &el);
         break;
       }
       case '@': {
@@ -211,7 +211,7 @@ void fill(FILE *f, TokenVector *vec) {
             .str = NULL,
             .location = {
                 .s_col = col, .s_row = row, .e_col = col, .e_row = row}};
-        add_el(vec, &el);
+        tokvec_add(vec, &el);
         break;
       }
       default:
@@ -228,7 +228,7 @@ void fill(FILE *f, TokenVector *vec) {
   free(buffer);
 }
 
-void free_vec(TokenVector *v) {
+void tokvec_free(TokenVector *v) {
   if (v == NULL) {
     LOG_ERR("Error while deallocating the vector.\n");
     exit(1);
@@ -242,7 +242,7 @@ void free_vec(TokenVector *v) {
   free(v->items);
 }
 
-void add_el(TokenVector *v, Token *el) {
+void tokvec_add(TokenVector *v, Token *el) {
   if (v == NULL || el == NULL) {
     LOG_ERR("Error while adding an elemnt to the vector.\n");
     exit(1);
@@ -261,7 +261,7 @@ void add_el(TokenVector *v, Token *el) {
   v->count++;
 }
 
-void add_at(TokenVector *v, Token *el, size_t index) {
+void tokvec_add_at(TokenVector *v, Token *el, size_t index) {
   if (v == NULL || el == NULL || index < 0) {
     LOG_ERR("Error while adding an element to the vector.\n");
     exit(1);
@@ -276,7 +276,7 @@ void add_at(TokenVector *v, Token *el, size_t index) {
   v->items[index] = *el;
 }
 
-void init(TokenVector *v) {
+void tokvec_init(TokenVector *v) {
   v->count = 0;
   v->capacity = 256;
   v->items = malloc(sizeof(*v->items) * v->capacity);
@@ -287,7 +287,7 @@ void init(TokenVector *v) {
   }
 }
 
-Token *get(TokenVector *v, size_t index) {
+Token *tokvec_get(TokenVector *v, size_t index) {
   if (v == NULL || index < 0) {
     LOG_ERR("Error while adding an element to the vector.\n");
     exit(1);
@@ -302,7 +302,7 @@ Token *get(TokenVector *v, size_t index) {
   return &(v->items[index]);
 }
 
-void rm_at(TokenVector *v, size_t index) {
+void tokvec_rm_at(TokenVector *v, size_t index) {
   if (v == NULL || index < 0) {
     LOG_ERR("Error while adding an element to the vector.\n");
     exit(1);
@@ -322,7 +322,7 @@ void rm_at(TokenVector *v, size_t index) {
   v->count -= 1;
 }
 
-size_t vec_size(TokenVector *v) { return v->count - 1; }
+size_t tokvec_size(TokenVector *v) { return v->count - 1; }
 
 Token gen_token(char *str, Location loc) {
   Token token = {};
@@ -541,14 +541,14 @@ Token gen_token(char *str, Location loc) {
 }
 
 #ifdef DEBUG_MODE
-void printv(TokenVector *v) {
+void tokvec_print(TokenVector *v) {
   for (int i = 0; i < v->count; i++) {
     Token t = v->items[i];
-    printt(t);
+    token_print(t);
   }
 }
 
-void printt(Token t) {
+void token_print(Token t) {
   switch (t.type) {
   case NUM:
     printf("NUM: %s [%d:%d] [%d:%d]\n", t.str, t.location.s_row,

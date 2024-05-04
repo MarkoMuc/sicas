@@ -1,6 +1,6 @@
 #!/bin/bash
 INCLUDES="-I ./includes/"
-DBG_CFLAGS="-Wall -ggdb -fanalyzer"
+DBG_CFLAGS=" -Wall -ggdb -fanalyzer"
 REL_CFLAGS="-O3"
 
 in="$1"

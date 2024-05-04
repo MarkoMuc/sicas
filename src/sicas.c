@@ -1,4 +1,4 @@
-#include <sicas.h>
+#include "../includes/sicas.h"
 
 int main(int argc, char **argv) {
   if (argc == 1) {
@@ -14,15 +14,15 @@ int main(int argc, char **argv) {
     }
 
     TokenVector vec = {};
-    init(&vec);
+    tokvec_init(&vec);
 
     fill(f, &vec);
 
 #ifdef DEBUG_MODE
-    printv(&vec);
+    tokvec_print(&vec);
 #endif
 
-    free_vec(&vec);
+    tokvec_free(&vec);
     fclose(f);
   }
 

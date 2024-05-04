@@ -122,15 +122,15 @@ typedef struct {
 Token gen_token(char *str, Location loc);
 void fill(FILE *f, TokenVector *vec);
 
-void add_el(TokenVector *v, Token *el);
-void add_at(TokenVector *v, Token *el, size_t index);
-Token *get(TokenVector *v, size_t index);
-void rm_at(TokenVector *v, size_t index);
-size_t vec_size(TokenVector *v);
-void init(TokenVector *v);
-void free_vec(TokenVector *v);
+void tokvec_add(TokenVector *v, Token *el);
+void tokvec_add_at(TokenVector *v, Token *el, size_t index);
+Token *tokvec_get(TokenVector *v, size_t index);
+void tokvec_rm_at(TokenVector *v, size_t index);
+size_t tokvec_size(TokenVector *v);
+void tokvec_init(TokenVector *v);
+void tokvec_free(TokenVector *v);
 
 #ifdef DEBUG_MODE
-void printv(TokenVector *v);
-void printt(Token t);
+void tokvec_print(TokenVector *v);
+void token_print(Token t);
 #endif

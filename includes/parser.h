@@ -1,5 +1,5 @@
 #ifndef TOKENIZER
-#include <tokenizer.h>
+#include "tokenizer.h"
 #endif
 
 enum itype { LOAD, STORE, ARIT, LOGI, JUMP, DEV, REG, MISC };
@@ -13,20 +13,17 @@ typedef struct {
   TokenVector *vec;
 } Instruction;
 
-typedef struct {
-  TokenVector *vec;
-} TokenStack;
+typedef TokenVector TokenStack;
 
-long builder(TokenVector *tokens, TokenVector *instr, TokenVector *sym,
-             long index);
-void parse_vector(TokenVector *vec, TokenVector *instr, TokenVector *sym);
+long builder(TokenVector *tokens, TokenVector *sym, long index);
+void parse_vector(TokenVector *vec, TokenVector *sym);
 
-void push(TokenStack *s, Token *el);
-Token *peek(TokenStack *s);
-Token *pop(TokenStack *s);
-void stack_init(TokenStack *s);
-void free_stack(TokenStack *s);
+void tokst_push(TokenStack *s, Token *el);
+Token *tokst_peek(TokenStack *s);
+Token *tokst_pop(TokenStack *s);
+void tokst_init(TokenStack *s);
+void tokst_free(TokenStack *s);
 
 #ifdef DEBUG_MODE
-void prints(TokenStack *s);
+void tokst_print(TokenStack *s);
 #endif
