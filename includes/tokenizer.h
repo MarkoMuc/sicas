@@ -91,13 +91,15 @@ enum ttype {
   // -- ADDITIONAL
   AT,
   STRING,
-  HEX,
   COMMA,
   LITERAL,
   PLUS,
   MINUS,
   ID,
-  NUM
+  HEX,
+  BIN,
+  NUM,
+  FNUM
 };
 
 typedef struct {
@@ -123,9 +125,9 @@ Token gen_token(char *str, Location loc);
 void fill(FILE *f, TokenVector *vec);
 
 void tokvec_add(TokenVector *v, Token *el);
-void tokvec_add_at(TokenVector *v, Token *el, size_t index);
-Token *tokvec_get(TokenVector *v, size_t index);
-void tokvec_rm_at(TokenVector *v, size_t index);
+void tokvec_add_at(TokenVector *v, Token *el, size_t idx);
+Token *tokvec_get(TokenVector *v, size_t idx);
+void tokvec_rm_at(TokenVector *v, size_t idx);
 size_t tokvec_size(TokenVector *v);
 void tokvec_init(TokenVector *v);
 void tokvec_free(TokenVector *v);

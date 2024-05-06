@@ -1,8 +1,12 @@
 #include "../includes/sicas.h"
 
+char help[] = "sicas " SICAS_VERSION " the SIX/XE assembler.\n"
+              "Usage:\n"
+              "\t sicas [file]\n";
+
 int main(int argc, char **argv) {
   if (argc == 1) {
-    printf("No file\n");
+    printf(help);
     exit(1);
   }
 

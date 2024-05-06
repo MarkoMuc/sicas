@@ -1,3 +1,4 @@
+#include <stdio.h>
 #ifndef TOKENIZER
 #include "../includes/tokenizer.h"
 #endif
@@ -8,11 +9,13 @@ void fill(FILE *f, TokenVector *vec) {
   char *str;
   long row = 0;
   long col = 0;
-  int index = 0;
+  int idx = 0;
   uint8_t num = 0;
   uint8_t identf = 0;
   uint8_t comment = 0;
   uint8_t special = 0;
+  int32_t num_delimiter = 0;
+  int8_t fraction = -1;
   long s_row = -1;
   long s_col = -1;
 
@@ -31,7 +34,7 @@ void fill(FILE *f, TokenVector *vec) {
     for (int i = 0; i < read_c; i++) {
       char c = buffer[i];
       col++;
-      index++;
+      idx++;
 
       if (c >= 'A' && c <= 'Z') {
         c = c + 32;
@@ -41,21 +44,36 @@ void fill(FILE *f, TokenVector *vec) {
         special = 1;
       } else if (special == 0 && c == 'c') {
         special = 3;
-      } else if (special && index == 1 && c == '\'') {
+      } else if (special == 0 && c == 'f' && !num) {
+        special = 5;
+      } else if (special == 0 && c == 'b' && !num) {
+        special = 7;
+      } else if (special && idx == 1 && c == '\'') {
         special++;
-        str[index - 1] = '\0';
-        index = 0;
+        idx = -1;
         identf = 0;
         continue;
       }
 
-      if (special == 2 || special == 4) {
+      if (special % 2 == 0 && special) {
         if (c == '\'') {
-          str[index - 1] = '\0';
+          str[idx] = '\0';
           Location loc = {
               .s_col = s_col, .s_row = s_row, .e_col = col, .e_row = row};
-          Token el = {
-              .str = str, .type = special == 4 ? STRING : HEX, .location = loc};
+          enum ttype type = HEX;
+
+          if (special > 2) {
+            type = special == 4 ? STRING : FNUM;
+            type = special == 8 ? BIN : type;
+          }
+
+          if (fraction == 0) {
+            LOG_ERR("[%ld, %ld]:[%ld, %ld] %s float missing fractional part.\n",
+                    s_row, s_col, row, col, str);
+            exit(1);
+          }
+
+          Token el = {.str = str, .type = type, .location = loc};
           tokvec_add(vec, &el);
 
           if (el.str != NULL) {
@@ -69,8 +87,10 @@ void fill(FILE *f, TokenVector *vec) {
           }
 
           s_row = -1;
-          index = 0;
+          idx = 0;
           special = 0;
+          num_delimiter = 0;
+          fraction = -1;
           continue;
         } else {
           if (special == 2 && !(c >= '0' && c <= '9') &&
@@ -78,8 +98,32 @@ void fill(FILE *f, TokenVector *vec) {
             LOG_ERR("[%ld, %ld]:[%ld, %ld] %c is not a valid hex symbol.\n",
                     s_row, s_col, row, col, buffer[i]);
             exit(1);
+          } else if (special == 6 && !(c >= '0' && c <= '9') && !(c == '.')) {
+            LOG_ERR("[%ld, %ld]:[%ld, %ld] %c is not a valid float symbol.\n",
+                    s_row, s_col, row, col, buffer[i]);
+            exit(1);
+          } else if (special == 8 && !(c == '0' || c == '1')) {
+            LOG_ERR("[%ld, %ld]:[%ld, %ld] %c is not a valid binary symbol.\n",
+                    s_row, s_col, row, col, buffer[i]);
+            exit(1);
           }
-          str[index - 1] = buffer[i];
+
+          if (fraction > -1) {
+            fraction++;
+          }
+          if (special == 6 && c == '.') {
+            num_delimiter += 1;
+            fraction += 1;
+            if (num_delimiter > 1) {
+              str[idx] = '\0';
+              LOG_ERR(
+                  "[%ld, %ld]:[%ld, %ld] %s float not in correct format, one "
+                  "too many seperators.\n",
+                  s_row, s_col, row, col, str);
+              exit(1);
+            }
+          }
+          str[idx] = buffer[i];
           continue;
         }
       }
@@ -93,13 +137,13 @@ void fill(FILE *f, TokenVector *vec) {
       if (!comment && !num && !identf && ((c >= 'a' && c <= 'z') || c == '_')) {
         s_row = row;
         s_col = col;
-        index = 0;
+        idx = 0;
         identf = 1;
       }
 
       if (identf) {
         if (!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'z') && c != '_') {
-          str[index] = '\0';
+          str[idx] = '\0';
           Location loc = {
               .s_col = s_col, .s_row = s_row, .e_col = col, .e_row = row};
           Token el = gen_token(str, loc);
@@ -114,11 +158,11 @@ void fill(FILE *f, TokenVector *vec) {
           }
 
           s_row = -1;
-          index = 0;
+          idx = 0;
           identf = 0;
           special = 0;
         } else {
-          str[index] = c;
+          str[idx] = c;
           continue;
         }
       }
@@ -126,16 +170,37 @@ void fill(FILE *f, TokenVector *vec) {
       if (!comment && !num && !identf && (c >= '0' && c <= '9')) {
         s_row = row;
         s_col = col;
-        index = 0;
+        idx = 0;
         num = 1;
       }
 
       if (num) {
-        if (!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f') &&
-            !(str[0] == '0' && c == 'x' && index == 1)) {
-          str[index] = '\0';
+        if (!(c >= '0' && c <= '9') &&
+            !(str[0] == '0' && c == 'x' && idx == 1) &&
+            !(str[0] == '0' && c == 'b' && idx == 1) &&
+            !(num_delimiter == -1 && c >= 'a' && c <= 'f') &&
+            !(str[0] == '0' && c == 'f' && idx == 1) &&
+            !(num_delimiter == 1 && c == '.')) {
+          str[idx] = '\0';
+          enum ttype type = NUM;
+          if (num_delimiter != 0) {
+            type = num_delimiter == -1 ? HEX : FNUM;
+            type = num_delimiter == -2 ? BIN : type;
+          }
+
+          if (fraction == 0) {
+            LOG_ERR("[%ld, %ld]:[%ld, %ld] %s float missing fractional part.\n",
+                    s_row, s_col, row, col, str);
+            exit(1);
+          } else if (c == '.' && num_delimiter >= 1) {
+            LOG_ERR("[%ld, %ld]:[%ld, %ld] %s float not in correct format, one "
+                    "too many seperators.\n",
+                    s_row, s_col, row, col, str);
+            exit(1);
+          }
+
           Token el = {
-              .type = NUM,
+              .type = type,
               .str = str,
               .location = {
                   .s_col = s_col, .s_row = s_row, .e_col = col, .e_row = row}};
@@ -150,10 +215,45 @@ void fill(FILE *f, TokenVector *vec) {
           }
 
           s_row = -1;
-          index = 0;
+          idx = 0;
           num = 0;
+          num_delimiter = 0;
+          fraction = -1;
+          if (type == FNUM) {
+            comment = 0;
+          }
         } else {
-          str[index] = c;
+          if (idx == 1 && str[0] == '0' && c == 'x') {
+            num_delimiter = -1;
+            idx = -1;
+            continue;
+          } else if (idx == 1 && str[0] == '0' && c == 'f') {
+            num_delimiter++;
+            idx = -1;
+            continue;
+          } else if (idx == 1 && str[0] == '0' && c == 'b') {
+            num_delimiter = -2;
+            idx = -1;
+            continue;
+          }
+
+          if (num_delimiter == -2 && (c != '0' && c != '1')) {
+            LOG_ERR("[%ld, %ld]:[%ld, %ld] %c is not a valid binary symbol.\n",
+                    s_row, s_col, row, col, buffer[i]);
+            exit(1);
+          }
+
+          if (fraction > -1) {
+            fraction++;
+          }
+
+          if (num_delimiter > 0 && c == '.') {
+            num_delimiter++;
+            fraction += 1;
+            comment = 0;
+          }
+
+          str[idx] = c;
           continue;
         }
       }
@@ -261,19 +361,19 @@ void tokvec_add(TokenVector *v, Token *el) {
   v->count++;
 }
 
-void tokvec_add_at(TokenVector *v, Token *el, size_t index) {
-  if (v == NULL || el == NULL || index < 0) {
+void tokvec_add_at(TokenVector *v, Token *el, size_t idx) {
+  if (v == NULL || el == NULL || idx < 0) {
     LOG_ERR("Error while adding an element to the vector.\n");
     exit(1);
   }
 
-  if (index >= v->capacity) {
-    LOG_ERR("Error while adding at index %ld capacity is %ld.\n", index,
+  if (idx >= v->capacity) {
+    LOG_ERR("Error while adding at index %ld capacity is %ld.\n", idx,
             v->capacity);
     exit(1);
   }
 
-  v->items[index] = *el;
+  v->items[idx] = *el;
 }
 
 void tokvec_init(TokenVector *v) {
@@ -287,35 +387,35 @@ void tokvec_init(TokenVector *v) {
   }
 }
 
-Token *tokvec_get(TokenVector *v, size_t index) {
-  if (v == NULL || index < 0) {
+Token *tokvec_get(TokenVector *v, size_t idx) {
+  if (v == NULL || idx < 0) {
     LOG_ERR("Error while adding an element to the vector.\n");
     exit(1);
   }
 
-  if (index >= v->capacity) {
-    LOG_ERR("Error while getting from index %ld capacity is %ld.\n", index,
+  if (idx >= v->capacity) {
+    LOG_ERR("Error while getting from index %ld capacity is %ld.\n", idx,
             v->capacity);
     exit(1);
   }
 
-  return &(v->items[index]);
+  return &(v->items[idx]);
 }
 
-void tokvec_rm_at(TokenVector *v, size_t index) {
-  if (v == NULL || index < 0) {
+void tokvec_rm_at(TokenVector *v, size_t idx) {
+  if (v == NULL || idx < 0) {
     LOG_ERR("Error while adding an element to the vector.\n");
     exit(1);
   }
 
-  if (index >= v->capacity) {
-    LOG_ERR("Error while getting from index %ld capacity is %ld.\n", index,
+  if (idx >= v->capacity) {
+    LOG_ERR("Error while getting from index %ld capacity is %ld.\n", idx,
             v->capacity);
     exit(1);
   }
   int count = v->count;
 
-  for (size_t i = index + 1; i < count; i++) {
+  for (size_t i = idx + 1; i < count; i++) {
     v->items[i - 1] = v->items[i];
   }
 
@@ -552,6 +652,14 @@ void token_print(Token t) {
   switch (t.type) {
   case NUM:
     printf("NUM: %s [%d:%d] [%d:%d]\n", t.str, t.location.s_row,
+           t.location.s_col, t.location.e_row, t.location.e_col);
+    break;
+  case FNUM:
+    printf("FNUM: %s [%d:%d] [%d:%d]\n", t.str, t.location.s_row,
+           t.location.s_col, t.location.e_row, t.location.e_col);
+    break;
+  case BIN:
+    printf("BIN: %s [%d:%d] [%d:%d]\n", t.str, t.location.s_row,
            t.location.s_col, t.location.e_row, t.location.e_col);
     break;
   case ID:
