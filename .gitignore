@@ -6,3 +6,4 @@ tools/
 Makefile
 test/cmpr/
 test/out/
+test/test-cases/
