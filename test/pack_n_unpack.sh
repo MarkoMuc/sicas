@@ -5,7 +5,7 @@ mode=${in:-"zip"}
 if [ "$mode" == "zip" ]; then
 	zip -r test-cases ./test-cases/*.s
 elif [ "$mode" == "unzip" ]; then 
-	unzip *.s ./test-cases
+	unzip test-cases.zip
 elif [ "$mode" == "clean" ]; then 
 	echo "TODO"
 fi
