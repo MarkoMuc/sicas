@@ -2,3 +2,7 @@ target/
 compile_flags.txt
 TODO.md
 tools/
+
+Makefile
+test/cmpr/
+test/out/

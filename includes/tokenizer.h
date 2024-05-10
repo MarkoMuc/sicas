@@ -1,20 +1,25 @@
 #ifndef STD_IO
+#define STD_IO
 #include <stdio.h>
 #endif
 
 #ifndef STD_INT
+#define STD_INT
 #include <stdint.h>
 #endif
 
 #ifndef STD_LIB
+#define STD_LIB
 #include <stdlib.h>
 #endif
 
 #ifndef STD_STRING
+#define STD_STRING
 #include <string.h>
 #endif
 
-#ifndef LOGGER
+#ifndef SICAS_LOGGER
+#define SICAS_LOGGER
 #include "logger.h"
 #endif
 
@@ -89,8 +94,8 @@ enum ttype {
   // -- Registers
   REGISTER,
   // -- ADDITIONAL
-  AT,
-  STRING,
+  AT,//TODO
+  STRING,//TODO
   COMMA,
   LITERAL,
   PLUS,
@@ -120,6 +125,13 @@ typedef struct {
   size_t capacity;
   Token *items;
 } TokenVector;
+
+#define token_check_null(tk, err) \
+        do{\
+          if ((tk) == NULL) {\
+            LOG_ERR((err));\
+            exit(1);}\
+        }while(0)
 
 Token gen_token(char *str, Location loc);
 void fill(FILE *f, TokenVector *vec);

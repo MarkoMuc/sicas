@@ -1,5 +1,5 @@
-#include <stdio.h>
-#ifndef TOKENIZER
+#ifndef SICAS_TOKENIZER
+#define SICAS_TOKENIZER
 #include "../includes/tokenizer.h"
 #endif
 

@@ -1,4 +1,5 @@
-#!/bin/bash
+#
+#c/bin/bash
 INCLUDES="-I ./includes/"
 DBG_CFLAGS=" -Wall -ggdb -fanalyzer"
 REL_CFLAGS="-O3"
@@ -14,5 +15,11 @@ elif [ "$mode" == "rel" ]; then
 	gcc $REL_CFLAGS $INCLUDES -o ./target/bin/sicas src/*
 elif [ "$mode" == "clean" ]; then 
 	rm -rf ./target
+elif [ "$mode" == "test" ]; then
+	mkdir -p ./test/out
+	for i in $(ls ./test/| grep ".s"); do
+		./target/dbg/sicas "./test/$i" > "./test/out/$i.out"
+		diff "./test/out/$i.out" "./test/cmpr/$i.res"
+	done 
 fi
 
