@@ -104,7 +104,8 @@ enum ttype {
   HEX,
   BIN,
   NUM,
-  FNUM
+  FNUM,
+  IMMEDIATE
 };
 
 typedef struct {

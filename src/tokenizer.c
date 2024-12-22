@@ -272,9 +272,18 @@ void fill(FILE *f, TokenVector *vec) {
         tokvec_add(vec, &el);
         break;
       }
-      case '#': {
+      case '=': {
         Token el = {
             .type = LITERAL,
+            .str = NULL,
+            .location = {
+                .s_col = col, .s_row = row, .e_col = col, .e_row = row}};
+        tokvec_add(vec, &el);
+        break;
+      }
+      case '#': {
+        Token el = {
+            .type = IMMEDIATE,
             .str = NULL,
             .location = {
                 .s_col = col, .s_row = row, .e_col = col, .e_row = row}};
@@ -956,6 +965,10 @@ void token_print(Token t) {
     break;
   case AT:
     printf("AT [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
+           t.location.e_row, t.location.e_col);
+    break;
+  case IMMEDIATE:
+    printf("IMMEDIATE [%d:%d] [%d:%d]\n", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   default:
