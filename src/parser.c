@@ -18,7 +18,7 @@ uint8_t parse_regs(TokenVector *tokens, TokenVector *new, long *idx) {
       *idx = *idx + 1;
     } else {
       Token *s_tk = tokvec_get(new, 0);
-      LOG_ERR("[%d:%d]|[%d:%d] Missing second argument.\n",
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] Missing second argument.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
       return 1;
@@ -28,7 +28,7 @@ uint8_t parse_regs(TokenVector *tokens, TokenVector *new, long *idx) {
       tokvec_add(new, tk);
     } else {
       Token *s_tk = tokvec_get(new, 0);
-      LOG_ERR("[%d:%d]|[%d:%d] Argument 2 is not a register.\n",
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] Argument 2 is not a register.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
       return 1;
@@ -36,7 +36,7 @@ uint8_t parse_regs(TokenVector *tokens, TokenVector *new, long *idx) {
 
   } else {
     Token *s_tk = tokvec_get(new, 0);
-    LOG_ERR("[%d:%d]|[%d:%d] Argument 1 is not a register.\n",
+    LOG_ERR("[%ld:%ld]|[%ld:%ld] Argument 1 is not a register.\n",
             s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
             tk->location.e_row);
     return 1;
@@ -60,7 +60,7 @@ uint8_t parse_mem_addr(TokenVector *tokens, TokenVector *new, long *idx,
     if (tk->type == FNUM) {
       if (float_type == 0) {
         Token *s_tk = tokvec_get(new, 0);
-        LOG_ERR("[%d:%d]|[%d:%d] Floats not allowed here.\n",
+        LOG_ERR("[%ld:%ld]|[%ld:%ld] Floats not allowed here.\n",
                 s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
                 tk->location.e_row);
         return 1;
@@ -71,7 +71,7 @@ uint8_t parse_mem_addr(TokenVector *tokens, TokenVector *new, long *idx,
       tokvec_add(new, tk);
     } else {
       Token *s_tk = tokvec_get(new, 0);
-      LOG_ERR("[%d:%d]|[%d:%d] Literal missing numeral.\n",
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] Literal missing numeral.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
       return 1;
@@ -90,7 +90,7 @@ uint8_t parse_mem_addr(TokenVector *tokens, TokenVector *new, long *idx,
       tokvec_add(new, tk);
     } else {
       Token *s_tk = tokvec_get(new, 0);
-      LOG_ERR("[%d:%d]|[%d:%d] Missing identifier after @.\n",
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] Missing identifier after @.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
       return 1;
@@ -114,7 +114,7 @@ uint8_t parse_mem_addr(TokenVector *tokens, TokenVector *new, long *idx,
         tokvec_add(new, tk);
       } else {
         Token *s_tk = tokvec_get(new, 0);
-        LOG_ERR("[%d:%d]|[%d:%d] Offset should be X.\n", s_tk->location.s_col,
+        LOG_ERR("[%ld:%ld]|[%ld:%ld] Offset should be X.\n", s_tk->location.s_col,
                 s_tk->location.s_row, tk->location.e_col, tk->location.e_row);
         return 1;
       }
@@ -126,18 +126,18 @@ uint8_t parse_mem_addr(TokenVector *tokens, TokenVector *new, long *idx,
   return 0;
 }
 
-long builder(TokenVector *tokens, TokenVector *sym, TokenStack *stack,
+long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
              long idx) {
   Token *tk = tokvec_get(tokens, idx);
   uint8_t format = 0;
 
-  token_check_null(tk, "Instruction is missing parameters.\n");
+  token_check_null(tk, "Token in main token vector is null.\n");
 
   if (tk->type == PLUS) {
     format = 4;
   }
 
-  tokst_push(stack, tk);
+  // FIXME: Is this correct or do I need to initilase it with malloc?
   TokenVector *vc = {0};
   tokvec_init(vc);
 
@@ -205,7 +205,7 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenStack *stack,
   case RMO:
   case SUBR:
     if (format == 4) {
-      LOG_ERR("[%d:%d]|[%d:%d] This instruction cannot be in format 4.\n",
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
       exit(1);
@@ -218,7 +218,7 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenStack *stack,
 
   case CLEAR:
     if (format == 4) {
-      LOG_ERR("[%d:%d]|[%d:%d] This instruction cannot be in format 4.\n",
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
       exit(1);
@@ -230,7 +230,7 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenStack *stack,
       tokvec_add(vc, tk);
     } else {
       Token *s_tk = tokvec_get(vc, 0);
-      LOG_ERR("[%d:%d]|[%d:%d] Argument should be a register.\n",
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] Argument should be a register.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
       return 1;
@@ -241,7 +241,7 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenStack *stack,
   case SIO:
   case TIO:
     if (format == 4) {
-      LOG_ERR("[%d:%d]|[%d:%d] This instruction cannot be in format 4.\n",
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
       exit(1);
@@ -255,7 +255,7 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenStack *stack,
   case FLOAT:
   case NORM:
     if (format == 4) {
-      LOG_ERR("[%d:%d]|[%d:%d] This instruction cannot be in format 4.\n",
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
       exit(1);
@@ -280,7 +280,7 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenStack *stack,
       tokvec_add(vc, tk);
     } else {
       Token *s_tk = tokvec_get(vc, 0);
-      LOG_ERR("[%d:%d]|[%d:%d] Argument 1 is not a register.\n",
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] Argument 1 is not a register.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
       exit(1);
@@ -319,34 +319,62 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenStack *stack,
   return idx;
 }
 
+//FIXME: This is doesn't work just done so I can compile refactored code!
 void parse_vector(TokenVector *vec, TokenVector *sym) {
   long vec_size = vec->count;
-  TokenStack *stack = malloc(sizeof(*stack));
-  tokst_init(stack);
+  TokenVector stack = {0};
 
   for (long i = 0; i < vec_size; i++) {
-    i = builder(vec, sym, stack, i);
+    i = builder(vec, sym, &stack, i);
   }
 }
 
-void tokst_push(TokenStack *s, Token *el) { tokvec_add(s, el); }
+Instruction *init_instr() {
+  Instruction *instr = malloc(sizeof(*instr));
+  if (!instr) {
+    LOG_ERR("Failed to allocate memory for instruction.");
+  }
 
-Token *tokst_peek(TokenStack *s) {
-  size_t idx = tokvec_size(s);
-  Token *t = tokvec_get(s, idx);
-  return t;
+  return instr;
 }
 
-Token *tokst_pop(TokenStack *s) {
-  size_t idx = tokvec_size(s);
-  Token *t = tokvec_get(s, idx);
-  tokvec_rm_at(s, idx);
-  return t;
+#if defined(PARSER_DEBUG_MODE) || defined(DEBUG_MODE)
+void instruction_print(Instruction *instr) {
+  switch(instr->type) {
+    case MINSTR:
+      printf("itype: MINSTR, ");
+      break;
+    case DIRECTIVE:
+      printf("itype: DIRECTIVE, ");
+      break;
+    case LABEL:
+      printf("itype: LABEL, ");
+      break;
+    default:
+      printf("No itype, ");
+  }
+
+  switch(instr->format) {
+    case ZERO:
+      printf("ftype: ZERO, ");
+      break;
+    case ONE:
+      printf("ftype: ONE, ");
+      break;
+    case TWO:
+      printf("ftype: TWO, ");
+      break;
+    case THREE:
+      printf("ftype: THREE, ");
+      break;
+    case FOUR:
+      printf("ftype: FOUR, ");
+      break;
+    default:
+      printf("no ftype, ");
+  }
+  printf("opcode:%d, ", instr->opcode);
+  printf("addr:%ld\n", instr->addr);
+  tokvec_print(instr->vec);
 }
-void tokst_init(TokenStack *s) { tokvec_init(s); }
-
-void tokst_free(TokenStack *s) { tokvec_free(s); }
-
-#ifdef DEBUG_MODE
-void tokst_print(TokenStack *s) { tokvec_print(s); }
 #endif

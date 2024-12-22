@@ -18,33 +18,26 @@
 #include "tokenizer.h"
 #endif
 
-enum itype { LOAD, STORE, ARIT, LOGI, JUMP, DEV, REG, MISC, LABEL };
-enum ftype { ZERO = 0b0, ONE = 0b1, TWO = 0b10, THREE = 0b100, FOUR = 0b1000 };
+enum itype { MINSTR, DIRECTIVE, LABEL };
+enum ftype { ZERO, ONE, TWO, THREE, FOUR };
 
 typedef struct {
   enum itype type;
   enum ftype format;
   int opcode;
+  uint64_t addr;
   TokenVector *vec;
 } Instruction;
 
-#define tokst_size tokvec_size
 
-typedef TokenVector TokenStack;
-
-uint8_t parse_regs(TokenVector *tokens, TokenVector *new, long *idx);
-uint8_t parse_mem_addr(TokenVector *tokens, TokenVector *new, long *idx,
+uint8_t parse_regs(TokenVector *tokens, TokenVector *instr, long *idx);
+uint8_t parse_mem_addr(TokenVector *tokens, TokenVector *instr, long *idx,
                        uint8_t float_type);
-long builder(TokenVector *tokens, TokenVector *sym, TokenStack *stack,
+long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
              long idx);
 void parse_vector(TokenVector *vec, TokenVector *sym);
+Instruction* init_instr();
 
-void tokst_push(TokenStack *s, Token *el);
-Token *tokst_peek(TokenStack *s);
-Token *tokst_pop(TokenStack *s);
-void tokst_init(TokenStack *s);
-void tokst_free(TokenStack *s);
-
-#ifdef DEBUG_MODE
-void tokst_print(TokenStack *s);
+#if defined(PARSER_DEBUG_MODE) || defined(DEBUG_MODE)
+void instruction_print(Instruction *instr);
 #endif
