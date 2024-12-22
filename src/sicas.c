@@ -17,18 +17,23 @@ int main(int argc, char **argv) {
       exit(1);
     }
 
-    TokenVector vec = {};
+    TokenVector vec = {0};
     tokvec_init(&vec);
 
     fill(f, &vec);
-
     fclose(f);
-#ifdef DEBUG_MODE
+#if defined(TOKENIZER_DEBUG_MODE) || defined(DEBUG_MODE)
     tokvec_print(&vec);
 #endif
-
+    TokenVector sym = {0};
+    tokvec_init(&sym);
+#if defined(PARSER_DEBUG_MODE) || defined(DEBUG_MODE)
+    tokvec_print(&vec);
+#endif
+    //parse_vector(&vec, &sym);
 
     tokvec_free(&vec);
+    tokvec_free(&sym);
   }
 
   exit(0);

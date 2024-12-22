@@ -109,10 +109,10 @@ enum ttype {
 };
 
 typedef struct {
-  uint32_t s_row;
-  uint32_t s_col;
-  uint32_t e_row;
-  uint32_t e_col;
+  uint64_t s_row;
+  uint64_t s_col;
+  uint64_t e_row;
+  uint64_t e_col;
 } Location;
 
 typedef struct {
@@ -126,6 +126,11 @@ typedef struct {
   size_t capacity;
   Token *items;
 } TokenVector;
+
+#define START_BUFFER_SIZE (size_t) 256
+#define START_STRING_SIZE (size_t) 128
+#define TOKVEC_INITIAL_CAPACITY (size_t) 256
+#define TOKVEC_RESIZE_MULTIPLIER 2
 
 #define token_check_null(tk, err) \
         do{\
@@ -145,7 +150,8 @@ size_t tokvec_size(TokenVector *v);
 void tokvec_init(TokenVector *v);
 void tokvec_free(TokenVector *v);
 
-#ifdef DEBUG_MODE
+
+#if defined(TOKENIZER_DEBUG_MODE) || defined (DEBUG_MODE)
 void tokvec_print(TokenVector *v);
 void token_print(Token t);
 #endif
