@@ -1,8 +1,3 @@
-#ifndef SICAS_TOKENIZER
-#define SICAS_TOKENIZER
-#include "tokenizer.h"
-#endif
-
 #ifndef STD_INT
 #define STD_INT
 #include <stdint.h>
@@ -18,8 +13,10 @@
 #include "logger.h"
 #endif
 
-
-#define tokst_size tokvec_size
+#ifndef SICAS_TOKENIZER
+#define SICAS_TOKENIZER
+#include "tokenizer.h"
+#endif
 
 enum itype { LOAD, STORE, ARIT, LOGI, JUMP, DEV, REG, MISC, LABEL };
 enum ftype { ZERO = 0b0, ONE = 0b1, TWO = 0b10, THREE = 0b100, FOUR = 0b1000 };
@@ -30,6 +27,8 @@ typedef struct {
   int opcode;
   TokenVector *vec;
 } Instruction;
+
+#define tokst_size tokvec_size
 
 typedef TokenVector TokenStack;
 
