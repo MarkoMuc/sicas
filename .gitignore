@@ -1,9 +1,7 @@
 target/
-compile_flags.txt
-TODO.md
+build/
 tools/
 
-Makefile
 test/cmpr/
 test/out/
 test/test-cases/
