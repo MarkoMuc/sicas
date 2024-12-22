@@ -1,7 +1,7 @@
 #!/bin/bash
 INCLUDES="-I ./includes/"
 DBG_CFLAGS=" -Wall -ggdb -fanalyzer"
-REL_CFLAGS="-O3"
+REL_CFLAGS="-O2"
 
 in="$1"
 mode=${in:-"dbg"}

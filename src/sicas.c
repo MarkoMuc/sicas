@@ -22,12 +22,13 @@ int main(int argc, char **argv) {
 
     fill(f, &vec);
 
+    fclose(f);
 #ifdef DEBUG_MODE
     tokvec_print(&vec);
 #endif
 
+
     tokvec_free(&vec);
-    fclose(f);
   }
 
   exit(0);
