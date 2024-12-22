@@ -28,13 +28,21 @@
 
 - [ ] Logger macros
 - [ ] Testing system
+- [ ] Hashmap for symbols
+    - [Tsoding](https://www.youtube.com/watch?v=n-S9DBwPGTo)
+    - [Hash Functions](https://www.cse.yorku.ca/~oz/hash.html)
+    - []
 
 ## FAR FUTURE
 
 - [ ] TOKENIZER 
-    - [ ] ADD preprocessing
+     [ ] ADD preprocessing
     - [ ] Should the tokenizer change regs to numbers
     - [ ] Privileged instructions: HIO, LPS
 - [ ] Build system
     - Compilers
     - Testing for different platforms
+- [ ] Use Arenas & better strings?
+    - [Tsoding](https://www.youtube.com/watch?v=3IAlJSIjvH0)
+    - [Linear Allocation](https://www.gingerbill.org/article/2019/02/08/memory-allocation-strategies-002/)
+    - [More C-Like Lists](https://felipec.wordpress.com/2024/03/03/c-skill-issue-how-the-white-house-is-wrong/)
