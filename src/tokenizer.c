@@ -655,324 +655,325 @@ Token gen_token(char *str, Location loc) {
 
 #if defined(TOKENIZER_DEBUG_MODE) || defined(DEBUG_MODE)
 void tokvec_print(TokenVector *v) {
-  for (int i = 0; i < v->count; i++) {
+  for(size_t i = 0; i < v->count; i++) {
     Token t = v->items[i];
     token_print(t);
+    printf("\n");
   }
 }
 
 void token_print(Token t) {
   switch (t.type) {
   case NUM:
-    printf("NUM: %s [%ld:%ld] [%ld:%ld]\n", t.str, t.location.s_row,
+    printf("NUM: %s [%ld:%ld] [%ld:%ld]", t.str, t.location.s_row,
            t.location.s_col, t.location.e_row, t.location.e_col);
     break;
   case FNUM:
-    printf("FNUM: %s [%ld:%ld] [%ld:%ld]\n", t.str, t.location.s_row,
+    printf("FNUM: %s [%ld:%ld] [%ld:%ld]", t.str, t.location.s_row,
            t.location.s_col, t.location.e_row, t.location.e_col);
     break;
   case BIN:
-    printf("BIN: %s [%ld:%ld] [%ld:%ld]\n", t.str, t.location.s_row,
+    printf("BIN: %s [%ld:%ld] [%ld:%ld]", t.str, t.location.s_row,
            t.location.s_col, t.location.e_row, t.location.e_col);
     break;
   case ID:
-    printf("ID: %s [%ld:%ld] [%ld:%ld]\n", t.str, t.location.s_row,
+    printf("ID: %s [%ld:%ld] [%ld:%ld]", t.str, t.location.s_row,
            t.location.s_col, t.location.e_row, t.location.e_col);
     break;
   case ADD:
-    printf("ADD [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("ADD [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case ADDF:
-    printf("ADDF [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("ADDF [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case ADDR:
-    printf("ADDR [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("ADDR [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case AND:
-    printf("AND [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("AND [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case CLEAR:
-    printf("CLEAR [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("CLEAR [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case COMP:
-    printf("COMP [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("COMP [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case COMPF:
-    printf("COMPF [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("COMPF [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case COMPR:
-    printf("COMPR [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("COMPR [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case DIV:
-    printf("DIV [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("DIV [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case DIVF:
-    printf("DIVF [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("DIVF [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case DIVR:
-    printf("DIVR [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("DIVR [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case FIX:
-    printf("FIX [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("FIX [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case FLOAT:
-    printf("FLOAT [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("FLOAT [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case HIO:
-    printf("HIO [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("HIO [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case J:
-    printf("J [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("J [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case JEQ:
-    printf("JEQ [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("JEQ [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case JGT:
-    printf("JGT [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("JGT [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case JLT:
-    printf("JLT [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("JLT [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case JSUB:
-    printf("JSUB [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("JSUB [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case LDA:
-    printf("LDA [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("LDA [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case LDB:
-    printf("LDB [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("LDB [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case LDCH:
-    printf("LDCH [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("LDCH [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case LDF:
-    printf("LDF [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("LDF [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case LDL:
-    printf("LDL [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("LDL [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case LDS:
-    printf("LDS [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("LDS [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case LDT:
-    printf("LDT [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("LDT [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case LDX:
-    printf("LDX [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("LDX [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case LPS:
-    printf("LPS [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("LPS [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case MUL:
-    printf("MUL [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("MUL [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case MULF:
-    printf("MULF [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("MULF [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case MULR:
-    printf("MULR [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("MULR [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case NORM:
-    printf("NORM [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("NORM [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case OR:
-    printf("OR [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("OR [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case RD:
-    printf("RD [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("RD [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case RMO:
-    printf("RMO [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("RMO [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case RSUB:
-    printf("RSUB [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("RSUB [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case SHIFTL:
-    printf("SHIFTL [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("SHIFTL [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case SHIFTR:
-    printf("SHIFTR [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("SHIFTR [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case SIO:
-    printf("SIO [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("SIO [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case SSK:
-    printf("SSK [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("SSK [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case STA:
-    printf("STA [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("STA [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case STB:
-    printf("STB [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("STB [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case STCH:
-    printf("STCH [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("STCH [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case STF:
-    printf("STF [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("STF [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case STI:
-    printf("STI [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("STI [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case STL:
-    printf("STL [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("STL [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case STS:
-    printf("STS [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("STS [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case STSW:
-    printf("STSW [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("STSW [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case STT:
-    printf("STT [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("STT [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case STX:
-    printf("STX [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("STX [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case SUB:
-    printf("SUB [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("SUB [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case SUBF:
-    printf("SUBF [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("SUBF [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case SUBR:
-    printf("SUBR [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("SUBR [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case SVC:
-    printf("SVC [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("SVC [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case TD:
-    printf("TD [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("TD [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case TIO:
-    printf("TIO [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("TIO [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case TIX:
-    printf("TIX [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("TIX [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case TIXR:
-    printf("TIXR [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("TIXR [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case WD:
-    printf("WD [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("WD [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case START:
-    printf("START [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("START [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case END:
-    printf("END [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("END [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case BYTE:
-    printf("BYTE [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("BYTE [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case WORD:
-    printf("WORD [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("WORD [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case RESB:
-    printf("RESB [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("RESB [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case RESW:
-    printf("RESW [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("RESW [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case COMMA:
-    printf("COMMA [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("COMMA [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case LITERAL:
-    printf("LITERAL [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("LITERAL [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case PLUS:
-    printf("PLUS [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("PLUS [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case MINUS:
-    printf("MINUS [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("MINUS [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case HEX:
-    printf("HEX: %s [%ld:%ld] [%ld:%ld]\n", t.str, t.location.s_row,
+    printf("HEX: %s [%ld:%ld] [%ld:%ld]", t.str, t.location.s_row,
            t.location.s_col, t.location.e_row, t.location.e_col);
     break;
   case STRING:
-    printf("STRING: %s [%ld:%ld] [%ld:%ld]\n", t.str, t.location.s_row,
+    printf("STRING: %s [%ld:%ld] [%ld:%ld]", t.str, t.location.s_row,
            t.location.s_col, t.location.e_row, t.location.e_col);
     break;
   case REGISTER:
-    printf("REGISTER: %s [%ld:%ld] [%ld:%ld]\n", t.str, t.location.s_row,
+    printf("REGISTER: %s [%ld:%ld] [%ld:%ld]", t.str, t.location.s_row,
            t.location.s_col, t.location.e_row, t.location.e_col);
     break;
   case AT:
-    printf("AT [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("AT [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   case IMMEDIATE:
-    printf("IMMEDIATE [%ld:%ld] [%ld:%ld]\n", t.location.s_row, t.location.s_col,
+    printf("IMMEDIATE [%ld:%ld] [%ld:%ld]", t.location.s_row, t.location.s_col,
            t.location.e_row, t.location.e_col);
     break;
   default:
