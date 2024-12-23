@@ -70,7 +70,7 @@ size_t djb2_hash(char* key);
 void instrvec_init(InstrVector *v);
 void instrvec_free(InstrVector *v);
 void instrvec_add(InstrVector *v, Instruction *el);
-void instrvec_add_at(InstrVector *v, Instruction *el, size_t idx);
+void instrvec_replace(InstrVector *v, Instruction *el, size_t idx);
 void instrvec_rm(InstrVector *v, size_t idx);
 Instruction *instrvec_get(InstrVector *v, size_t idx);
 

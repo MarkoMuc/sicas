@@ -396,31 +396,25 @@ void instrvec_add(InstrVector *v, Instruction *el){
   v->items[v->count++] = *el;
 }
 
-void instrvec_add_at(InstrVector *v, Instruction *el, size_t idx){
+void instrvec_replace(InstrVector *v, Instruction *el, size_t idx){
   if (!v || !el || idx < 0) {
-    LOG_ERR("Error while adding an element to the instruction vector.\n");
-    exit(1);
+    LOG_PANIC("Error while replacing element in the instruction vector.\n");
   }
 
-  if (idx >= v->capacity) {
-    LOG_ERR("Error while adding instruction at index %ld capacity is %ld.\n", idx,
-            v->capacity);
-    exit(1);
+  if (idx >= v->count) {
+    LOG_PANIC("Error while replacing instruction at index %ld current count is %ld.\n", idx,
+            v->count);
   }
 
-  if(idx >= v->count) {
-    v->count++;
-    v->items[idx] = *el;
-  }else{
-    Instruction old = v->items[idx];
-    v->items[idx] = *el;
-    for (size_t i = idx + 1; i < v->count; i++) {
-      Instruction inter = v->items[i];
-      v->items[i] = old;
-      old = inter;
-    }
-    instrvec_add(v, &old);
+  Instruction old = v->items[idx];
+  v->items[idx] = *el;
+  for (size_t i = idx + 1; i < v->count; i++) {
+    Instruction inter = v->items[i];
+    v->items[i] = old;
+    old = inter;
   }
+
+  instrvec_add(v, &old);
 }
 
 void instrvec_rm(InstrVector *v, size_t idx){
