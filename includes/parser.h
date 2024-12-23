@@ -20,6 +20,8 @@
 
 #define SYMTABLE_SIZE (size_t) 256
 #define SYMTABLE_INITIAL_CAPACITY (size_t) 256
+#define INSTRVEC_INITIAL_CAPACITY TOKVEC_INITIAL_CAPACITY
+#define INSTRVEC_RESIZE_MULTIPLIER TOKVEC_RESIZE_MULTIPLIER
 #define hash_key djb2_hash
 
 enum itype { MINSTR, DIRECTIVE, LABEL };
@@ -32,6 +34,12 @@ typedef struct {
   uint64_t addr;
   TokenVector *vec;
 } Instruction;
+
+typedef struct {
+  size_t count;
+  size_t capacity;
+  Instruction *items;
+} InstrVector;
 
 typedef struct {
   char* symbol;
@@ -59,13 +67,19 @@ Instruction* init_instr();
 
 size_t djb2_hash(char* key);
 
+void instrvec_init(InstrVector *v);
+void instrvec_free(InstrVector *v);
+void instrvec_add(InstrVector *v, Instruction *el);
+void instrvec_add_at(InstrVector *v, Instruction *el, size_t idx);
+void instrvec_rm(InstrVector *v, size_t idx);
+Instruction *instrvec_get(InstrVector *v, size_t idx);
+
 void symtab_init(SymTable *table);
 void symtab_free(SymTable *table);
 void symtab_free_destructive(SymTable *table);
 void symtab_add_symbol(SymTable *table, char *symbol);
 void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr);
 SymValue *symtab_get_symbol(SymTable *table, char *symbol);
-
 
 #if (defined(PARSER_DEBUG_MODE) && defined(TOKENIZER_DEBUG_MODE)) || defined(DEBUG_MODE)
 void instruction_print(Instruction *instr);

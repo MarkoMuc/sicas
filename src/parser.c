@@ -332,10 +332,131 @@ void parse_vector(TokenVector *vec, TokenVector *sym) {
 Instruction *init_instr() {
   Instruction *instr = malloc(sizeof(*instr));
   if (!instr) {
-    LOG_ERR("Failed to allocate memory for instruction.");
+    LOG_ERR("Failed to allocate memory for the instruction.");
   }
 
   return instr;
+}
+
+void instrvec_init(InstrVector *v){
+  v->count = 0;
+  v->capacity = INSTRVEC_INITIAL_CAPACITY;
+  v->items = malloc(sizeof(*v->items) * v->capacity);
+
+  if (!v->items) {
+    LOG_ERR("Error during instruction vector init.\n");
+    exit(1);
+  }
+}
+
+void instrvec_free(InstrVector *v){
+  if (!v) {
+    LOG_ERR("Error while deallocating the instruction vector.\n");
+    exit(1);
+  }
+
+  for(size_t i = 0; i < v->count; i++) {
+    Instruction instr = v->items[i];
+    tokvec_free(instr.vec);
+  }
+
+  free(v->items);
+}
+
+void instrvec_free_destructive(InstrVector *v){
+  if (!v) {
+    LOG_ERR("Error while deallocating the instruction vector.\n");
+    exit(1);
+  }
+
+  for(size_t i = 0; i < v->count; i++) {
+    Instruction instr = v->items[i];
+    tokvec_free_destructive(instr.vec);
+  }
+
+  free(v->items);
+}
+
+void instrvec_add(InstrVector *v, Instruction *el){
+  if (!v || !el) {
+    LOG_ERR("Error while adding an element to the instruction vector.\n");
+    exit(1);
+  }
+
+  if (v->count >= v->capacity) {
+    v->capacity *= INSTRVEC_RESIZE_MULTIPLIER;
+    v->items = realloc(v->items, sizeof(*v->items) * v->capacity);
+    if (!v->items) {
+      LOG_ERR("Error while expanding the instruction vector from %ld to %ld.\n", v->count,
+              v->capacity);
+      exit(1);
+    }
+  }
+
+  v->items[v->count++] = *el;
+}
+
+void instrvec_add_at(InstrVector *v, Instruction *el, size_t idx){
+  if (!v || !el || idx < 0) {
+    LOG_ERR("Error while adding an element to the instruction vector.\n");
+    exit(1);
+  }
+
+  if (idx >= v->capacity) {
+    LOG_ERR("Error while adding instruction at index %ld capacity is %ld.\n", idx,
+            v->capacity);
+    exit(1);
+  }
+
+  if(idx >= v->count) {
+    v->count++;
+    v->items[idx] = *el;
+  }else{
+    Instruction old = v->items[idx];
+    v->items[idx] = *el;
+    for (size_t i = idx + 1; i < v->count; i++) {
+      Instruction inter = v->items[i];
+      v->items[i] = old;
+      old = inter;
+    }
+    instrvec_add(v, &old);
+  }
+}
+
+void instrvec_rm(InstrVector *v, size_t idx){
+  if (!v|| idx < 0) {
+    LOG_ERR("Error while removing an instruction to the vector.\n");
+    exit(1);
+  }
+
+  if (idx >= v->capacity) {
+    LOG_ERR("Error while removing instruction from index %ld capacity is %ld.\n", idx,
+            v->capacity);
+    exit(1);
+  }
+
+  int count = v->count;
+
+  for (size_t i = idx + 1; i < count; i++) {
+    v->items[i - 1] = v->items[i];
+  }
+
+  v->count -= 1;
+}
+
+Instruction *instrvec_get(InstrVector *v, size_t idx){
+  if (!v || idx < 0) {
+    LOG_ERR("Error while adding an element to the instruction vector.\n");
+    exit(1);
+  }
+
+  if (idx >= v->capacity) {
+    LOG_ERR("Error while getting instruction from index %ld capacity is %ld.\n", idx,
+            v->capacity);
+    exit(1);
+  }
+
+  return &(v->items[idx]);
 }
 
 size_t djb2_hash(char* str){
