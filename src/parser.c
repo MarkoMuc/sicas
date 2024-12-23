@@ -19,28 +19,25 @@ uint8_t parse_regs(TokenVector *tokens, TokenVector *new, long *idx) {
       *idx = *idx + 1;
     } else {
       Token *s_tk = tokvec_get(new, 0);
-      LOG_ERR("[%ld:%ld]|[%ld:%ld] Missing second argument.\n",
+      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Missing second argument.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
-      return 1;
     }
 
     if (tk->type == REGISTER) {
       tokvec_add(new, tk);
     } else {
       Token *s_tk = tokvec_get(new, 0);
-      LOG_ERR("[%ld:%ld]|[%ld:%ld] Argument 2 is not a register.\n",
+      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Argument 2 is not a register.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
-      return 1;
     }
 
   } else {
     Token *s_tk = tokvec_get(new, 0);
-    LOG_ERR("[%ld:%ld]|[%ld:%ld] Argument 1 is not a register.\n",
+    LOG_PANIC("[%ld:%ld]|[%ld:%ld] Argument 1 is not a register.\n",
             s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
             tk->location.e_row);
-    return 1;
   }
 
   return 0;
@@ -61,10 +58,9 @@ uint8_t parse_mem_addr(TokenVector *tokens, TokenVector *new, long *idx,
     if (tk->type == FNUM) {
       if (float_type == 0) {
         Token *s_tk = tokvec_get(new, 0);
-        LOG_ERR("[%ld:%ld]|[%ld:%ld] Floats not allowed here.\n",
+        LOG_PANIC("[%ld:%ld]|[%ld:%ld] Floats not allowed here.\n",
                 s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
                 tk->location.e_row);
-        return 1;
       }
 
       tokvec_add(new, tk);
@@ -72,10 +68,9 @@ uint8_t parse_mem_addr(TokenVector *tokens, TokenVector *new, long *idx,
       tokvec_add(new, tk);
     } else {
       Token *s_tk = tokvec_get(new, 0);
-      LOG_ERR("[%ld:%ld]|[%ld:%ld] Literal missing numeral.\n",
+      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Literal missing numeral.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
-      return 1;
     }
 
     return 0;
@@ -91,10 +86,9 @@ uint8_t parse_mem_addr(TokenVector *tokens, TokenVector *new, long *idx,
       tokvec_add(new, tk);
     } else {
       Token *s_tk = tokvec_get(new, 0);
-      LOG_ERR("[%ld:%ld]|[%ld:%ld] Missing identifier after @.\n",
+      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Missing identifier after @.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
-      return 1;
     }
 
     // TODO: Comma after this allowed?
@@ -115,9 +109,8 @@ uint8_t parse_mem_addr(TokenVector *tokens, TokenVector *new, long *idx,
         tokvec_add(new, tk);
       } else {
         Token *s_tk = tokvec_get(new, 0);
-        LOG_ERR("[%ld:%ld]|[%ld:%ld] Offset should be X.\n", s_tk->location.s_col,
+        LOG_PANIC("[%ld:%ld]|[%ld:%ld] Offset should be X.\n", s_tk->location.s_col,
                 s_tk->location.s_row, tk->location.e_col, tk->location.e_row);
-        return 1;
       }
     } else {
       *idx = *idx - 1;
@@ -180,6 +173,7 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
       format = 3;
     }
     if (parse_mem_addr(tokens, vc, &idx, 0)) {
+        //FIXME: handle me
       exit(1);
     }
     break;
@@ -195,6 +189,7 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
       format = 3;
     }
     if (parse_mem_addr(tokens, vc, &idx, 1)) {
+        //FIXME: handle me
       exit(1);
     }
     break;
@@ -206,23 +201,22 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
   case RMO:
   case SUBR:
     if (format == 4) {
-      LOG_ERR("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
+      LOG_PANIC("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
-      exit(1);
     }
     format = 2;
     if (parse_regs(tokens, vc, &idx)) {
+        //FIXME: handle me
       exit(1);
     }
     break;
 
   case CLEAR:
     if (format == 4) {
-      LOG_ERR("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
+      LOG_PANIC("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
-      exit(1);
     }
     format = 2;
 
@@ -231,10 +225,9 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
       tokvec_add(vc, tk);
     } else {
       Token *s_tk = tokvec_get(vc, 0);
-      LOG_ERR("[%ld:%ld]|[%ld:%ld] Argument should be a register.\n",
+      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Argument should be a register.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
-      return 1;
     }
     break;
 
@@ -242,10 +235,9 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
   case SIO:
   case TIO:
     if (format == 4) {
-      LOG_ERR("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
+      LOG_PANIC("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
-      exit(1);
     }
     format = 1;
     tokvec_add(vc, tk);
@@ -256,10 +248,9 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
   case FLOAT:
   case NORM:
     if (format == 4) {
-      LOG_ERR("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
+      LOG_PANIC("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
-      exit(1);
     }
     format = 1;
     tokvec_add(vc, tk);
@@ -281,10 +272,9 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
       tokvec_add(vc, tk);
     } else {
       Token *s_tk = tokvec_get(vc, 0);
-      LOG_ERR("[%ld:%ld]|[%ld:%ld] Argument 1 is not a register.\n",
+      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Argument 1 is not a register.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
-      exit(1);
     }
 
     tk = tokvec_get(tokens, idx);
@@ -313,8 +303,7 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
     break;
 
   default:
-    LOG_ERR("This token should not be here alone %ld\n", idx);
-    exit(1);
+    LOG_PANIC("This token should not be here alone %ld\n", idx);
   }
 
   return idx;
@@ -332,7 +321,7 @@ void parse_vector(TokenVector *vec, TokenVector *sym) {
 Instruction *init_instr() {
   Instruction *instr = malloc(sizeof(*instr));
   if (!instr) {
-    LOG_ERR("Failed to allocate memory for the instruction.");
+    LOG_PANIC("Failed to allocate memory for the instruction.");
   }
 
   return instr;
@@ -344,15 +333,13 @@ void instrvec_init(InstrVector *v){
   v->items = malloc(sizeof(*v->items) * v->capacity);
 
   if (!v->items) {
-    LOG_ERR("Error during instruction vector init.\n");
-    exit(1);
+    LOG_PANIC("Error during instruction vector init.\n");
   }
 }
 
 void instrvec_free(InstrVector *v){
   if (!v) {
-    LOG_ERR("Error while deallocating the instruction vector.\n");
-    exit(1);
+    LOG_PANIC("Error while deallocating the instruction vector.\n");
   }
 
   for(size_t i = 0; i < v->count; i++) {
@@ -365,8 +352,7 @@ void instrvec_free(InstrVector *v){
 
 void instrvec_free_destructive(InstrVector *v){
   if (!v) {
-    LOG_ERR("Error while deallocating the instruction vector.\n");
-    exit(1);
+    LOG_PANIC("Error while deallocating the instruction vector.\n");
   }
 
   for(size_t i = 0; i < v->count; i++) {
@@ -379,17 +365,15 @@ void instrvec_free_destructive(InstrVector *v){
 
 void instrvec_add(InstrVector *v, Instruction *el){
   if (!v || !el) {
-    LOG_ERR("Error while adding an element to the instruction vector.\n");
-    exit(1);
+    LOG_PANIC("Error while adding an element to the instruction vector.\n");
   }
 
   if (v->count >= v->capacity) {
     v->capacity *= INSTRVEC_RESIZE_MULTIPLIER;
     v->items = realloc(v->items, sizeof(*v->items) * v->capacity);
     if (!v->items) {
-      LOG_ERR("Error while expanding the instruction vector from %ld to %ld.\n", v->count,
+      LOG_PANIC("Error while expanding the instruction vector from %ld to %ld.\n", v->count,
               v->capacity);
-      exit(1);
     }
   }
 
@@ -419,14 +403,12 @@ void instrvec_replace(InstrVector *v, Instruction *el, size_t idx){
 
 void instrvec_rm(InstrVector *v, size_t idx){
   if (!v|| idx < 0) {
-    LOG_ERR("Error while removing an instruction to the vector.\n");
-    exit(1);
+    LOG_PANIC("Error while removing an instruction to the vector.\n");
   }
 
   if (idx >= v->capacity) {
-    LOG_ERR("Error while removing instruction from index %ld capacity is %ld.\n", idx,
+    LOG_PANIC("Error while removing instruction from index %ld capacity is %ld.\n", idx,
             v->capacity);
-    exit(1);
   }
 
   int count = v->count;
@@ -440,14 +422,12 @@ void instrvec_rm(InstrVector *v, size_t idx){
 
 Instruction *instrvec_get(InstrVector *v, size_t idx){
   if (!v || idx < 0) {
-    LOG_ERR("Error while adding an element to the instruction vector.\n");
-    exit(1);
+    LOG_PANIC("Error while adding an element to the instruction vector.\n");
   }
 
   if (idx >= v->capacity) {
-    LOG_ERR("Error while getting instruction from index %ld capacity is %ld.\n", idx,
+    LOG_PANIC("Error while getting instruction from index %ld capacity is %ld.\n", idx,
             v->capacity);
-    exit(1);
   }
 
   return &(v->items[idx]);
@@ -470,8 +450,7 @@ void symtab_init(SymTable *table){
   table->map = malloc(sizeof(*(table->map)) * table->capacity);
 
   if(!table->map){
-    LOG_ERR("Error during symtable init.\n");
-    exit(1);
+    LOG_PANIC("Error during symtable init.\n");
   }
 
   for(size_t i = 0; i < SYMTABLE_INITIAL_CAPACITY; i++){
@@ -481,8 +460,7 @@ void symtab_init(SymTable *table){
 
 void symtab_free(SymTable *table){
   if (!table) {
-    LOG_ERR("Error while deallocating the SymTable.\n");
-    exit(1);
+    LOG_PANIC("Error while deallocating the SymTable.\n");
   }
 
   free(table->map);
@@ -490,8 +468,7 @@ void symtab_free(SymTable *table){
 
 void symtab_free_destructive(SymTable *table){
   if (!table) {
-    LOG_ERR("Error while deallocating the SymTable.\n");
-    exit(1);
+    LOG_PANIC("Error while deallocating the SymTable.\n");
   }
 
   for(size_t i = 0; i < SYMTABLE_INITIAL_CAPACITY; i++){
@@ -520,8 +497,7 @@ void symtab_add_symbol(SymTable *table, char *symbol){
   table->count++;
 
   if(table->map[key].count >= SYMTABLE_SIZE){
-    LOG_ERR("SYMTABLE has been completely filled.");
-    exit(1);
+    LOG_PANIC("SYMTABLE has been completely filled.");
   }
 }
 
@@ -542,8 +518,7 @@ void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr){
   table->count++;
 
   if(table->map[key].count >= SYMTABLE_SIZE){
-    LOG_ERR("SYMTABLE has been completely filled.");
-    exit(1);
+    LOG_PANIC("SYMTABLE has been completely filled.");
   }
 }
 
