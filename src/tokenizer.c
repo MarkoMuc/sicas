@@ -20,15 +20,13 @@ void fill(FILE *f, TokenVector *vec) {
   uint64_t s_col = -1;
 
   buffer = malloc(sizeof((*buffer)) * START_BUFFER_SIZE);
-  if (buffer == NULL) {
-    LOG_ERR("Error during inital buffer alloc for token.\n");
-    exit(1);
+  if (!buffer) {
+    LOG_PANIC("Error during inital buffer alloc for token.\n");
   }
 
   str = malloc(sizeof((*str)) * START_STRING_SIZE);
-  if (str == NULL) {
-    LOG_ERR("Error during inital string alloc for token.\n");
-    exit(1);
+  if (!str) {
+    LOG_PANIC("Error during inital string alloc for token.\n");
   }
 
   while ((read_c = fread(buffer, sizeof(char), START_BUFFER_SIZE, f)) > 1) {
@@ -69,21 +67,19 @@ void fill(FILE *f, TokenVector *vec) {
           }
 
           if (fraction == 0) {
-            LOG_ERR("[%ld, %ld]:[%ld, %ld] %s float missing fractional part.\n",
+            LOG_PANIC("[%ld, %ld]:[%ld, %ld] %s float missing fractional part.\n",
                     s_row, s_col, row, col, str);
-            exit(1);
           }
 
           Token el = {.str = str, .type = type, .location = loc};
           tokvec_add(vec, &el);
 
-          if (el.str != NULL) {
+          if (el.str) {
             str = malloc(sizeof((*str)) * START_STRING_SIZE);
-            if (str == NULL) {
-              LOG_ERR(
+            if (!str) {
+              LOG_PANIC(
                   "[%ld, %ld]:[%ld, %ld] Error allocating string for token.\n",
                   s_row, s_col, row, col);
-              exit(1);
             }
           }
 
@@ -96,34 +92,32 @@ void fill(FILE *f, TokenVector *vec) {
         } else {
           if (special == 2 && !(c >= '0' && c <= '9') &&
               !(c >= 'a' && c <= 'f')) {
-            LOG_ERR("[%ld, %ld]:[%ld, %ld] %c is not a valid hex symbol.\n",
+            LOG_PANIC("[%ld, %ld]:[%ld, %ld] %c is not a valid hex symbol.\n",
                     s_row, s_col, row, col, buffer[i]);
-            exit(1);
           } else if (special == 6 && !(c >= '0' && c <= '9') && !(c == '.')) {
-            LOG_ERR("[%ld, %ld]:[%ld, %ld] %c is not a valid float symbol.\n",
+            LOG_PANIC("[%ld, %ld]:[%ld, %ld] %c is not a valid float symbol.\n",
                     s_row, s_col, row, col, buffer[i]);
-            exit(1);
           } else if (special == 8 && !(c == '0' || c == '1')) {
-            LOG_ERR("[%ld, %ld]:[%ld, %ld] %c is not a valid binary symbol.\n",
+            LOG_PANIC("[%ld, %ld]:[%ld, %ld] %c is not a valid binary symbol.\n",
                     s_row, s_col, row, col, buffer[i]);
-            exit(1);
           }
 
           if (fraction > -1) {
             fraction++;
           }
+
           if (special == 6 && c == '.') {
             num_delimiter += 1;
             fraction += 1;
             if (num_delimiter > 1) {
               str[idx] = '\0';
-              LOG_ERR(
+              LOG_PANIC(
                   "[%ld, %ld]:[%ld, %ld] %s float not in correct format, one "
                   "too many seperators.\n",
                   s_row, s_col, row, col, str);
-              exit(1);
             }
           }
+
           str[idx] = buffer[i];
           continue;
         }
@@ -150,11 +144,10 @@ void fill(FILE *f, TokenVector *vec) {
           Token el = gen_token(str, loc);
           tokvec_add(vec, &el);
 
-          if (el.str != NULL) {
+          if (el.str) {
             str = malloc(sizeof((*str)) * START_STRING_SIZE);
-            if (str == NULL) {
-              LOG_ERR("Error during string alloc after identifer.\n");
-              exit(1);
+            if (!str) {
+              LOG_PANIC("Error during string alloc after identifer.\n");
             }
           }
 
@@ -190,14 +183,12 @@ void fill(FILE *f, TokenVector *vec) {
           }
 
           if (fraction == 0) {
-            LOG_ERR("[%ld, %ld]:[%ld, %ld] %s float missing fractional part.\n",
+            LOG_PANIC("[%ld, %ld]:[%ld, %ld] %s float missing fractional part.\n",
                     s_row, s_col, row, col, str);
-            exit(1);
           } else if (c == '.' && num_delimiter >= 1) {
-            LOG_ERR("[%ld, %ld]:[%ld, %ld] %s float not in correct format, one "
+            LOG_PANIC("[%ld, %ld]:[%ld, %ld] %s float not in correct format, one "
                     "too many seperators.\n",
                     s_row, s_col, row, col, str);
-            exit(1);
           }
 
           Token el = {
@@ -207,11 +198,10 @@ void fill(FILE *f, TokenVector *vec) {
                   .s_col = s_col, .s_row = s_row, .e_col = col, .e_row = row}};
           tokvec_add(vec, &el);
 
-          if (str != NULL) {
+          if (str) {
             str = malloc(sizeof((*str)) * START_STRING_SIZE);
-            if (str == NULL) {
-              LOG_ERR("Error during string alloc after number.\n");
-              exit(1);
+            if (!str) {
+              LOG_PANIC("Error during string alloc after number.\n");
             }
           }
 
@@ -239,9 +229,8 @@ void fill(FILE *f, TokenVector *vec) {
           }
 
           if (num_delimiter == -2 && (c != '0' && c != '1')) {
-            LOG_ERR("[%ld, %ld]:[%ld, %ld] %c is not a valid binary symbol.\n",
+            LOG_PANIC("[%ld, %ld]:[%ld, %ld] %c is not a valid binary symbol.\n",
                     s_row, s_col, row, col, buffer[i]);
-            exit(1);
           }
 
           if (fraction > -1) {
@@ -326,8 +315,7 @@ void fill(FILE *f, TokenVector *vec) {
       }
       default:
         if (!comment) {
-          LOG_ERR("[%ld:%ld] %c is an illegal symbol.\n", row, col, buffer[i]);
-          exit(1);
+          LOG_PANIC("[%ld:%ld] %c is an illegal symbol.\n", row, col, buffer[i]);
         }
         break;
       }
@@ -338,93 +326,93 @@ void fill(FILE *f, TokenVector *vec) {
   free(buffer);
 }
 
-void tokvec_free(TokenVector *v) {
-  if (v == NULL) {
-    LOG_ERR("Error while deallocating the vector.\n");
-    exit(1);
-  }
-  for (int i = 0; i < v->count; i++) {
-    Token token = v->items[i];
-    if (token.str != NULL) {
-      free(token.str);
-    }
-  }
-  free(v->items);
-}
-
-void tokvec_add(TokenVector *v, Token *el) {
-  if (v == NULL || el == NULL) {
-    LOG_ERR("Error while adding an element to the vector.\n");
-    exit(1);
-  }
-
-  if (v->count == v->capacity) {
-    v->capacity *= TOKVEC_RESIZE_MULTIPLIER;
-    v->items = realloc(v->items, sizeof(*v->items) * v->capacity);
-    if (v->items == NULL) {
-      LOG_ERR("Error while expanding the vector from %ld to %ld.\n", v->count,
-              v->capacity);
-      exit(1);
-    }
-  }
-  v->items[v->count++] = *el;
-}
-
-void tokvec_add_at(TokenVector *v, Token *el, size_t idx) {
-  if (v == NULL || el == NULL || idx < 0) {
-    LOG_ERR("Error while adding an element to the vector.\n");
-    exit(1);
-  }
-
-  if (idx >= v->capacity) {
-    LOG_ERR("Error while adding at index %ld capacity is %ld.\n", idx,
-            v->capacity);
-    exit(1);
-  }
-  if(idx >= v->count) {
-    v->count++;
-  }
-
-  v->items[idx] = *el;
-}
-
 void tokvec_init(TokenVector *v) {
   v->count = 0;
   v->capacity = TOKVEC_INITIAL_CAPACITY;
   v->items = malloc(sizeof(*v->items) * v->capacity);
 
-  if (v->items == NULL) {
-    LOG_ERR("Error during vector init.\n");
-    exit(1);
+  if (!v->items) {
+    LOG_PANIC("Error during token vector init.\n");
   }
 }
 
-Token *tokvec_get(TokenVector *v, size_t idx) {
-  if (v == NULL || idx < 0) {
-    LOG_ERR("Error while adding an element to the vector.\n");
-    exit(1);
+void tokvec_free(TokenVector *v) {
+  if (!v) {
+    LOG_PANIC("Error while deallocating the token vector.\n");
   }
 
-  if (idx >= v->capacity) {
-    LOG_ERR("Error while getting from index %ld capacity is %ld.\n", idx,
-            v->capacity);
-    exit(1);
-  }
-
-  return &(v->items[idx]);
+  v->count = 0;
+  v->capacity = 0;
+  free(v->items);
 }
 
-void tokvec_rm_at(TokenVector *v, size_t idx) {
-  if (v == NULL || idx < 0) {
-    LOG_ERR("Error while adding an element to the vector.\n");
-    exit(1);
+void tokvec_free_destructive(TokenVector *v) {
+  if (!v) {
+    LOG_PANIC("Error while deallocating the token vector.\n");
+  }
+
+  for (size_t i = 0; i < v->count; i++) {
+    Token token = v->items[i];
+    if (token.str != NULL) {
+      free(token.str);
+    }
+  }
+
+  v->count = 0;
+  v->capacity = 0;
+  free(v->items);
+}
+
+void tokvec_add(TokenVector *v, Token *el) {
+  if (!v || !el) {
+    LOG_PANIC("Error while adding an element to the token vector.\n");
+  }
+
+  if (v->count >= v->capacity) {
+    v->capacity *= TOKVEC_RESIZE_MULTIPLIER;
+    v->items = realloc(v->items, sizeof(*v->items) * v->capacity);
+    
+    if (!v->items) {
+      LOG_PANIC("Error while expanding the token vector from %ld to %ld.\n", v->count,
+              v->capacity);
+    }
+  }
+
+  v->items[v->count++] = *el;
+}
+
+void tokvec_replace(TokenVector *v, Token *el, size_t idx) {
+  if (!v || !el || idx < 0) {
+    LOG_PANIC("Error while replace an element in the token vector.\n");
+  }
+
+  if (idx >= v->count ) {
+    LOG_PANIC("Error while replacing token at index %ld capacity is %ld.\n", idx,
+            v->capacity);
+  }
+
+  Token old = v->items[idx];
+  v->items[idx] = *el;
+
+  for(size_t i = idx + 1; i < v->count; i++) {
+    Token inter = v->items[i];
+    v->items[i] = old;
+    old = inter;
+  }
+
+  tokvec_add(v, &old);
+}
+
+void tokvec_rm(TokenVector *v, size_t idx) {
+  if (!v || idx < 0) {
+    LOG_PANIC("Error while removing an element from the token vector.\n");
   }
 
   if (idx >= v->capacity) {
-    LOG_ERR("Error while getting from index %ld capacity is %ld.\n", idx,
+    LOG_PANIC("Error while removing token from index %ld capacity is %ld.\n", idx,
             v->capacity);
-    exit(1);
   }
+
   int count = v->count;
 
   for (size_t i = idx + 1; i < count; i++) {
@@ -434,7 +422,18 @@ void tokvec_rm_at(TokenVector *v, size_t idx) {
   v->count -= 1;
 }
 
-size_t tokvec_size(TokenVector *v) { return v->count - 1; }
+Token *tokvec_get(TokenVector *v, size_t idx) {
+  if (!v || idx < 0) {
+    LOG_PANIC("Error while adding an element to the token vector.\n");
+  }
+
+  if (idx >= v->capacity) {
+    LOG_PANIC("Error while getting token from index %ld capacity is %ld.\n", idx,
+            v->capacity);
+  }
+
+  return &(v->items[idx]);
+}
 
 //FIXME: This can literally just be a comparison, why am I using a function?
 Token gen_token(char *str, Location loc) {

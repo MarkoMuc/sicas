@@ -133,23 +133,21 @@ typedef struct {
 #define TOKVEC_RESIZE_MULTIPLIER 2
 
 #define token_check_null(tk, err) \
-        do{\
-          if ((tk) == NULL) {\
-            LOG_ERR((err));\
-            exit(1);}\
+        do{                       \
+          if ((tk) == NULL) {     \
+            LOG_PANIC((err));}    \
         }while(0)
 
 Token gen_token(char *str, Location loc);
 void fill(FILE *f, TokenVector *vec);
 
-void tokvec_add(TokenVector *v, Token *el);
-void tokvec_add_at(TokenVector *v, Token *el, size_t idx);
-Token *tokvec_get(TokenVector *v, size_t idx);
-void tokvec_rm_at(TokenVector *v, size_t idx);
-size_t tokvec_size(TokenVector *v);
 void tokvec_init(TokenVector *v);
 void tokvec_free(TokenVector *v);
-
+void tokvec_free_destructive(TokenVector *v);
+void tokvec_add(TokenVector *v, Token *el);
+void tokvec_replace(TokenVector *v, Token *el, size_t idx);
+void tokvec_rm(TokenVector *v, size_t idx);
+Token *tokvec_get(TokenVector *v, size_t idx);
 
 #if defined(TOKENIZER_DEBUG_MODE) || defined (DEBUG_MODE)
 void tokvec_print(TokenVector *v);
