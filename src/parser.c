@@ -1,6 +1,7 @@
 #ifndef SICAS_PARSER
 #define SICAS_PARSER
 #include "../includes/parser.h"
+#include <stdio.h>
 #endif
 
 uint8_t parse_regs(TokenVector *tokens, TokenVector *new, long *idx) {
@@ -319,7 +320,6 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
   return idx;
 }
 
-//FIXME: This is doesn't work just done so I can compile refactored code!
 void parse_vector(TokenVector *vec, TokenVector *sym) {
   long vec_size = vec->count;
   TokenVector stack = {0};
@@ -338,7 +338,114 @@ Instruction *init_instr() {
   return instr;
 }
 
-#if defined(PARSER_DEBUG_MODE) || defined(DEBUG_MODE)
+size_t djb2_hash(char* str){
+  size_t hash = 5381;
+  char c;
+
+  while ((c = *str++)){
+      hash = ((hash << 5) + hash) + c;
+  }
+
+  return hash % SYMTABLE_INITIAL_CAPACITY;
+}
+
+void symtab_init(SymTable *table){
+  table->count = 0;
+  table->capacity = SYMTABLE_INITIAL_CAPACITY;
+  table->map = malloc(sizeof(*(table->map)) * table->capacity);
+
+  if(!table->map){
+    LOG_ERR("Error during symtable init.\n");
+    exit(1);
+  }
+
+  for(size_t i = 0; i < SYMTABLE_INITIAL_CAPACITY; i++){
+    table->map[i].count = 0;
+  }
+}
+
+void symtab_free(SymTable *table){
+  if (!table) {
+    LOG_ERR("Error while deallocating the SymTable.\n");
+    exit(1);
+  }
+
+  free(table->map);
+}
+
+void symtab_free_destructive(SymTable *table){
+  if (!table) {
+    LOG_ERR("Error while deallocating the SymTable.\n");
+    exit(1);
+  }
+
+  for(size_t i = 0; i < SYMTABLE_INITIAL_CAPACITY; i++){
+    size_t count = table->map[i].count;
+    for(size_t j = 0; j < count; j++){
+      free(table->map[i].values[j].symbol);
+    }
+  }
+
+  free(table->map);
+}
+
+void symtab_add_symbol(SymTable *table, char *symbol){
+  size_t key = hash_key(symbol);
+  size_t count = table->map[key].count;
+
+  for(size_t i = 0; i < count; i++){
+    if(strcmp(table->map[key].values[i].symbol, symbol) == 0){
+      return;
+    }
+  }
+
+  table->map[key].values[count].symbol = symbol;
+  table->map[key].values[count].addr = 0;
+  table->map[key].count++;
+  table->count++;
+
+  if(table->map[key].count >= SYMTABLE_SIZE){
+    LOG_ERR("SYMTABLE has been completely filled.");
+    exit(1);
+  }
+}
+
+void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr){
+  size_t key = hash_key(symbol);
+  size_t count = table->map[key].count;
+
+  for(size_t i = 0; i < count; i++){
+    if(strcmp(table->map[key].values[i].symbol, symbol) == 0){
+      table->map[key].values[i].addr = addr;
+      return;
+    }
+  }
+
+  table->map[key].values[count].symbol = symbol;
+  table->map[key].values[count].addr = addr;
+  table->map[key].count++;
+  table->count++;
+
+  if(table->map[key].count >= SYMTABLE_SIZE){
+    LOG_ERR("SYMTABLE has been completely filled.");
+    exit(1);
+  }
+}
+
+SymValue *symtab_get_symbol(SymTable *table, char *symbol){
+  size_t key = hash_key(symbol);
+  size_t count = table->map[key].count;
+
+  for(size_t i = 0; i < count; i++){
+    if(strcmp(table->map[key].values[i].symbol, symbol) == 0){
+      return &(table->map[key].values[i]);
+    }
+  }
+
+  return NULL;
+}
+
+#if (defined(PARSER_DEBUG_MODE) && defined(TOKENIZER_DEBUG_MODE)) || defined(DEBUG_MODE)
 void instruction_print(Instruction *instr) {
   switch(instr->type) {
     case MINSTR:
@@ -374,7 +481,33 @@ void instruction_print(Instruction *instr) {
       printf("no ftype, ");
   }
   printf("opcode:%d, ", instr->opcode);
-  printf("addr:%ld\n", instr->addr);
-  tokvec_print(instr->vec);
+  printf("addr:%ld, ", instr->addr);
+  printf("(");
+  for (size_t i = 0; i < instr->vec->count; i++) {
+    if(i > 0) {
+      printf(", ");
+    }
+    Token t = instr->vec->items[i];
+    token_print(t);
+  }
+  printf(")\n");
+}
+
+void symtab_print(SymTable *table) {
+  printf("Symtable[%ld|%ld]:\n", table->count, table->capacity);
+  for(size_t i = 0; i < SYMTABLE_INITIAL_CAPACITY; i++){
+    size_t count = table->map[i].count;
+    if(count == 0){
+      continue;
+    }
+    printf("key: %ld, values: ", i);
+    for(size_t j = 0; j < count; j++){
+      if(j > 0){
+        printf(", ");
+      }
+      printf("(%s, %ld)",table->map[i].values[j].symbol,  table->map[i].values[j].addr);
+    }
+    printf("\n");
+  }
 }
 #endif

@@ -18,6 +18,10 @@
 #include "tokenizer.h"
 #endif
 
+#define SYMTABLE_SIZE (size_t) 256
+#define SYMTABLE_INITIAL_CAPACITY (size_t) 256
+#define hash_key djb2_hash
+
 enum itype { MINSTR, DIRECTIVE, LABEL };
 enum ftype { ZERO, ONE, TWO, THREE, FOUR };
 
@@ -29,6 +33,21 @@ typedef struct {
   TokenVector *vec;
 } Instruction;
 
+typedef struct {
+  char* symbol;
+  uint64_t addr;
+} SymValue;
+
+typedef struct {
+  size_t count;
+  SymValue values[SYMTABLE_SIZE];
+} SymMap;
+
+typedef struct {
+  size_t count;
+  size_t capacity;
+  SymMap *map;
+} SymTable;
 
 uint8_t parse_regs(TokenVector *tokens, TokenVector *instr, long *idx);
 uint8_t parse_mem_addr(TokenVector *tokens, TokenVector *instr, long *idx,
@@ -38,6 +57,17 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
 void parse_vector(TokenVector *vec, TokenVector *sym);
 Instruction* init_instr();
 
-#if defined(PARSER_DEBUG_MODE) || defined(DEBUG_MODE)
+size_t djb2_hash(char* key);
+
+void symtab_init(SymTable *table);
+void symtab_free(SymTable *table);
+void symtab_free_destructive(SymTable *table);
+void symtab_add_symbol(SymTable *table, char *symbol);
+void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr);
+SymValue *symtab_get_symbol(SymTable *table, char *symbol);
+
+
+#if (defined(PARSER_DEBUG_MODE) && defined(TOKENIZER_DEBUG_MODE)) || defined(DEBUG_MODE)
 void instruction_print(Instruction *instr);
+void symtab_print(SymTable *table);
 #endif
