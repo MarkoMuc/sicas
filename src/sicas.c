@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
 #endif
     TokenVector sym = {0};
     tokvec_init(&sym);
-#if defined(PARSER_DEBUG_MODE) || defined(DEBUG_MODE)
+#if (defined(PARSER_DEBUG_MODE) && defined(TOKENIZER_DEBUG_MODE))|| defined(DEBUG_MODE)
     tokvec_print(&vec);
 #endif
     //parse_vector(&vec, &sym);
