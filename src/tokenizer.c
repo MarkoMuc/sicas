@@ -383,12 +383,12 @@ void tokvec_add(TokenVector *v, Token *el) {
 
 void tokvec_replace(TokenVector *v, Token *el, size_t idx) {
   if (!v || !el || idx < 0) {
-    LOG_PANIC("Error while replace an element in the token vector.\n");
+    LOG_PANIC("Error while replacing an element in the token vector.\n");
   }
 
-  if (idx >= v->count ) {
-    LOG_PANIC("Error while replacing token at index %ld capacity is %ld.\n", idx,
-            v->capacity);
+  if (idx >= v->count) {
+    LOG_PANIC("Error while replacing token at index %ld current count is %ld.\n", idx,
+            v->count);
   }
 
   Token old = v->items[idx];
