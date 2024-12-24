@@ -24,7 +24,7 @@
 #define INSTRVEC_RESIZE_MULTIPLIER TOKVEC_RESIZE_MULTIPLIER
 #define hash_key djb2_hash
 
-enum itype { MINSTR, DIRECTIVE, LABEL };
+enum itype { MINSTR, DIRECTIVE, LABEL, CEXPR };
 enum ftype { ZERO, ONE, TWO, THREE, FOUR };
 
 typedef struct {
@@ -57,13 +57,11 @@ typedef struct {
   SymMap *map;
 } SymTable;
 
-uint8_t parse_regs(TokenVector *tokens, TokenVector *instr, long *idx);
-uint8_t parse_mem_addr(TokenVector *tokens, TokenVector *instr, long *idx,
-                       uint8_t float_type);
-long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
-             long idx);
-void parse_vector(TokenVector *vec, TokenVector *sym);
-Instruction* init_instr();
+uint8_t parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx);
+uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, uint8_t float_type);
+size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx);
+void parse_vector(TokenVector *vec, InstrVector *instrs, SymTable *sym);
+Instruction* instr_create();
 
 size_t djb2_hash(char* key);
 

@@ -37,15 +37,21 @@ int main(int argc, char **argv) {
 #if defined(TOKENIZER_DEBUG_MODE) || defined(DEBUG_MODE)
     tokvec_print(&vec);
 #endif
-    TokenVector sym = {0};
-    tokvec_init(&sym);
+
+    SymTable symbols = {0};
+    symtab_init(&symbols);
+
+    InstrVector instrs = {0};
+    instrvec_init(&instrs);
+
 #if (defined(PARSER_DEBUG_MODE) && defined(TOKENIZER_DEBUG_MODE))|| defined(DEBUG_MODE)
     tokvec_print(&vec);
 #endif
-    //parse_vector(&vec, &sym);
+    parse_vector(&vec, &instrs, &symbols);
 
     tokvec_free(&vec);
-    tokvec_free(&sym);
+    symtab_free(&symbols);
+    instrvec_free(&instrs);
   }
 
   exit(0);

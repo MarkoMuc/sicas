@@ -1,52 +1,71 @@
 #ifndef SICAS_PARSER
 #define SICAS_PARSER
 #include "../includes/parser.h"
-#include <stdio.h>
 #endif
 
-uint8_t parse_regs(TokenVector *tokens, TokenVector *new, long *idx) {
-  Token *tk = tokvec_get(tokens, *idx);
-  *idx = *idx + 1;
+uint8_t parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx) {
+  size_t i = *idx;
+
+  if(i >= tokens->count){
+    Token *tk =  tokvec_get(tokens, i - 1);
+    LOG_PANIC("[%ld:%ld]|[%ld:%ld] Missing first register for instruction of format 2.\n",
+              tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
+  }
+
+  Token *tk = tokvec_get(tokens, i++);
 
   if (tk->type == REGISTER) {
-    tokvec_add(new, tk);
-    tk = tokvec_get(tokens, *idx);
-    *idx = *idx + 1;
+    tokvec_add(instr->vec, tk);
+
+    if(i >= tokens->count){
+      Token *tk =  tokvec_get(tokens, i - 1);
+      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Missing separating comma for instruction of format 2.\n",
+                tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
+    }
+
+    tk = tokvec_get(tokens, i++);
 
     if (tk->type == COMMA) {
-      tokvec_add(new, tk);
-      tk = tokvec_get(tokens, *idx);
-      *idx = *idx + 1;
+      tokvec_add(instr->vec, tk);
     } else {
-      Token *s_tk = tokvec_get(new, 0);
-      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Missing second argument.\n",
+      Token *s_tk = tokvec_get(instr->vec, 0);
+      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Instruction of type 2 is missing a separator betweena registers.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
     }
 
+    if(i >= tokens->count){
+      Token *tk =  tokvec_get(tokens, i - 1);
+      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Missing second register for instruction of type 2.\n",
+                tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
+    }
+
+    tk = tokvec_get(tokens, i++);
+
     if (tk->type == REGISTER) {
-      tokvec_add(new, tk);
+      tokvec_add(instr->vec, tk);
     } else {
-      Token *s_tk = tokvec_get(new, 0);
-      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Argument 2 is not a register.\n",
+      Token *s_tk = tokvec_get(instr->vec, 0);
+      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Instruction of type 2 is missing a register as second argument.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
     }
 
   } else {
-    Token *s_tk = tokvec_get(new, 0);
-    LOG_PANIC("[%ld:%ld]|[%ld:%ld] Argument 1 is not a register.\n",
+    Token *s_tk = tokvec_get(instr->vec, 0);
+    LOG_PANIC("[%ld:%ld]|[%ld:%ld] Instruction of type 2 is missing a register as first argument.\n",
             s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
             tk->location.e_row);
   }
 
+  *idx = i;
+
   return 0;
 }
 
-uint8_t parse_mem_addr(TokenVector *tokens, TokenVector *new, long *idx,
-                       uint8_t float_type) {
-  Token *tk = tokvec_get(tokens, *idx);
-  *idx = *idx + 1;
+uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, uint8_t format) {
+  size_t i = *idx;
+  Token *tk = tokvec_get(tokens, i++);
 
   token_check_null(tk, "Instruction is missing parameters.\n");
 
@@ -117,23 +136,24 @@ uint8_t parse_mem_addr(TokenVector *tokens, TokenVector *new, long *idx,
     }
   }
 
+  *idx = i;
   return 0;
 }
 
-long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
-             long idx) {
-  Token *tk = tokvec_get(tokens, idx);
-  uint8_t format = 0;
+size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx) {
+  size_t i = *idx;
+  Token *tk = tokvec_get(tokens, i++);
+  enum ftype format = THREE;
+  enum itype type = MINSTR;
 
   token_check_null(tk, "Token in main token vector is null.\n");
 
   if (tk->type == PLUS) {
-    format = 4;
+    format = FOUR;
+    tk = tokvec_get(tokens, i++);
   }
 
-  // FIXME: Is this correct or do I need to initilase it with malloc?
-  TokenVector *vc = {0};
-  tokvec_init(vc);
+  Instruction *instr = instr_create();
 
   switch (tk->type) {
   case ADD:
@@ -169,13 +189,9 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
   case TD:
   case TIX:
   case WD:
-    if (format != 4) {
-      format = 3;
-    }
-    if (parse_mem_addr(tokens, vc, &idx, 0)) {
-        //FIXME: handle me
-      exit(1);
-    }
+    tokvec_add(instr->vec, tk);
+    parse_mem_addr(tokens, vc, &idx, format);
+
     break;
 
   case ADDF:
@@ -185,13 +201,12 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
   case MULF:
   case STF:
   case SUBF:
-    if (format != 4) {
-      format = 3;
-    }
+    tokvec_add(instr->vec, tk);
     if (parse_mem_addr(tokens, vc, &idx, 1)) {
         //FIXME: handle me
       exit(1);
     }
+
     break;
 
   case ADDR:
@@ -200,25 +215,27 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
   case MULR:
   case RMO:
   case SUBR:
-    if (format == 4) {
+    if (format == FOUR) {
       LOG_PANIC("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
     }
-    format = 2;
+
+    format = TWO;
     if (parse_regs(tokens, vc, &idx)) {
         //FIXME: handle me
       exit(1);
     }
+
     break;
 
   case CLEAR:
-    if (format == 4) {
+    if (format == FOUR) {
       LOG_PANIC("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
     }
-    format = 2;
+    format = TWO;
 
     tk = tokvec_get(tokens, idx);
     if (tk->type == REGISTER) {
@@ -234,14 +251,12 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
   case HIO:
   case SIO:
   case TIO:
-    if (format == 4) {
+    if (format == FOUR) {
       LOG_PANIC("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
     }
-    format = 1;
-    tokvec_add(vc, tk);
-    tk = tokvec_get(tokens, idx);
+    format = ONE;
     break;
 
   case FIX:
@@ -252,8 +267,7 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
     }
-    format = 1;
-    tokvec_add(vc, tk);
+    format = ONE;
     break;
 
   case RSUB:
@@ -286,43 +300,55 @@ long builder(TokenVector *tokens, TokenVector *sym, TokenVector *stack,
     tokvec_add(vc, tk);
     idx++;
 
-    tk = tokvec_get(tokens, idx);
+    tk = tokvec_get(tokens, i);
     tokvec_add(vc, tk);
     break;
 
   case START:
   case END:
-    // TODO
+    format = ZERO;
     break;
 
   case BYTE:
   case WORD:
   case RESB:
   case RESW:
-    // GO until hitting something that is not a number
+    format = ZERO;
     break;
 
   default:
-    LOG_PANIC("This token should not be here alone %ld\n", idx);
+    LOG_PANIC("This token should not be here alone %ld\n", i);
   }
 
-  return idx;
+  instr->format = format;
+  instr->type = type;
+  //FIXME: Calc addr
+  instr->addr = 0;
+
+  *idx = i;
+  //FIXME: Maybe return instruction
+  return i;
 }
 
-void parse_vector(TokenVector *vec, TokenVector *sym) {
+void parse_vector(TokenVector *vec, InstrVector *instrs, SymTable *sym) {
   long vec_size = vec->count;
-  TokenVector stack = {0};
-
-  for (long i = 0; i < vec_size; i++) {
-    i = builder(vec, sym, &stack, i);
+  size_t i = 0;
+  while(i < vec_size){
+    //FIXME: Maybe return error idk something?
+    i = builder(vec, instrs, sym, &i);
   }
 }
 
-Instruction *init_instr() {
+Instruction *instr_create() {
   Instruction *instr = malloc(sizeof(*instr));
   if (!instr) {
     LOG_PANIC("Failed to allocate memory for the instruction.");
   }
+
+  tokvec_init(instr->vec);
+  instr->type = 0;
+  instr->addr = 0;
+  instr->format = 0;
 
   return instr;
 }
@@ -570,7 +596,6 @@ void instruction_print(Instruction *instr) {
     default:
       printf("no ftype, ");
   }
-  printf("opcode:%d, ", instr->opcode);
   printf("addr:%ld, ", instr->addr);
   printf("(");
   for (size_t i = 0; i < instr->vec->count; i++) {
