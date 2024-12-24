@@ -2,7 +2,8 @@
 
 char help[] = "sicas " SICAS_VERSION " the SIX/XE assembler.\n"
               "Usage:\n"
-              "\t sicas [file]\n";
+              "\t sicas [file]\n"
+              "\t -h or --help for this message.\n";
 
 int main(int argc, char **argv) {
   if (argc == 1) {
@@ -11,6 +12,17 @@ int main(int argc, char **argv) {
   }
 
   for (int arg = 1; arg < argc; arg++) {
+    if(argv[arg][0] == '-'){
+      if(!strcmp(argv[arg], "-h") || !strcmp(argv[arg], "--help")){
+        printf(help);
+        exit(1);
+      }else{
+        LOG_ERR("Command %s does not exist.\n",argv[arg]);
+        exit(1);
+      }
+    }
+
+
     FILE *f = fopen(argv[arg], "r");
     if (f == NULL) {
       printf("File not found.");
