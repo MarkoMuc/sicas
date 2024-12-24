@@ -21,17 +21,20 @@
     - [ ] Add labels?
     - [ ] 0b is a valid token -> should not be
 - [ ] Parser:
+    - [ ] Formats and addressing types.
     - [ ] ADD token parsing
         - PLUS and MINUS around LITERALS, legal or not?
         - Add additional instruction parsing
-    - [ ] Add better error reporting
-
+    - If label found, then get next token and perform analysis
+    - How do I handle this:
+    https://github.com/jurem/SicDemos/blob/80ef4102e821da3694187aa8c6b1cc963fadc51d/graph-screen/space-shooters/space_shooters.asm#L882
+    - [ ] Symbols can be of type constexpr!!!
+- [ ] Add better error reporting
 - [ ] Logger macros
 - [ ] Testing system
-- [ ] Hashmap for symbols
+- [X] Hashmap for symbols
     - [Tsoding](https://www.youtube.com/watch?v=n-S9DBwPGTo)
     - [Hash Functions](https://www.cse.yorku.ca/~oz/hash.html)
-    - []
 
 ## FAR FUTURE
 
@@ -46,3 +49,6 @@
     - [Tsoding](https://www.youtube.com/watch?v=3IAlJSIjvH0)
     - [Linear Allocation](https://www.gingerbill.org/article/2019/02/08/memory-allocation-strategies-002/)
     - [More C-Like Lists](https://felipec.wordpress.com/2024/03/03/c-skill-issue-how-the-white-house-is-wrong/)
+- [ ] Add "embed" directive
+    - Embeds the file contents as BYTE
+    - Structure is `LABEL EMBED "path`
