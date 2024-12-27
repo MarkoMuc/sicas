@@ -5,3 +5,5 @@ tools/
 test/cmpr/
 test/out/
 test/test-cases/
+
+run-tmux.sh

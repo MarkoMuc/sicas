@@ -20,6 +20,7 @@
         - uses a `.` as a seperator
     - [ ] Add labels?
     - [ ] 0b is a valid token -> should not be
+    - [ ] `C'EOF'` should be valid
 - [ ] Parser:
     - [ ] Formats and addressing types.
     - [ ] ADD token parsing
@@ -36,10 +37,10 @@
     - [Tsoding](https://www.youtube.com/watch?v=n-S9DBwPGTo)
     - [Hash Functions](https://www.cse.yorku.ca/~oz/hash.html)
 
+
 ## FAR FUTURE
 
 - [ ] TOKENIZER 
-     [ ] ADD preprocessing
     - [ ] Should the tokenizer change regs to numbers
     - [ ] Privileged instructions: HIO, LPS
 - [ ] Build system
@@ -49,6 +50,8 @@
     - [Tsoding](https://www.youtube.com/watch?v=3IAlJSIjvH0)
     - [Linear Allocation](https://www.gingerbill.org/article/2019/02/08/memory-allocation-strategies-002/)
     - [More C-Like Lists](https://felipec.wordpress.com/2024/03/03/c-skill-issue-how-the-white-house-is-wrong/)
-- [ ] Add "embed" directive
+- [ ] Add `embed` directive
     - Embeds the file contents as BYTE
     - Structure is `LABEL EMBED "path`
+- [ ] Add `export` directive to export labels
+- [ ] Refactor code, use more consts
