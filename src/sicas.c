@@ -44,10 +44,17 @@ int main(int argc, char **argv) {
     InstrVector instrs = {0};
     instrvec_init(&instrs);
 
-#if (defined(PARSER_DEBUG_MODE) && defined(TOKENIZER_DEBUG_MODE))|| defined(DEBUG_MODE)
-    tokvec_print(&vec);
-#endif
     parse_vector(&vec, &instrs, &symbols);
+#if (defined(PARSER_DEBUG_MODE) && defined(TOKENIZER_DEBUG_MODE))|| defined(DEBUG_MODE)
+    printf("Instructions:\n");
+    for(size_t i = 0; i < instrs.count; i++){
+      Instruction *instr = instrvec_get(&instrs, i);
+      instruction_print(instr);
+    }
+
+    printf("Symbols:\n");
+    symtab_print(&symbols);
+#endif
 
     tokvec_free(&vec);
     symtab_free(&symbols);

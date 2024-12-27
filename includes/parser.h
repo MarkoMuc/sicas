@@ -58,7 +58,7 @@ typedef struct {
 } SymTable;
 
 uint8_t parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx);
-uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, uint8_t float_type);
+uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, uint8_t float_instr, enum ftype format);
 size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx);
 void parse_vector(TokenVector *vec, InstrVector *instrs, SymTable *sym);
 Instruction* instr_create();

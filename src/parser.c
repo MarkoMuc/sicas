@@ -63,77 +63,82 @@ uint8_t parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx) {
   return 0;
 }
 
-uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, uint8_t format) {
+uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, uint8_t float_instr, enum ftype format) {
   size_t i = *idx;
   Token *tk = tokvec_get(tokens, i++);
 
   token_check_null(tk, "Instruction is missing parameters.\n");
-
-  if (tk->type == LITERAL) {
-    tokvec_add(new, tk);
-    tk = tokvec_get(tokens, *idx);
-    *idx = *idx + 1;
+  
+  uint8_t disp = 0;
+  //TODO: This can be a switch
+  if (tk->type == LITERAL && !disp) {
+    tokvec_add(instr->vec, tk);
+    tk = tokvec_get(tokens, i++);
 
     if (tk->type == FNUM) {
-      if (float_type == 0) {
-        Token *s_tk = tokvec_get(new, 0);
+      if (float_instr == 0) {
+        Token *s_tk = tokvec_get(instr->vec, 0);
         LOG_PANIC("[%ld:%ld]|[%ld:%ld] Floats not allowed here.\n",
                 s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
                 tk->location.e_row);
       }
 
-      tokvec_add(new, tk);
-    } else if (tk->type == NUM || tk->type == HEX || tk->type == BIN) {
-      tokvec_add(new, tk);
+      tokvec_add(instr->vec, tk);
+    } else if (tk->type == NUM || tk->type == HEX || tk->type == BIN || tk->type == STRING) {
+      tokvec_add(instr->vec, tk);
     } else {
-      Token *s_tk = tokvec_get(new, 0);
+      Token *s_tk = tokvec_get(instr->vec, 0);
       LOG_PANIC("[%ld:%ld]|[%ld:%ld] Literal missing numeral.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
     }
-
-    return 0;
+    disp = 1;
   }
 
-  if (tk->type == AT) {
-    tokvec_add(new, tk);
-    tk = tokvec_get(tokens, *idx);
-    *idx = *idx + 1;
+  if (tk->type == AT && !disp) {
+      tokvec_add(instr->vec, tk);
+      tk = tokvec_get(tokens, i++);
 
     // TODO:Is only ID allowed after?
     if (tk->type == ID) {
-      tokvec_add(new, tk);
+      tokvec_add(instr->vec, tk);
+      symtab_add_symbol(sym, tk->str);
     } else {
-      Token *s_tk = tokvec_get(new, 0);
+      Token *s_tk = tokvec_get(instr->vec, 0);
       LOG_PANIC("[%ld:%ld]|[%ld:%ld] Missing identifier after @.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
     }
-
-    // TODO: Comma after this allowed?
-    return 0;
+    disp = 1;
   }
 
-  if (tk->type == ID) {
-    tokvec_add(new, tk);
-    *idx = *idx + 1;
-    tk = tokvec_get(tokens, *idx);
+  if (tk->type == ID && !disp) {
+    tokvec_add(instr->vec, tk);
+    symtab_add_symbol(sym, tk->str);
+    disp = 1;
+  }
+
+  if(i < instr->vec->count){
+    tk = tokvec_get(instr->vec, i++);
 
     if (tk->type == COMMA) {
-      tokvec_add(new, tk);
-      tk = tokvec_get(tokens, *idx);
-      *idx = *idx + 1;
+      tokvec_add(instr->vec, tk);
+      tk = tokvec_get(tokens, i++);
 
       if (tk->type == REGISTER && strcmp(tk->str, "X")) {
-        tokvec_add(new, tk);
+        tokvec_add(instr->vec, tk);
       } else {
-        Token *s_tk = tokvec_get(new, 0);
-        LOG_PANIC("[%ld:%ld]|[%ld:%ld] Offset should be X.\n", s_tk->location.s_col,
+        Token *s_tk = tokvec_get(instr->vec, 0);
+        LOG_PANIC("[%ld:%ld]|[%ld:%ld] Offset should be register X.\n", s_tk->location.s_col,
                 s_tk->location.s_row, tk->location.e_col, tk->location.e_row);
       }
     } else {
-      *idx = *idx - 1;
+      i = i - 1;
     }
+  }
+
+  if(!disp){
+    LOG_PANIC("No freaking address in instruction brah\n");
   }
 
   *idx = i;
@@ -190,8 +195,8 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   case TIX:
   case WD:
     tokvec_add(instr->vec, tk);
-    parse_mem_addr(tokens, vc, &idx, format);
-
+    //TODO: How do we handle format?
+    parse_mem_addr(tokens, instr, sym, &i, 0, format);
     break;
 
   case ADDF:
@@ -202,11 +207,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   case STF:
   case SUBF:
     tokvec_add(instr->vec, tk);
-    if (parse_mem_addr(tokens, vc, &idx, 1)) {
-        //FIXME: handle me
-      exit(1);
-    }
-
+    parse_mem_addr(tokens, instr, sym, &i, 1, format);
     break;
 
   case ADDR:
@@ -222,26 +223,25 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     }
 
     format = TWO;
-    if (parse_regs(tokens, vc, &idx)) {
-        //FIXME: handle me
-      exit(1);
-    }
-
+    tokvec_add(instr->vec, tk);
+    parse_regs(tokens, instr, &i);
     break;
 
   case CLEAR:
+    LOG_PANIC("Instruction has not been implemented\n");
     if (format == FOUR) {
       LOG_PANIC("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
     }
     format = TWO;
-
-    tk = tokvec_get(tokens, idx);
+    tokvec_add(instr->vec, tk);
+    //FIXME: This is a mnemonic so its wrong
+    tk = tokvec_get(tokens, i++);
     if (tk->type == REGISTER) {
-      tokvec_add(vc, tk);
+      tokvec_add(instr->vec, tk);
     } else {
-      Token *s_tk = tokvec_get(vc, 0);
+      Token *s_tk = tokvec_get(instr->vec, 0);
       LOG_PANIC("[%ld:%ld]|[%ld:%ld] Argument should be a register.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
@@ -251,62 +251,62 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   case HIO:
   case SIO:
   case TIO:
+    LOG_PANIC("Instruction has not been implemented\n");
     if (format == FOUR) {
       LOG_PANIC("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
     }
     format = ONE;
+    tokvec_add(instr->vec, tk);
     break;
 
   case FIX:
   case FLOAT:
   case NORM:
+    LOG_PANIC("Instruction has not been implemented\n");
     if (format == 4) {
       LOG_PANIC("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
     }
     format = ONE;
+    tokvec_add(instr->vec, tk);
     break;
 
   case RSUB:
-    tokvec_add(vc, tk);
-
+    LOG_PANIC("Instruction has not been implemented\n");
+    tokvec_add(instr->vec, tk);
     break;
 
   case SHIFTL:
   case SHIFTR:
-    tokvec_add(vc, tk);
-    idx++;
+    LOG_PANIC("Instruction has not been implemented\n");
+    tokvec_add(instr->vec, tk);
+    tk = tokvec_get(tokens, i++);
 
-    tk = tokvec_get(tokens, idx);
-    idx++;
     if (tk->type == REGISTER) {
-      tokvec_add(vc, tk);
+    tokvec_add(instr->vec, tk);
     } else {
-      Token *s_tk = tokvec_get(vc, 0);
+      Token *s_tk = tokvec_get(instr->vec, 0);
       LOG_PANIC("[%ld:%ld]|[%ld:%ld] Argument 1 is not a register.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
     }
 
-    tk = tokvec_get(tokens, idx);
-    tokvec_add(vc, tk);
-
+    //FIXME: This should check the following is a numeral
+    tk = tokvec_get(tokens, i++);
+    tokvec_add(instr->vec, tk);
     break;
 
   case SVC:
-    tokvec_add(vc, tk);
-    idx++;
-
-    tk = tokvec_get(tokens, i);
-    tokvec_add(vc, tk);
+    LOG_PANIC("Instruction has not been implemented\n");
     break;
 
   case START:
   case END:
     format = ZERO;
+    LOG_PANIC("Instruction has not been implemented\n");
     break;
 
   case BYTE:
@@ -314,10 +314,13 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   case RESB:
   case RESW:
     format = ZERO;
+    LOG_PANIC("Instruction has not been implemented\n");
     break;
 
   default:
-    LOG_PANIC("This token should not be here alone %ld\n", i);
+    token_print(*tk);
+    printf("\n");
+    LOG_PANIC("This token should not be here alone \n");
   }
 
   instr->format = format;
@@ -325,8 +328,10 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   //FIXME: Calc addr
   instr->addr = 0;
 
+  instrvec_add(instrs, instr);
   *idx = i;
   //FIXME: Maybe return instruction
+  free(instr);
   return i;
 }
 
@@ -342,7 +347,12 @@ void parse_vector(TokenVector *vec, InstrVector *instrs, SymTable *sym) {
 Instruction *instr_create() {
   Instruction *instr = malloc(sizeof(*instr));
   if (!instr) {
-    LOG_PANIC("Failed to allocate memory for the instruction.");
+    LOG_PANIC("Failed to allocate memory for the instruction.\n");
+  }
+
+  instr->vec = malloc(sizeof(*(instr->vec)));
+  if(!instr->vec){
+    LOG_PANIC("Failed to allocate memory for the token vector during instruction creation.\n");
   }
 
   tokvec_init(instr->vec);
