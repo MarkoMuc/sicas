@@ -1,13 +1,18 @@
 #!/bin/bash
 
-set -e
+set -xe
 
 INCLUDES="-I ./includes/"
 DBG_CFLAGS=" -Wall -ggdb -fanalyzer -pedantic -std=c99"
 REL_CFLAGS="-O2"
 
-in="$1"
-mode=${in:-"dbg"}
+mode=${1:-"dbg"}
+execute=${2:-""}
+
+if [ "$mode" == "run" ]; then
+	mode="dbg"
+	execute="run"
+fi
 
 if [ "$mode" == "dbg" ]; then
 	mkdir -p ./target/dbg
@@ -29,8 +34,7 @@ elif [ "$mode" == "test" ]; then
 	exit 0
 fi
 
-mode=${2:-""}
-if [ "$mode" == "run" ]; then
+if [ "$execute" == "run" ]; then
 	"$target_path"
 fi
 
