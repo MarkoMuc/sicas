@@ -37,3 +37,20 @@
 - +JSUB WRREC -> Format 4 instruction
 - MAYBE WORD -> EOF
 - Assembler directive BASE
+
+## Basic assembler directives
+
+- `.` -> Comment.
+- `,X` -> Indexed addressing.
+- `name START address` -> Specify name and starting address for the program.
+- `END address` -> Indicate the end of the source program and (optionally) specify the first executable instruction in the program.
+- `BYTE` -> Generate character or hexadecimal constant, occupy as many bytes as needed to represent the constant.
+- `WORD` -> Generate one-word integer constant.
+- `RESB` -> Reserve the indicated number of bytes for a data area.
+- `RESW` -> Reserve the indicated number of words for a data area.
+- `C'CHAR'`-> Character constant
+- `EOF` -> End of file value 0119
+
+## Mnemonic operations
+
+- `CLEAR reg` -> translates to `LD{reg} 0` or translates to `LD{reg} #0`
