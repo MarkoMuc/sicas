@@ -38,7 +38,7 @@ typedef struct {
 typedef struct {
   size_t count;
   size_t capacity;
-  Instruction *items;
+  Instruction **items;
 } InstrVector;
 
 typedef struct {

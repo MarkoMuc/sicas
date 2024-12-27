@@ -331,7 +331,6 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   instrvec_add(instrs, instr);
   *idx = i;
   //FIXME: Maybe return instruction
-  free(instr);
   return i;
 }
 
@@ -366,7 +365,7 @@ Instruction *instr_create() {
 void instrvec_init(InstrVector *v){
   v->count = 0;
   v->capacity = INSTRVEC_INITIAL_CAPACITY;
-  v->items = malloc(sizeof(*v->items) * v->capacity);
+  v->items = malloc(sizeof(*(v->items)) * v->capacity);
 
   if (!v->items) {
     LOG_PANIC("Error during instruction vector init.\n");
@@ -379,8 +378,8 @@ void instrvec_free(InstrVector *v){
   }
 
   for(size_t i = 0; i < v->count; i++) {
-    Instruction instr = v->items[i];
-    tokvec_free(instr.vec);
+    Instruction *instr = v->items[i];
+    tokvec_free(instr->vec);
   }
 
   free(v->items);
@@ -392,8 +391,8 @@ void instrvec_free_destructive(InstrVector *v){
   }
 
   for(size_t i = 0; i < v->count; i++) {
-    Instruction instr = v->items[i];
-    tokvec_free_destructive(instr.vec);
+    Instruction *instr = v->items[i];
+    tokvec_free_destructive(instr->vec);
   }
 
   free(v->items);
@@ -406,14 +405,14 @@ void instrvec_add(InstrVector *v, Instruction *el){
 
   if (v->count >= v->capacity) {
     v->capacity *= INSTRVEC_RESIZE_MULTIPLIER;
-    v->items = realloc(v->items, sizeof(*v->items) * v->capacity);
+    v->items = realloc(v->items, sizeof(*(v->items)) * v->capacity);
     if (!v->items) {
       LOG_PANIC("Error while expanding the instruction vector from %ld to %ld.\n", v->count,
               v->capacity);
     }
   }
 
-  v->items[v->count++] = *el;
+  v->items[v->count++] = el;
 }
 
 void instrvec_replace(InstrVector *v, Instruction *el, size_t idx){
@@ -426,24 +425,24 @@ void instrvec_replace(InstrVector *v, Instruction *el, size_t idx){
             v->count);
   }
 
-  Instruction old = v->items[idx];
-  v->items[idx] = *el;
+  Instruction *old = v->items[idx];
+  v->items[idx] = el;
   for (size_t i = idx + 1; i < v->count; i++) {
-    Instruction inter = v->items[i];
+    Instruction *inter = v->items[i];
     v->items[i] = old;
     old = inter;
   }
 
-  instrvec_add(v, &old);
+  instrvec_add(v, old);
 }
 
 void instrvec_rm(InstrVector *v, size_t idx){
   if (!v|| idx < 0) {
-    LOG_PANIC("Error while removing an instruction to the vector.\n");
+    LOG_PANIC("Error while removing an instruction from the vector.\n");
   }
 
   if (idx >= v->capacity) {
-    LOG_PANIC("Error while removing instruction from index %ld capacity is %ld.\n", idx,
+    LOG_PANIC("Error while removing instruction from instruction vector at index %ld capacity is %ld.\n", idx,
             v->capacity);
   }
 
@@ -466,7 +465,7 @@ Instruction *instrvec_get(InstrVector *v, size_t idx){
             v->capacity);
   }
 
-  return &(v->items[idx]);
+  return v->items[idx];
 }
 
 size_t djb2_hash(char* str){
