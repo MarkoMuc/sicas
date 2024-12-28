@@ -36,7 +36,7 @@
 - [X] Hashmap for symbols
     - [Tsoding](https://www.youtube.com/watch?v=n-S9DBwPGTo)
     - [Hash Functions](https://www.cse.yorku.ca/~oz/hash.html)
-
+- [ ] Characters/strings: Special characters, etc.
 
 ## FAR FUTURE
 
@@ -55,3 +55,6 @@
     - Structure is `LABEL EMBED "path`
 - [ ] Add `export` directive to export labels
 - [ ] Refactor code, use more consts
+- [ ] Only keywords can be lower or upper case.
+- [ ] Output as ASCII object code or normal object code.
+- [ ] Detect and inform user on base addressing.
