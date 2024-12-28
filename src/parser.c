@@ -29,7 +29,7 @@ uint8_t parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx) {
       tokvec_add(instr->vec, tk);
     } else {
       Token *s_tk = tokvec_get(instr->vec, 0);
-      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Instruction of type 2 is missing a separator betweena registers.\n",
+      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Instruction of type 2 is missing a separator between a registers.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
     }
@@ -68,54 +68,53 @@ uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, s
   Token *tk = tokvec_get(tokens, i++);
 
   token_check_null(tk, "Instruction is missing parameters.\n");
-  
-  uint8_t disp = 0;
-  //TODO: This can be a switch
-  if (tk->type == LITERAL && !disp) {
-    tokvec_add(instr->vec, tk);
-    tk = tokvec_get(tokens, i++);
 
-    if (tk->type == FNUM) {
-      if (float_instr == 0) {
-        Token *s_tk = tokvec_get(instr->vec, 0);
-        LOG_PANIC("[%ld:%ld]|[%ld:%ld] Floats not allowed here.\n",
-                s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
-                tk->location.e_row);
-      }
-
-      tokvec_add(instr->vec, tk);
-    } else if (tk->type == NUM || tk->type == HEX || tk->type == BIN || tk->type == STRING) {
-      tokvec_add(instr->vec, tk);
-    } else {
-      Token *s_tk = tokvec_get(instr->vec, 0);
-      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Literal missing numeral.\n",
-              s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
-              tk->location.e_row);
-    }
-    disp = 1;
-  }
-
-  if (tk->type == AT && !disp) {
+  switch(tk->type) {
+    case LITERAL:
       tokvec_add(instr->vec, tk);
       tk = tokvec_get(tokens, i++);
 
-    // TODO:Is only ID allowed after?
-    if (tk->type == ID) {
+      if (tk->type == FNUM) {
+        if (float_instr == 0) {
+          Token *s_tk = tokvec_get(instr->vec, 0);
+          LOG_PANIC("[%ld:%ld]|[%ld:%ld] Floats not allowed here.\n",
+                  s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
+                  tk->location.e_row);
+        }
+
+        tokvec_add(instr->vec, tk);
+      } else if (tk->type == NUM || tk->type == HEX || tk->type == BIN || tk->type == STRING) {
+        tokvec_add(instr->vec, tk);
+      } else {
+        Token *s_tk = tokvec_get(instr->vec, 0);
+        LOG_PANIC("[%ld:%ld]|[%ld:%ld] Literal missing numeral.\n",
+                s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
+                tk->location.e_row);
+      }
+      break;
+
+    case AT:
+        tokvec_add(instr->vec, tk);
+        tk = tokvec_get(tokens, i++);
+
+      // TODO:Is only ID allowed after?
+      if (tk->type == ID) {
+        tokvec_add(instr->vec, tk);
+        symtab_add_symbol(sym, tk->str);
+      } else {
+        Token *s_tk = tokvec_get(instr->vec, 0);
+        LOG_PANIC("[%ld:%ld]|[%ld:%ld] Missing identifier after @.\n",
+                s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
+                tk->location.e_row);
+      }
+      break;
+
+    case ID:
       tokvec_add(instr->vec, tk);
       symtab_add_symbol(sym, tk->str);
-    } else {
-      Token *s_tk = tokvec_get(instr->vec, 0);
-      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Missing identifier after @.\n",
-              s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
-              tk->location.e_row);
-    }
-    disp = 1;
-  }
-
-  if (tk->type == ID && !disp) {
-    tokvec_add(instr->vec, tk);
-    symtab_add_symbol(sym, tk->str);
-    disp = 1;
+      break;
+    default:
+      LOG_PANIC("Instruction does not contain a valid address.\n");
   }
 
   if(i < instr->vec->count){
@@ -135,10 +134,6 @@ uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, s
     } else {
       i = i - 1;
     }
-  }
-
-  if(!disp){
-    LOG_PANIC("No freaking address in instruction brah\n");
   }
 
   *idx = i;
