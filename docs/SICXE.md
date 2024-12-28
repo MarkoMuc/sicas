@@ -144,6 +144,16 @@ There are two versions of SIC, one is the basic SIC the other one is known as SI
 - SIC/XE instructions that specify neither immediate nor indirect addressing are assembled with bits *n* and *i* set to 1. Assembler for SIC will set the bits in both of these positions to 0, since all SIC opcodes end with `00`.
 - SIC/XE has a special hardware feature designed to provide the upward compatibility mentioned earlier. If bits *n* and *i* are both `0`, then bits *b,p,e* are considered part of the address field of the instruction (rather than flags indicating addressing modes). This makes instruction Format 3 identical to the format used on the standard version of SIC.
 
+### Instruction Set
+
+- SIC/XE provides all of the instructions that are available on the standard version.
+- It also expands the instruction set with:
+    - Load and store instructions for the new registers.
+    - Floating-point arithmetic operations.
+    - Register as operand instructions.
+    - Superviosr call instructions.
+    - etc.
+
 ### Input and Output
 
 - The standard I/O instructions we discussed for SIC are also available on SIC/XE.
