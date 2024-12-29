@@ -22,7 +22,7 @@
 #define SYMTABLE_INITIAL_CAPACITY (size_t) 256
 #define INSTRVEC_INITIAL_CAPACITY TOKVEC_INITIAL_CAPACITY
 #define INSTRVEC_RESIZE_MULTIPLIER TOKVEC_RESIZE_MULTIPLIER
-#define hash_key djb2_hash
+#define hash_func djb2_hash
 
 enum itype { MINSTR, DIRECTIVE, LABEL, CEXPR };
 enum ftype { ZERO, ONE, TWO, THREE, FOUR };
@@ -58,7 +58,7 @@ typedef struct {
 } SymTable;
 
 uint8_t parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx);
-uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, uint8_t float_instr, enum ftype format);
+uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, uint8_t float_instr);
 size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx);
 void parse_vector(TokenVector *vec, InstrVector *instrs, SymTable *sym);
 Instruction* instr_create();

@@ -132,10 +132,18 @@ typedef struct {
 #define TOKVEC_INITIAL_CAPACITY (size_t) 256
 #define TOKVEC_RESIZE_MULTIPLIER 2
 
-#define token_check_null(tk, err) \
+#define token_check_null(tk) \
         do{                       \
           if ((tk) == NULL) {     \
-            LOG_PANIC((err));}    \
+            LOG_PANIC(("Token is NULL.\n"));}    \
+        }while(0)
+
+#define check_next_token(idx, token_vec, error_msg) \
+        do {\
+            if((idx) >= (token_vec)->count){ \
+              Token *tk =  tokvec_get((token_vec), (idx) - 1); \
+              LOG_ERR( "[%ld:%ld]|[%ld:%ld]" error_msg, tk->location.s_col, tk->location.s_row,\
+                        tk->location.e_col, tk->location.e_row);exit(1);}\
         }while(0)
 
 Token gen_token(char *str, Location loc);

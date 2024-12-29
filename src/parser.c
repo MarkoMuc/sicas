@@ -6,56 +6,44 @@
 uint8_t parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx) {
   size_t i = *idx;
 
-  if(i >= tokens->count){
-    Token *tk =  tokvec_get(tokens, i - 1);
-    LOG_PANIC("[%ld:%ld]|[%ld:%ld] Missing first register for instruction of format 2.\n",
-              tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
-  }
-
+  check_next_token(i, tokens, "Missing first register for instruction of format 2.\n");
   Token *tk = tokvec_get(tokens, i++);
 
   if (tk->type == REGISTER) {
     tokvec_add(instr->vec, tk);
 
-    if(i >= tokens->count){
-      Token *tk =  tokvec_get(tokens, i - 1);
-      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Missing separating comma for instruction of format 2.\n",
-                tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
-    }
-
+    check_next_token(i, tokens, "Missing separating comma for instruction of format 2.\n");
     tk = tokvec_get(tokens, i++);
 
     if (tk->type == COMMA) {
       tokvec_add(instr->vec, tk);
     } else {
       Token *s_tk = tokvec_get(instr->vec, 0);
-      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Instruction of type 2 is missing a separator between a registers.\n",
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] Instruction of type 2 is missing a separator between a registers.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
+      exit(1);
     }
 
-    if(i >= tokens->count){
-      Token *tk =  tokvec_get(tokens, i - 1);
-      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Missing second register for instruction of type 2.\n",
-                tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
-    }
-
+    check_next_token(i, tokens, "Missing second register for instruction of type 2.\n");
     tk = tokvec_get(tokens, i++);
 
     if (tk->type == REGISTER) {
       tokvec_add(instr->vec, tk);
     } else {
       Token *s_tk = tokvec_get(instr->vec, 0);
-      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Instruction of type 2 is missing a register as second argument.\n",
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] Instruction of type 2 is missing a register as second argument.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
+      exit(1);
     }
 
   } else {
     Token *s_tk = tokvec_get(instr->vec, 0);
-    LOG_PANIC("[%ld:%ld]|[%ld:%ld] Instruction of type 2 is missing a register as first argument.\n",
+    LOG_ERR("[%ld:%ld]|[%ld:%ld] Instruction of type 2 is missing a register as first argument.\n",
             s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
             tk->location.e_row);
+    exit(1);
   }
 
   *idx = i;
@@ -63,23 +51,31 @@ uint8_t parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx) {
   return 0;
 }
 
-uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, uint8_t float_instr, enum ftype format) {
+uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, uint8_t float_instr) {
   size_t i = *idx;
+  uint8_t indexing_illegal = 0;
+  check_next_token(i, tokens, "Instruction has no address operand.\n");
   Token *tk = tokvec_get(tokens, i++);
 
-  token_check_null(tk, "Instruction is missing parameters.\n");
+  token_check_null(tk);
 
   switch(tk->type) {
     case LITERAL:
+    literal_label:
       tokvec_add(instr->vec, tk);
+
+      check_next_token(i, tokens, "No constant following a literal.\n");
       tk = tokvec_get(tokens, i++);
+      token_check_null(tk);
 
       if (tk->type == FNUM) {
         if (float_instr == 0) {
           Token *s_tk = tokvec_get(instr->vec, 0);
-          LOG_PANIC("[%ld:%ld]|[%ld:%ld] Floats not allowed here.\n",
+          token_check_null(s_tk);
+          LOG_ERR("[%ld:%ld]|[%ld:%ld] Floats not allowed here.\n",
                   s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
                   tk->location.e_row);
+          exit(1);
         }
 
         tokvec_add(instr->vec, tk);
@@ -87,25 +83,37 @@ uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, s
         tokvec_add(instr->vec, tk);
       } else {
         Token *s_tk = tokvec_get(instr->vec, 0);
-        LOG_PANIC("[%ld:%ld]|[%ld:%ld] Literal missing numeral.\n",
+        token_check_null(s_tk);
+        LOG_ERR("[%ld:%ld]|[%ld:%ld] Literal missing constant.\n",
                 s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
                 tk->location.e_row);
+        exit(1);
       }
       break;
 
+    case IMMEDIATE:
     case AT:
-        tokvec_add(instr->vec, tk);
-        tk = tokvec_get(tokens, i++);
+      tokvec_add(instr->vec, tk);
 
-      // TODO:Is only ID allowed after?
+      check_next_token(i, tokens, "Missing operand for indirect or immediate addressing.\n");
+      tk = tokvec_get(tokens, i++);
+      token_check_null(tk);
+
+      indexing_illegal = 1;
       if (tk->type == ID) {
         tokvec_add(instr->vec, tk);
         symtab_add_symbol(sym, tk->str);
+      } else if(tk->type == NUM || tk->type == HEX || tk->type == BIN || tk->type == STRING){
+        tokvec_add(instr->vec, tk);
+      } else if(tk->type == LITERAL){
+        goto literal_label;
       } else {
         Token *s_tk = tokvec_get(instr->vec, 0);
-        LOG_PANIC("[%ld:%ld]|[%ld:%ld] Missing identifier after @.\n",
+        token_check_null(s_tk);
+        LOG_ERR("[%ld:%ld]|[%ld:%ld] Missing identifier or constant after indirect or immediate addressing.\n",
                 s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
                 tk->location.e_row);
+        exit(1);
       }
       break;
 
@@ -113,23 +121,52 @@ uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, s
       tokvec_add(instr->vec, tk);
       symtab_add_symbol(sym, tk->str);
       break;
+
+    case NUM:
+    case HEX:
+    case BIN:
+    case STRING:
+    case FNUM:
+        if(tk->type == FNUM && float_instr){
+          LOG_ERR("[%ld:%ld]|[%ld:%ld] Float constant not allowed here.\n",
+                tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
+          exit(1);
+        }
+
+        tokvec_add(instr->vec, tk);
+    break;
+
     default:
-      LOG_PANIC("Instruction does not contain a valid address.\n");
+      LOG_ERR("Instruction does not contain a valid address.\n");
+      exit(1);
   }
 
   if(i < instr->vec->count){
     tk = tokvec_get(instr->vec, i++);
+    token_check_null(tk);
 
     if (tk->type == COMMA) {
+      if(indexing_illegal){
+        Token *s_tk = tokvec_get(instr->vec, 0);
+        token_check_null(s_tk);
+        LOG_ERR("[%ld:%ld]|[%ld:%ld] Immediate and indirect addressing cannot be paired with indexed addressing.\n", s_tk->location.s_col,
+                s_tk->location.s_row, tk->location.e_col, tk->location.e_row);
+        exit(1);
+      }
+
       tokvec_add(instr->vec, tk);
+
+      check_next_token(i, tokens, "Indexed addressing is missing X after the comma.\n");
       tk = tokvec_get(tokens, i++);
 
       if (tk->type == REGISTER && strcmp(tk->str, "X")) {
         tokvec_add(instr->vec, tk);
       } else {
         Token *s_tk = tokvec_get(instr->vec, 0);
-        LOG_PANIC("[%ld:%ld]|[%ld:%ld] Offset should be register X.\n", s_tk->location.s_col,
+        token_check_null(s_tk);
+        LOG_ERR("[%ld:%ld]|[%ld:%ld] Offset should be register X.\n", s_tk->location.s_col,
                 s_tk->location.s_row, tk->location.e_col, tk->location.e_row);
+        exit(1);
       }
     } else {
       i = i - 1;
@@ -146,7 +183,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   enum ftype format = THREE;
   enum itype type = MINSTR;
 
-  token_check_null(tk, "Token in main token vector is null.\n");
+  token_check_null(tk);
 
   if (tk->type == PLUS) {
     format = FOUR;
@@ -191,7 +228,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   case WD:
     tokvec_add(instr->vec, tk);
     //TODO: How do we handle format?
-    parse_mem_addr(tokens, instr, sym, &i, 0, format);
+    parse_mem_addr(tokens, instr, sym, &i, 0);
     break;
 
   case ADDF:
@@ -202,7 +239,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   case STF:
   case SUBF:
     tokvec_add(instr->vec, tk);
-    parse_mem_addr(tokens, instr, sym, &i, 1, format);
+    parse_mem_addr(tokens, instr, sym, &i, 1);
     break;
 
   case ADDR:
@@ -512,7 +549,7 @@ void symtab_free_destructive(SymTable *table){
 }
 
 void symtab_add_symbol(SymTable *table, char *symbol){
-  size_t key = hash_key(symbol);
+  size_t key = hash_func(symbol);
   size_t count = table->map[key].count;
 
   for(size_t i = 0; i < count; i++){
@@ -532,7 +569,7 @@ void symtab_add_symbol(SymTable *table, char *symbol){
 }
 
 void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr){
-  size_t key = hash_key(symbol);
+  size_t key = hash_func(symbol);
   size_t count = table->map[key].count;
 
   for(size_t i = 0; i < count; i++){
@@ -553,7 +590,7 @@ void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr){
 }
 
 SymValue *symtab_get_symbol(SymTable *table, char *symbol){
-  size_t key = hash_key(symbol);
+  size_t key = hash_func(symbol);
   size_t count = table->map[key].count;
 
   for(size_t i = 0; i < count; i++){
