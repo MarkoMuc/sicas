@@ -177,8 +177,10 @@ uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, s
   return 0;
 }
 
-size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx) {
+size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx, uint64_t *loc_ctr) {
   size_t i = *idx;
+  Token *id = NULL;
+  uint64_t offset = 0;
   Token *tk = tokvec_get(tokens, i++);
   enum ftype format = THREE;
   enum itype type = MINSTR;
@@ -187,7 +189,23 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
 
   if (tk->type == PLUS) {
     format = FOUR;
+    check_next_token(i, tokens, "Missing token after +.");
     tk = tokvec_get(tokens, i++);
+    token_check_null(tk);
+  }
+
+  //FIXME: Program name can overlap with a label
+  if(tk->type == ID){
+    id = tk;
+    if(symtab_add_symbol(sym, tk->str)) {
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] Symbol %s has multiple definitions.\n", tk->location.s_col,
+              tk->location.s_row, tk->location.e_col, tk->location.e_row, tk->str);
+      exit(1);
+    }
+
+    check_next_token(i, tokens, "Missing token after +.");
+    tk = tokvec_get(tokens, i++);
+    token_check_null(tk);
   }
 
   Instruction *instr = instr_create();
@@ -227,8 +245,8 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   case TIX:
   case WD:
     tokvec_add(instr->vec, tk);
-    //TODO: How do we handle format?
     parse_mem_addr(tokens, instr, sym, &i, 0);
+    offset = format;
     break;
 
   case ADDF:
@@ -240,6 +258,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   case SUBF:
     tokvec_add(instr->vec, tk);
     parse_mem_addr(tokens, instr, sym, &i, 1);
+    offset = format;
     break;
 
   case ADDR:
@@ -249,66 +268,62 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   case RMO:
   case SUBR:
     if (format == FOUR) {
-      LOG_PANIC("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
+      exit(1);
     }
 
     format = TWO;
     tokvec_add(instr->vec, tk);
     parse_regs(tokens, instr, &i);
+    offset = format;
     break;
 
   case CLEAR:
-    LOG_PANIC("Instruction has not been implemented\n");
+  case TIXR:
     if (format == FOUR) {
-      LOG_PANIC("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
+      exit(1);
     }
+
     format = TWO;
     tokvec_add(instr->vec, tk);
-    //FIXME: This is a mnemonic so its wrong
+
+    check_next_token(i, tokens, "Instruction is missing a register operand.");
     tk = tokvec_get(tokens, i++);
+
     if (tk->type == REGISTER) {
       tokvec_add(instr->vec, tk);
     } else {
       Token *s_tk = tokvec_get(instr->vec, 0);
-      LOG_PANIC("[%ld:%ld]|[%ld:%ld] Argument should be a register.\n",
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] Operand should be a register.\n",
               s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
+      exit(1);
     }
+    offset = format;
     break;
 
   case HIO:
   case SIO:
   case TIO:
-    LOG_PANIC("Instruction has not been implemented\n");
-    if (format == FOUR) {
-      LOG_PANIC("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
-              tk->location.s_col, tk->location.s_row, tk->location.e_col,
-              tk->location.e_row);
-    }
-    format = ONE;
-    tokvec_add(instr->vec, tk);
-    break;
-
   case FIX:
   case FLOAT:
   case NORM:
-    LOG_PANIC("Instruction has not been implemented\n");
-    if (format == 4) {
-      LOG_PANIC("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
+  case RSUB:
+    if (format == FOUR) {
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] This instruction cannot be in format 4.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
+      exit(1);
     }
+
     format = ONE;
     tokvec_add(instr->vec, tk);
-    break;
-
-  case RSUB:
-    LOG_PANIC("Instruction has not been implemented\n");
-    tokvec_add(instr->vec, tk);
+    offset = format;
     break;
 
   case SHIFTL:
@@ -326,9 +341,9 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
               tk->location.e_row);
     }
 
-    //FIXME: This should check the following is a numeral
     tk = tokvec_get(tokens, i++);
     tokvec_add(instr->vec, tk);
+    offset = format;
     break;
 
   case SVC:
@@ -336,9 +351,58 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     break;
 
   case START:
+    format = ZERO;
+
+    if(id == NULL || id->type != ID) {
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] Missing program name before START directive.\n",
+              tk->location.s_col, tk->location.s_row, tk->location.e_col,
+              tk->location.e_row);
+      exit(1);
+    }
+
+    tokvec_add(instr->vec, id);
+    tokvec_add(instr->vec, tk);
+
+    check_next_token(i, tokens, "Missing value after START directive.\n");
+    tk = tokvec_get(tokens, i++);
+    token_check_null(tk);
+    tokvec_add(instr->vec, tk);
+
+    if(tk->type == NUM) {
+        *loc_ctr = strtol(tk->str, NULL, 0);
+    } else if(tk->type == HEX){
+        *loc_ctr = strtol(tk->str, NULL, 16);
+    } else if (tk->type == BIN){
+        *loc_ctr = strtol(tk->str, NULL, 2);
+    }else{
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] Missing value after START directive or the value is not a constant.\n",
+              tk->location.s_col, tk->location.s_row, tk->location.e_col,
+              tk->location.e_row);
+      exit(1);
+    }
+
+    offset = 0;
+    //TODO: Save the program name
+    break;
+
   case END:
     format = ZERO;
-    LOG_PANIC("Instruction has not been implemented\n");
+    tokvec_add(instr->vec, tk);
+
+    check_next_token(i, tokens, "Missing value after END directive.\n");
+    tk = tokvec_get(tokens, i++);
+    token_check_null(tk);
+
+    if (tk->type == NUM || tk->type == HEX || tk->type == BIN) {
+      //TODO: resolve and save this value
+    } else {
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] Missing value after END directive or the value is not a constant/symbol.\n",
+              tk->location.s_col, tk->location.s_row, tk->location.e_col,
+              tk->location.e_row);
+      exit(1);
+    }
+
+    offset = 0;
     break;
 
   case BYTE:
@@ -346,7 +410,59 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   case RESB:
   case RESW:
     format = ZERO;
-    LOG_PANIC("Instruction has not been implemented\n");
+
+    if(id == NULL || id->type != ID) {
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] Missing program label before RESB or RESW directive.\n",
+              tk->location.s_col, tk->location.s_row, tk->location.e_col,
+              tk->location.e_row);
+      exit(1);
+    }
+
+    tokvec_add(instr->vec, id);
+    tokvec_add(instr->vec, tk);
+
+    check_next_token(i, tokens, "Missing value after RESW or RESB directive.\n");
+    tk = tokvec_get(tokens, i++);
+    token_check_null(tk);
+
+    if(tk->type == RESB || tk->type == RESW) {
+        if(tk->type == NUM) {
+            offset = strtol(tk->str, NULL, 0);
+        } else if(tk->type == HEX){
+            offset = strtol(tk->str, NULL, 16);
+        } else if (tk->type == BIN){
+            offset = strtol(tk->str, NULL, 2);
+        }else{
+          LOG_ERR("[%ld:%ld]|[%ld:%ld] Missing value after START directive or the value is not a constant.\n",
+                  tk->location.s_col, tk->location.s_row, tk->location.e_col,
+                  tk->location.e_row);
+          exit(1);
+        }
+
+        if(tk->type == RESW){
+            offset = SICAS_WORD_SIZE * offset;
+        }
+    }else{
+        uint64_t num = 0;
+        if(tk->type == NUM) {
+            num = strtol(tk->str, NULL, 0);
+        } else if(tk->type == HEX){
+            num = strtol(tk->str, NULL, 16);
+        } else if (tk->type == BIN){
+            num = strtol(tk->str, NULL, 2);
+        }else if (tk->type == STRING) {
+          //FIXME: Take into account special characters.
+            while(tk->str[num++] != '\0');
+        } else{
+          LOG_ERR("[%ld:%ld]|[%ld:%ld] Missing value after memory directive or the value is not a constant.\n",
+                  tk->location.s_col, tk->location.s_row, tk->location.e_col,
+                  tk->location.e_row);
+          exit(1);
+        }
+        offset = long_log2(num)/(tk->type == WORD? SICAS_WORD_SIZE : SICAS_BYTE_SIZE);
+        offset = offset == 0? 1 : offset;
+    }
+
     break;
 
   default:
@@ -355,23 +471,29 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     LOG_PANIC("This token should not be here alone \n");
   }
 
+  if(id != NULL){
+    symtab_add_addr(sym, id->str, *loc_ctr);
+  }
+
   instr->format = format;
   instr->type = type;
-  //FIXME: Calc addr
-  instr->addr = 0;
+  instr->addr = *loc_ctr;
+  *loc_ctr += offset;
 
   instrvec_add(instrs, instr);
   *idx = i;
-  //FIXME: Maybe return instruction
+
   return i;
 }
 
 void parse_vector(TokenVector *vec, InstrVector *instrs, SymTable *sym) {
   long vec_size = vec->count;
   size_t i = 0;
+  uint64_t loc_ctr = 0;
+
   while(i < vec_size){
     //FIXME: Maybe return error idk something?
-    i = builder(vec, instrs, sym, &i);
+    i = builder(vec, instrs, sym, &i, &loc_ctr);
   }
 }
 
@@ -392,6 +514,19 @@ Instruction *instr_create() {
   instr->format = 0;
 
   return instr;
+}
+
+uint64_t long_log2(uint64_t num){
+  if(num == 0){
+    return 1;
+  }
+
+  uint64_t ctr = 0;
+  while(num > 0){
+    num = num >> 1;
+    ctr++;
+  }
+  return ctr;
 }
 
 void instrvec_init(InstrVector *v){
@@ -548,24 +683,26 @@ void symtab_free_destructive(SymTable *table){
   free(table->map);
 }
 
-void symtab_add_symbol(SymTable *table, char *symbol){
+uint8_t symtab_add_symbol(SymTable *table, char *symbol){
   size_t key = hash_func(symbol);
   size_t count = table->map[key].count;
 
   for(size_t i = 0; i < count; i++){
     if(strcmp(table->map[key].values[i].symbol, symbol) == 0){
-      return;
+      return table->map[key].values[i].set;
     }
   }
 
   table->map[key].values[count].symbol = symbol;
   table->map[key].values[count].addr = 0;
+  table->map[key].values[count].set = 0;
   table->map[key].count++;
   table->count++;
 
   if(table->map[key].count >= SYMTABLE_SIZE){
     LOG_PANIC("SYMTABLE has been completely filled.");
   }
+  return 0;
 }
 
 void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr){
@@ -581,6 +718,8 @@ void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr){
 
   table->map[key].values[count].symbol = symbol;
   table->map[key].values[count].addr = addr;
+  table->map[key].values[count].set = 1;
+
   table->map[key].count++;
   table->count++;
 

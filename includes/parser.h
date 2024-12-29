@@ -18,14 +18,21 @@
 #include "tokenizer.h"
 #endif
 
+// macros
+
 #define SYMTABLE_SIZE (size_t) 256
 #define SYMTABLE_INITIAL_CAPACITY (size_t) 256
 #define INSTRVEC_INITIAL_CAPACITY TOKVEC_INITIAL_CAPACITY
 #define INSTRVEC_RESIZE_MULTIPLIER TOKVEC_RESIZE_MULTIPLIER
 #define hash_func djb2_hash
+#define SICAS_WORD_SIZE 3
+#define SICAS_BYTE_SIZE 1
+// enums
 
 enum itype { MINSTR, DIRECTIVE, LABEL, CEXPR };
-enum ftype { ZERO, ONE, TWO, THREE, FOUR };
+enum ftype { ZERO = 0 , ONE = 1, TWO = 2 , THREE = 3, FOUR = 4};
+
+// structs
 
 typedef struct {
   enum itype type;
@@ -43,7 +50,8 @@ typedef struct {
 
 typedef struct {
   char* symbol;
-  int64_t addr;
+  uint64_t addr;
+  uint8_t set;
 } SymValue;
 
 typedef struct {
@@ -57,13 +65,18 @@ typedef struct {
   SymMap *map;
 } SymTable;
 
+// mfunc
+
 uint8_t parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx);
 uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, uint8_t float_instr);
-size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx);
+size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx, uint64_t *loc_ctr);
 void parse_vector(TokenVector *vec, InstrVector *instrs, SymTable *sym);
 Instruction* instr_create();
 
 size_t djb2_hash(char* key);
+uint64_t long_log2(uint64_t num);
+
+// ufunc
 
 void instrvec_init(InstrVector *v);
 void instrvec_free(InstrVector *v);
@@ -75,9 +88,11 @@ Instruction *instrvec_get(InstrVector *v, size_t idx);
 void symtab_init(SymTable *table);
 void symtab_free(SymTable *table);
 void symtab_free_destructive(SymTable *table);
-void symtab_add_symbol(SymTable *table, char *symbol);
+uint8_t symtab_add_symbol(SymTable *table, char *symbol);
 void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr);
 SymValue *symtab_get_symbol(SymTable *table, char *symbol);
+
+// debug
 
 #if (defined(PARSER_DEBUG_MODE) && defined(TOKENIZER_DEBUG_MODE)) || defined(DEBUG_MODE)
 void instruction_print(Instruction *instr);
