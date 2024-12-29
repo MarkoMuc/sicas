@@ -43,7 +43,7 @@ typedef struct {
 
 typedef struct {
   char* symbol;
-  uint64_t addr;
+  int64_t addr;
 } SymValue;
 
 typedef struct {
