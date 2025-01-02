@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
 
     parse_vector(&vec, &instrs, &symbols);
 #if (defined(PARSER_DEBUG_MODE) && defined(TOKENIZER_DEBUG_MODE))|| defined(DEBUG_MODE)
-    printf("Instructions[%08lx:%08lx]:\n", instrs.start_addr, instrs.end_addr);
+    printf("Instructions [%08lx:%08lx][%08lx]:\n", instrs.start_addr, instrs.end_addr, instrs.first_addr);
     for(size_t i = 0; i < instrs.count; i++){
       Instruction *instr = instrvec_get(&instrs, i);
       instruction_print(instr);

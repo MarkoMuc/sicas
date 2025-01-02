@@ -45,6 +45,7 @@ typedef struct {
 typedef struct {
   size_t count;
   size_t capacity;
+  uint64_t first_addr;
   uint64_t start_addr;
   uint64_t end_addr;
   Instruction **items;
