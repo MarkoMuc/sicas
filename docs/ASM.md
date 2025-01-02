@@ -47,3 +47,23 @@ Extra:
 ## Assembler Mnemonic
 
 - `A,B,X,...` -> Registers.
+
+## Structure assembled object code
+
+Object code consists of three main parts, the header, text record and end record.
+
+Header structure:
+    - Column 1: `H`.
+    - Column 2-7: Program name.
+    - Column 8-13: Starting address of object program (in hexadecimal).
+    - Column 14-19: Length of object program in bytes (in hexadecimal).
+
+Text record structure:
+    - Column 1: `T`.
+    - Column 2-7: Starting address for object code in this record (hexadecimal).
+    - Column 8-9: Length of object code in this record in bytes (hexadecimal).
+    - Column 10-69: Object code, represented in hexadecimal (2 columns per byte of object code).
+
+End record structure:
+    - Column 1: `E`.
+    - Column 2-7: Address of first executable instruction in object program (hexadecimal).

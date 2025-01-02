@@ -35,6 +35,11 @@
         - [Hash Functions.](https://www.cse.yorku.ca/~oz/hash.html)
     - [ ] Literals.
     - [ ] EQU and ORG.
+    - [ ] Catch duplicate/mispositioned END or START directives
+    - [ ] If no END starting address is the first executable instruction.
+- Assembler:
+    - `RESW` and `RESB` are not directly represented in the object code, instead a new line with offset address is written.
+    - [ ] Check size of instructions vector, has to be at least something inside that is not an directive.
 - [ ] Logger macros.
 - [ ] Testing system.
 - [ ] Characters/strings: Special characters, etc.
