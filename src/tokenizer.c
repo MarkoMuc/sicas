@@ -67,7 +67,7 @@ void fill(FILE *f, TokenVector *vec) {
           }
 
           if (fraction == 0) {
-            LOG_PANIC("[%ld, %ld]:[%ld, %ld] %s float missing fractional part.\n",
+            LOG_XERR("[%ld, %ld]:[%ld, %ld] %s float missing fractional part.\n",
                     s_row, s_col, row, col, str);
           }
 
@@ -92,13 +92,13 @@ void fill(FILE *f, TokenVector *vec) {
         } else {
           if (special == 2 && !(c >= '0' && c <= '9') &&
               !(c >= 'a' && c <= 'f')) {
-            LOG_PANIC("[%ld, %ld]:[%ld, %ld] %c is not a valid hex symbol.\n",
+            LOG_XERR("[%ld, %ld]:[%ld, %ld] %c is not a valid hex symbol.\n",
                     s_row, s_col, row, col, buffer[i]);
           } else if (special == 6 && !(c >= '0' && c <= '9') && !(c == '.')) {
-            LOG_PANIC("[%ld, %ld]:[%ld, %ld] %c is not a valid float symbol.\n",
+            LOG_XERR("[%ld, %ld]:[%ld, %ld] %c is not a valid float symbol.\n",
                     s_row, s_col, row, col, buffer[i]);
           } else if (special == 8 && !(c == '0' || c == '1')) {
-            LOG_PANIC("[%ld, %ld]:[%ld, %ld] %c is not a valid binary symbol.\n",
+            LOG_XERR("[%ld, %ld]:[%ld, %ld] %c is not a valid binary symbol.\n",
                     s_row, s_col, row, col, buffer[i]);
           }
 
@@ -111,7 +111,7 @@ void fill(FILE *f, TokenVector *vec) {
             fraction += 1;
             if (num_delimiter > 1) {
               str[idx] = '\0';
-              LOG_PANIC(
+              LOG_XERR(
                   "[%ld, %ld]:[%ld, %ld] %s float not in correct format, one "
                   "too many seperators.\n",
                   s_row, s_col, row, col, str);
@@ -183,10 +183,10 @@ void fill(FILE *f, TokenVector *vec) {
           }
 
           if (fraction == 0) {
-            LOG_PANIC("[%ld, %ld]:[%ld, %ld] %s float missing fractional part.\n",
+            LOG_XERR("[%ld, %ld]:[%ld, %ld] %s float missing fractional part.\n",
                     s_row, s_col, row, col, str);
           } else if (c == '.' && num_delimiter >= 1) {
-            LOG_PANIC("[%ld, %ld]:[%ld, %ld] %s float not in correct format, one "
+            LOG_XERR("[%ld, %ld]:[%ld, %ld] %s float not in correct format, one "
                     "too many seperators.\n",
                     s_row, s_col, row, col, str);
           }
@@ -229,7 +229,7 @@ void fill(FILE *f, TokenVector *vec) {
           }
 
           if (num_delimiter == -2 && (c != '0' && c != '1')) {
-            LOG_PANIC("[%ld, %ld]:[%ld, %ld] %c is not a valid binary symbol.\n",
+            LOG_XERR("[%ld, %ld]:[%ld, %ld] %c is not a valid binary symbol.\n",
                     s_row, s_col, row, col, buffer[i]);
           }
 
@@ -315,7 +315,7 @@ void fill(FILE *f, TokenVector *vec) {
       }
       default:
         if (!comment) {
-          LOG_PANIC("[%ld:%ld] %c is an illegal symbol.\n", row, col, buffer[i]);
+          LOG_XERR("[%ld:%ld] %c is an illegal symbol.\n", row, col, buffer[i]);
         }
         break;
       }
@@ -371,7 +371,7 @@ void tokvec_add(TokenVector *v, Token *el) {
   if (v->count >= v->capacity) {
     v->capacity *= TOKVEC_RESIZE_MULTIPLIER;
     v->items = realloc(v->items, sizeof(*v->items) * v->capacity);
-    
+
     if (!v->items) {
       LOG_PANIC("Error while expanding the token vector from %ld to %ld.\n", v->count,
               v->capacity);
