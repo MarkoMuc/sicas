@@ -62,6 +62,7 @@ uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, s
   switch(tk->type) {
     case LITERAL:
     literal_label:
+      LOG_PANIC("LITERALS not implemented yet.\n");
       tokvec_add(instr->vec, tk);
 
       check_next_token(i, tokens, "No constant following a literal.\n");
@@ -353,6 +354,13 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   case START:
     format = ZERO;
 
+    if(*loc_ctr != 0) {
+      LOG_ERR("[%ld:%ld]|[%ld:%ld] Duplicate START directive or START is not the first instruction.\n",
+              tk->location.s_col, tk->location.s_row, tk->location.e_col,
+              tk->location.e_row);
+      exit(1);
+    }
+
     if(id == NULL || id->type != ID) {
       LOG_ERR("[%ld:%ld]|[%ld:%ld] Missing program name before START directive.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
@@ -381,6 +389,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       exit(1);
     }
 
+    instrs->start_addr = *loc_ctr;
     offset = 0;
     //TODO: Save the program name
     break;
@@ -495,6 +504,7 @@ void parse_vector(TokenVector *vec, InstrVector *instrs, SymTable *sym) {
     //FIXME: Maybe return error idk something?
     i = builder(vec, instrs, sym, &i, &loc_ctr);
   }
+  instrs->end_addr = loc_ctr;
 }
 
 Instruction *instr_create() {
@@ -531,6 +541,8 @@ uint64_t long_log2(uint64_t num){
 
 void instrvec_init(InstrVector *v){
   v->count = 0;
+  v->start_addr = 0;
+  v->end_addr = 0;
   v->capacity = INSTRVEC_INITIAL_CAPACITY;
   v->items = malloc(sizeof(*(v->items)) * v->capacity);
 
@@ -776,7 +788,7 @@ void instruction_print(Instruction *instr) {
     default:
       printf("no ftype, ");
   }
-  printf("addr:%ld, ", instr->addr);
+  printf("addr:%08lx, ", instr->addr);
   printf("(");
   for (size_t i = 0; i < instr->vec->count; i++) {
     if(i > 0) {
@@ -800,7 +812,7 @@ void symtab_print(SymTable *table) {
       if(j > 0){
         printf(", ");
       }
-      printf("(%s, %ld)",table->map[i].values[j].symbol,  table->map[i].values[j].addr);
+      printf("(%s,%08lx)",table->map[i].values[j].symbol,  table->map[i].values[j].addr);
     }
     printf("\n");
   }
