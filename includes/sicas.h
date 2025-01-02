@@ -1,5 +1,5 @@
 #ifndef SICAS_PARSER
-#include "parser.h"
+#include "assembler.h"
 #endif
 
 #define SICAS_VERSION "0.0.2"

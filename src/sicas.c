@@ -55,6 +55,7 @@ int main(int argc, char **argv) {
     printf("Symbols:\n");
     symtab_print(&symbols);
 #endif
+    assemble_instructions(&instrs, &symbols, stdout);
 
     tokvec_free(&vec);
     symtab_free(&symbols);
