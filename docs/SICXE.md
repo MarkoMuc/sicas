@@ -122,12 +122,12 @@ There are two versions of SIC, one is the basic SIC the other one is known as SI
 - Two new relative addressing modes are available for use with instructions assembled using format 3.
 - The full table of addressing modes in SIC/XE is described in the following table.
 
-| Mode            | Indication | Target address calculation           |
-|-----------------|------------|--------------------------------------|
-| Direct          | x=0        | TA = address                         |
-| Indexed         | x=1        | TA = address + (X)                   |
-| Base relative   | b=1, p=0   | TA = (B) + disp; (0<=disp<=4095)     |
-| PC relative     | b=0, p=1   | TA = (PC) + disp; (-2048<=disp<=2047 |
+| Mode            | Indication | Target address calculation            |
+|-----------------|------------|---------------------------------------|
+| Direct          | x=0        | TA = address                          |
+| Indexed         | x=1        | TA = address + (X)                    |
+| Base relative   | b=1, p=0   | TA = (B) + disp; (0<=disp<=4095)      |
+| PC relative     | b=0, p=1   | TA = (PC) + disp; (-2048<=disp<=2047) |
 
 - For **Base relative addressing** the displacement field *disp* is interpreted as a 12-bit unsigned integer.
 - For **Program counter relative addressing** the displacement field *disp* is interpreted as a 12-bit signed integer in 2's complement.
