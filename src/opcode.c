@@ -66,6 +66,30 @@ uint8_t get_opcode(enum ttype operation){
     case TIXR: return 0xB8;
     case WD: return 0xDC;
   default:
-    LOG_PANIC("Invalid token\n");
+    LOG_PANIC("Invalid instruction.\n");
   }
+}
+
+uint8_t get_reg(char *reg){
+    if(!strcmp(reg, "A")){
+      return 0x0;
+    }else if(!strcmp(reg, "X")){
+      return 0x1;
+    }else if(!strcmp(reg, "L")){
+      return 0x2;
+    }else if(!strcmp(reg, "B")){
+      return 0x3;
+    }else if(!strcmp(reg, "S")){
+      return 0x4;
+    }else if(!strcmp(reg, "T")){
+      return 0x5;
+    }else if(!strcmp(reg, "F")){
+      return 0x6;
+    }else if(!strcmp(reg, "PC")){
+      return 0x8;
+    }else if(!strcmp(reg, "F")){
+      return 0x9;
+    }else{
+      LOG_PANIC("Invalid register.\n");
+    }
 }

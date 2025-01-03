@@ -174,7 +174,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   uint64_t offset = 0;
   Token *tk = tokvec_get(tokens, i++);
   enum ftype format = THREE;
-  enum itype type = MINSTR;
+  enum itype type = INSTR;
 
   token_check_null(tk);
 
@@ -338,6 +338,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
 
   case START:
     format = ZERO;
+    type = DIRECTIVE;
 
     if(*loc_ctr != 0) {
       LOG_XERR("[%ld:%ld]|[%ld:%ld] Duplicate START directive or START is not the first instruction.\n",
@@ -378,6 +379,8 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
 
   case END:
     format = ZERO;
+    type = DIRECTIVE;
+
     tokvec_add(instr->vec, tk);
     if(instrs->first_addr != 0) {
       LOG_XERR("[%ld:%ld]|[%ld:%ld] Duplicate START directive or START is not the first instruction.\n",
@@ -424,6 +427,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     token_check_null(tk);
 
     if(tk->type == RESB || tk->type == RESW) {
+        type = RMEM;
         if(tk->type == NUM) {
             offset = strtol(tk->str, NULL, 0);
         } else if(tk->type == HEX){
@@ -440,6 +444,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
             offset = SICAS_WORD_SIZE * offset;
         }
     }else{
+        type = IMEM;
         uint64_t num = 0;
         if(tk->type == NUM) {
             num = strtol(tk->str, NULL, 0);
@@ -748,14 +753,17 @@ SymValue *symtab_get_symbol(SymTable *table, char *symbol){
 #if (defined(PARSER_DEBUG_MODE) && defined(TOKENIZER_DEBUG_MODE)) || defined(DEBUG_MODE)
 void instruction_print(Instruction *instr) {
   switch(instr->type) {
-    case MINSTR:
-      printf("itype: MINSTR, ");
+    case INSTR:
+      printf("itype: INSTR, ");
+      break;
+    case IMEM:
+      printf("itype: IMEM, ");
+      break;
+    case RMEM:
+      printf("itype: RMEM, ");
       break;
     case DIRECTIVE:
       printf("itype: DIRECTIVE, ");
-      break;
-    case LABEL:
-      printf("itype: LABEL, ");
       break;
     default:
       printf("No itype, ");

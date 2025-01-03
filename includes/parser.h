@@ -29,7 +29,7 @@
 #define SICAS_BYTE_SIZE 1
 // enums
 
-enum itype { MINSTR, DIRECTIVE, LABEL, CEXPR };
+enum itype { INSTR, DIRECTIVE, RMEM, IMEM, CEXPR };
 enum ftype { ZERO = 0 , ONE = 1, TWO = 2 , THREE = 3, FOUR = 4};
 
 // structs
