@@ -23,9 +23,9 @@
 #include "tokenizer.h"
 #endif
 
-#ifndef SICAS_OPCODE
-#define SICAS_OPCODE
-#include "opcode.h"
+#ifndef SICAS_MNEMONIC
+#define SICAS_MNEMONIC
+#include "mnemonic.h"
 #endif
 
 

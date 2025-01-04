@@ -1,8 +1,6 @@
 #ifndef SICAS_ASSEMBLER
 #define SICAS_ASSEMBLER
 #include "../includes/assembler.h"
-#include "opcode.c"
-#include <stdio.h>
 #endif
 
 void assemble_instructions(InstrVector *instrs, SymTable *sym, FILE *output){
@@ -50,17 +48,17 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
 
     }else if(instr->type == INSTR){
       Token *tk = tokvec_get(instr->vec, 0);
-      uint8_t opcode = get_opcode(tk->type);
+      uint8_t opcode = mnemonic_get_opcode(tk->type);
 
       if(instr->format == TWO) {
         sprintf(body + b_idx, "%02xl", opcode);
         b_idx = b_idx + 2;
 
         tk = tokvec_get(instr->vec, 1);
-        uint8_t reg1 = get_reg(tk->str);
+        uint8_t reg1 = mnemonic_get_reg(tk->str);
 
         tk = tokvec_get(instr->vec, 2);
-        uint8_t reg2 = get_reg(tk->str);
+        uint8_t reg2 = mnemonic_get_reg(tk->str);
 
         sprintf(body + b_idx, "%01x%01x", reg1, reg2);
         b_idx = b_idx + 2;

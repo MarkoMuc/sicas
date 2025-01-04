@@ -15,7 +15,7 @@ Regs* parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx) {
   Token *tk = tokvec_get(tokens, i++);
 
   if (tk->type == REGISTER) {
-    regs->reg1 = get_reg(tk->str);
+    regs->reg1 = mnemonic_get_reg(tk->str);
     check_next_token(i, tokens, "Missing separating comma for instruction of format 2.\n");
     tk = tokvec_get(tokens, i++);
 
@@ -29,7 +29,7 @@ Regs* parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx) {
     tk = tokvec_get(tokens, i++);
 
     if (tk->type == REGISTER) {
-      regs->reg2 = get_reg(tk->str);
+      regs->reg2 = mnemonic_get_reg(tk->str);
     } else {
       Token *s_tk = tokvec_get(tokens, i - 4);
       LOG_XERR("[%ld:%ld]|[%ld:%ld] Instruction of type 2 is missing a register as second argument.\n",

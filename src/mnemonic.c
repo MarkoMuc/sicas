@@ -1,11 +1,10 @@
-#ifndef SICAS_OPCODE
-#define SICAS_OPCODE
-#include "../includes/opcode.h"
+#ifndef SICAS_MNEMONIC
+#define SICAS_MNEMONIC
+#include "../includes/mnemonic.h"
 #endif
 
-uint8_t get_opcode(enum ttype operation){
+uint8_t mnemonic_get_opcode(enum ttype operation){
   switch (operation) {
-  // -- CPU Instructions
     case ADD: return 0x18;
     case ADDF: return 0x58;
     case ADDR: return 0x90;
@@ -70,7 +69,7 @@ uint8_t get_opcode(enum ttype operation){
   }
 }
 
-uint8_t get_reg(char *reg){
+uint8_t mnemonic_get_reg(char *reg){
     if(!strcmp(reg, "A")){
       return 0x0;
     }else if(!strcmp(reg, "X")){
