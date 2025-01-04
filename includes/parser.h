@@ -23,6 +23,12 @@
 #include "tokenizer.h"
 #endif
 
+#ifndef SICAS_OPCODE
+#define SICAS_OPCODE
+#include "opcode.h"
+#endif
+
+
 // macros
 
 #define SYMTABLE_SIZE (size_t) 256
@@ -104,6 +110,7 @@ Instruction* instr_create();
 
 size_t djb2_hash(char* key);
 uint64_t long_log2(uint64_t num);
+uint64_t token_to_long(Token *tk);
 
 // ufunc
 

@@ -1,7 +1,6 @@
 #ifndef SICAS_PARSER
 #define SICAS_PARSER
 #include "../includes/parser.h"
-#include "assembler.c"
 #endif
 
 Regs* parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx) {
@@ -370,6 +369,12 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     format = ZERO;
     type = DIRECTIVE;
 
+    instr->instr = malloc(sizeof(Directive));
+
+    if(!instr->instr){
+      LOG_PANIC("Failed to malloc directive.\n");
+    }
+
     if(*loc_ctr != 0) {
       LOG_XERR("[%ld:%ld]|[%ld:%ld] Duplicate START directive or START is not the first instruction.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
@@ -378,17 +383,15 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
 
     if(id == NULL || id->type != ID) {
       LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing program name before START directive.\n",
-              tk->location.s_col, tk->location.s_row, tk->location.e_col,
-              tk->location.e_row);
+              tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
     }
 
-    tokvec_add(instr->vec, id);
-    tokvec_add(instr->vec, tk);
+    ((Directive*)instr->instr)->tk = id;
+    ((Directive*)instr->instr)->directive = tk->type;
 
     check_next_token(i, tokens, "Missing value after START directive.\n");
     tk = tokvec_get(tokens, i++);
     token_check_null(tk);
-    tokvec_add(instr->vec, tk);
 
     if(tk->type == NUM) {
         *loc_ctr = strtol(tk->str, NULL, 0);
@@ -398,40 +401,42 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
         *loc_ctr = strtol(tk->str, NULL, 2);
     }else{
       LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing value after START directive or the value is not a constant.\n",
-              tk->location.s_col, tk->location.s_row, tk->location.e_col,
-              tk->location.e_row);
+              tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
     }
 
     instrs->start_addr = *loc_ctr;
     offset = 0;
-    //TODO: Save the program name
     break;
 
   case END:
     format = ZERO;
     type = DIRECTIVE;
 
-    tokvec_add(instr->vec, tk);
+    instr->instr = malloc(sizeof(Directive));
+
+    if(!instr->instr){
+      LOG_PANIC("Failed to malloc directive.\n");
+    }
+
     if(instrs->first_addr != 0) {
       LOG_XERR("[%ld:%ld]|[%ld:%ld] Duplicate START directive or START is not the first instruction.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col,
               tk->location.e_row);
     }
 
+    ((Directive*)instr->instr)->directive = tk->type;
+
     check_next_token(i, tokens, "Missing value after END directive.\n");
     tk = tokvec_get(tokens, i++);
     token_check_null(tk);
 
-    if (tk->type == NUM){
-        instrs->first_addr = strtol(tk->str, NULL, 0);
-    } else if(tk->type == HEX){
-        instrs->first_addr = strtol(tk->str, NULL, 16);
-    } else if (tk->type == BIN){
-        instrs->first_addr = strtol(tk->str, NULL, 2);
-    } else {
+    ((Directive*)instr->instr)->tk = tk;
+
+    if (tk->type == NUM || tk->type == HEX || tk->type == BIN ){
+        instrs->first_addr = token_to_long(tk);
+    } else if (tk->type != ID){
       LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing value after END directive or the value is not a constant/symbol.\n",
-              tk->location.s_col, tk->location.s_row, tk->location.e_col,
-              tk->location.e_row);
+              tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
     }
 
     offset = 0;
@@ -544,6 +549,21 @@ Instruction *instr_create() {
   instr->instr = NULL;
 
   return instr;
+}
+
+uint64_t token_to_long(Token *tk){
+  uint64_t res = 0;
+  if (tk->type == NUM){
+      res = strtol(tk->str, NULL, 0);
+  } else if(tk->type == HEX){
+      res = strtol(tk->str, NULL, 16);
+  } else if (tk->type == BIN){
+      res = strtol(tk->str, NULL, 2);
+  } else {
+    LOG_PANIC("Passing non integer type token.\n");
+  }
+
+  return res;
 }
 
 uint64_t long_log2(uint64_t num){
