@@ -8,6 +8,11 @@
 #include <string.h>
 #endif
 
+#ifndef STD_BOOL
+#define STD_BOOL
+#include "stdbool.h"
+#endif
+
 #ifndef SICAS_LOGGER
 #define SICAS_LOGGER
 #include "logger.h"
@@ -31,15 +36,36 @@
 
 enum itype { INSTR, DIRECTIVE, RMEM, IMEM, CEXPR };
 enum ftype { ZERO = 0 , ONE = 1, TWO = 2 , THREE = 3, FOUR = 4};
+enum mtype { SIM, IMM, IND};
 
 // structs
 
 typedef struct {
+  uint8_t reg1;
+  uint8_t reg2;
+} Regs;
+
+typedef struct {
+  enum mtype mem_type;
+  bool indexed;
+  Token *tk;
+} Mem;
+
+typedef struct {
+  enum ttype directive;
+  Token *tk;
+} Directive;
+
+typedef struct {
+  enum ttype op;
+  void *oper;
+} MInstr;
+
+typedef struct {
   enum itype type;
   enum ftype format;
-  int opcode;
   uint64_t addr;
-  TokenVector *vec;
+  void *instr;
 } Instruction;
 
 typedef struct {
@@ -70,8 +96,8 @@ typedef struct {
 
 // mfunc
 
-uint8_t parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx);
-uint8_t parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, uint8_t float_instr);
+Regs* parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx);
+Mem* parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, uint8_t float_instr);
 size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx, uint64_t *loc_ctr);
 void parse_vector(TokenVector *vec, InstrVector *instrs, SymTable *sym);
 Instruction* instr_create();
