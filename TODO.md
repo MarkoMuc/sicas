@@ -43,6 +43,7 @@
 - [ ] Logger macros.
 - [ ] Testing system.
 - [ ] Characters/strings: Special characters, etc.
+- [ ] Make sure I'm saving labels correctly.
 
 ## Quality of life changes and expansion
 

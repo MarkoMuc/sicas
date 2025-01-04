@@ -444,9 +444,55 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
 
   case BYTE:
   case WORD:
+    format = ZERO;
+    type = IMEM;
+
+    instr->instr = malloc(sizeof(InitMemory));
+
+    if(!instr->instr){
+      LOG_PANIC("Failed to malloc initialized memory.\n");
+    }
+
+    ((InitMemory*)instr->instr)->type = tk->type;
+
+    if(id == NULL || id->type != ID) {
+      LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing program label before BYTE or WORD directive.\n",
+              tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
+    }
+
+    check_next_token(i, tokens, "Missing value after BYTE or WORD directive.\n");
+
+    uint64_t res_bytes = 0;
+    if (tk->type == NUM || tk->type == HEX || tk->type == BIN ){
+        res_bytes = token_to_long(tk);
+    } else if (tk->type == STRING) {
+      //FIXME: Take into account special characters.
+        while(tk->str[res_bytes++] != '\0');
+    } else{
+      LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing value after memory directive or the value is not a constant.\n",
+              tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
+    }
+    offset = long_log2(res_bytes)/(((InitMemory*)instr->instr)->type == WORD? SICAS_WORD_SIZE : SICAS_BYTE_SIZE);
+    offset = offset == 0? 1 : offset;
+
+    ((InitMemory*)instr->instr)->start_addr = *loc_ctr;
+    ((InitMemory*)instr->instr)->reserved = offset;
+    ((InitMemory*)instr->instr)->tk = tk;
+
+    break;
+
   case RESB:
   case RESW:
     format = ZERO;
+    type = RMEM;
+
+    instr->instr = malloc(sizeof(ResMemory));
+
+    if(!instr->instr){
+      LOG_PANIC("Failed to malloc reserved memory.\n");
+    }
+
+    ((ResMemory*)instr->instr)->type = tk->type;
 
     if(id == NULL || id->type != ID) {
       LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing program label before RESB or RESW directive.\n",
@@ -454,48 +500,23 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
               tk->location.e_row);
     }
 
-    tokvec_add(instr->vec, id);
-    tokvec_add(instr->vec, tk);
-
     check_next_token(i, tokens, "Missing value after RESW or RESB directive.\n");
     tk = tokvec_get(tokens, i++);
     token_check_null(tk);
 
-    if(tk->type == RESB || tk->type == RESW) {
-        type = RMEM;
-        if(tk->type == NUM) {
-            offset = strtol(tk->str, NULL, 0);
-        } else if(tk->type == HEX){
-            offset = strtol(tk->str, NULL, 16);
-        } else if (tk->type == BIN){
-            offset = strtol(tk->str, NULL, 2);
-        }else{
-          LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing value after memory directive or the value is not a constant.\n",
-                  tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
-        }
-
-        if(tk->type == RESW){
-            offset = SICAS_WORD_SIZE * offset;
-        }
-    }else{
-        type = IMEM;
-        uint64_t num = 0;
-        if(tk->type == NUM) {
-            num = strtol(tk->str, NULL, 0);
-        } else if(tk->type == HEX){
-            num = strtol(tk->str, NULL, 16);
-        } else if (tk->type == BIN){
-            num = strtol(tk->str, NULL, 2);
-        }else if (tk->type == STRING) {
-          //FIXME: Take into account special characters.
-            while(tk->str[num++] != '\0');
-        } else{
-          LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing value after memory directive or the value is not a constant.\n",
-                  tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
-        }
-        offset = long_log2(num)/(tk->type == WORD? SICAS_WORD_SIZE : SICAS_BYTE_SIZE);
-        offset = offset == 0? 1 : offset;
+    if (tk->type == NUM || tk->type == HEX || tk->type == BIN ){
+        offset = token_to_long(tk);
+    } else{
+      LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing value after memory directive or the value is not a constant.\n",
+              tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
     }
+
+    if(tk->type == RESW){
+        offset = SICAS_WORD_SIZE * offset;
+    }
+
+    ((ResMemory*)instr->instr)->start_addr = *loc_ctr;
+    ((ResMemory*)instr->instr)->reserved = offset;
 
     break;
 
@@ -877,10 +898,19 @@ void instruction_print(Instruction *instr) {
       }
       break;
     }
-    case IMEM:
+    case IMEM:{
+      InitMemory *m = instr->instr;
+      token_type_print(m->type);
+      printf(" %08lx + %08lx", m->start_addr, m->reserved);
+      token_print(*m->tk);
       break;
-    case RMEM:
+    }
+    case RMEM:{
+      ResMemory *m = instr->instr;
+      token_type_print(m->type);
+      printf(" %08lx -> %08lx (%08lx)", m->start_addr, m->start_addr + m->reserved, m->reserved);
       break;
+    }
     default:
       printf("ERROR, ");
   }

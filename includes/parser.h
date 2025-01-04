@@ -58,6 +58,21 @@ typedef struct {
 } Mem;
 
 typedef struct {
+  //FIXME: This field might not be needed
+  enum ttype type;
+  uint64_t start_addr;
+  uint64_t reserved;
+  Token *tk;
+} InitMemory;
+
+typedef struct {
+  //FIXME: This field might not be needed
+  enum ttype type;
+  uint64_t start_addr;
+  uint64_t reserved;
+} ResMemory;
+
+typedef struct {
   enum ttype directive;
   Token *tk;
 } Directive;
