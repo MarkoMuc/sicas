@@ -64,8 +64,34 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
   token_check_null(tk);
 
   switch(tk->type) {
+    case HASH:
+    case AT:
+      mem->mem_type = IND;
+
+      if(tk->type == HASH){
+        mem->mem_type = IMM;
+      }
+
+      check_next_token(i, tokens, "Missing operand for indirect or immediate addressing.\n");
+      tk = tokvec_get(tokens, i++);
+      token_check_null(tk);
+
+      indexing_illegal = true;
+      if(tk->type == ID || tk->type == NUM || tk->type == HEX || tk->type == BIN || tk->type == STRING){
+        mem->tk = tk;
+        if(tk->type == ID){
+          symtab_add_symbol(sym, tk->str);
+        }
+        break;
+      } else if(tk->type != LITERAL){
+        Token *s_tk = tokvec_get(tokens, i-2);
+        token_check_null(s_tk);
+        LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing identifier or constant after indirect or immediate addressing.\n",
+                s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
+                tk->location.e_row);
+      }
+      // If there is a literal, go forward.
     case LITERAL:
-    literal_label:
       LOG_PANIC("LITERALS not implemented yet.\n");
       //tokvec_add(instr->vec, tk);
 
@@ -92,36 +118,6 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
                 s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
                 tk->location.e_row);
       }
-      break;
-
-    case HASH:
-    case AT:
-      mem->mem_type = IND;
-
-      if(tk->type == HASH){
-        mem->mem_type = IMM;
-      }
-
-      check_next_token(i, tokens, "Missing operand for indirect or immediate addressing.\n");
-      tk = tokvec_get(tokens, i++);
-      token_check_null(tk);
-
-      indexing_illegal = true;
-      if(tk->type == ID || tk->type == NUM || tk->type == HEX || tk->type == BIN || tk->type == STRING){
-        mem->tk = tk;
-        if(tk->type == ID){
-          symtab_add_symbol(sym, tk->str);
-        }
-      } else if(tk->type == LITERAL){
-        goto literal_label;
-      } else {
-        Token *s_tk = tokvec_get(tokens, i-2);
-        token_check_null(s_tk);
-        LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing identifier or constant after indirect or immediate addressing.\n",
-                s_tk->location.s_col, s_tk->location.s_row, tk->location.e_col,
-                tk->location.e_row);
-      }
-
       break;
 
     case ID:
