@@ -461,6 +461,8 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     }
 
     check_next_token(i, tokens, "Missing value after BYTE or WORD directive.\n");
+    tk = tokvec_get(tokens, i++);
+    token_check_null(tk);
 
     uint64_t res_bytes = 0;
     if (tk->type == NUM || tk->type == HEX || tk->type == BIN ){
@@ -469,7 +471,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       //FIXME: Take into account special characters.
         while(tk->str[res_bytes++] != '\0');
     } else{
-      LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing value after memory directive or the value is not a constant.\n",
+      LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing value after WORD/BYTE or the value is not a constant.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
     }
     offset = long_log2(res_bytes)/(((InitMemory*)instr->instr)->type == WORD? SICAS_WORD_SIZE : SICAS_BYTE_SIZE);
@@ -507,7 +509,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     if (tk->type == NUM || tk->type == HEX || tk->type == BIN ){
         offset = token_to_long(tk);
     } else{
-      LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing value after memory directive or the value is not a constant.\n",
+      LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing value after RESW / RESB or the value is not a constant.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
     }
 
@@ -841,7 +843,7 @@ SymValue *symtab_get_symbol(SymTable *table, char *symbol){
 void instruction_print(Instruction *instr) {
   switch(instr->type) {
     case INSTR:
-      printf("itype: INSTR, ");
+      printf("[INSTR, ");
       break;
     case IMEM:
       printf("itype: IMEM, ");
@@ -901,14 +903,14 @@ void instruction_print(Instruction *instr) {
     case IMEM:{
       InitMemory *m = instr->instr;
       token_type_print(m->type);
-      printf(" %08lx + %08lx", m->start_addr, m->reserved);
+      printf(" %08lx + %08lx ", m->start_addr, m->reserved);
       token_print(*m->tk);
       break;
     }
     case RMEM:{
       ResMemory *m = instr->instr;
       token_type_print(m->type);
-      printf(" %08lx -> %08lx (%08lx)", m->start_addr, m->start_addr + m->reserved, m->reserved);
+      printf(" [%08lx->%08lx] %08lx", m->start_addr, m->start_addr + m->reserved, m->reserved);
       break;
     }
     default:
