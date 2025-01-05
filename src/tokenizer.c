@@ -455,9 +455,17 @@ Token gen_token(char *str, Location loc) {
     } else {
       not_keyword = 1;
     }
-  } else if (!strcmp(str, "b")) {
-    typ = REGISTER;
-    token.str = str;
+  } else if (!strncmp(str, "b", 1)) {
+    if (!strcmp(str, "base")) {
+      typ = BASE;
+    } else if (!strcmp(str, "byte")) {
+      typ = BYTE;
+    } else if (!strcmp(str, "b")) {
+      typ = REGISTER;
+      token.str = str;
+    }else{
+      not_keyword = 1;
+    }
   } else if (!strncmp(str, "c", 1)) {
     if (!strcmp(str, "clear")) {
       typ = CLEAR;
@@ -626,17 +634,19 @@ Token gen_token(char *str, Location loc) {
     } else {
       not_keyword = 1;
     }
-  } else if (!strcmp(str, "wd")) {
-    typ = WD;
+  } else if (!strncmp(str, "w", 1)) {
+    if (!strcmp(str, "wd")) {
+      typ = WD;
+    } else if (!strcmp(str, "word")) {
+      typ = WORD;
+    } else {
+      not_keyword = 1;
+    }
   } else if (!strcmp(str, "x")) {
     typ = REGISTER;
     token.str = str;
   } else if (!strcmp(str, "end")) {
     typ = END;
-  } else if (!strcmp(str, "byte")) {
-    typ = BYTE;
-  } else if (!strcmp(str, "word")) {
-    typ = WORD;
   } else {
     not_keyword = 1;
   }
@@ -868,6 +878,9 @@ void token_type_print(enum ttype tk_type){
     break;
   case END:
     printf("END");
+    break;
+  case BASE:
+    printf("BASE");
     break;
   case BYTE:
     printf("BYTE");

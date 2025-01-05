@@ -87,6 +87,7 @@ enum ttype {
   // -- ASSEMBLER DIRECTIVES
   START,
   END,
+  BASE,
   BYTE,
   WORD,
   RESB,

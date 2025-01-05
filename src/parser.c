@@ -442,6 +442,36 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     offset = 0;
     break;
 
+  case BASE:
+    format = ZERO;
+    type = DIRECTIVE;
+
+    instr->instr = malloc(sizeof(Directive));
+
+    if(!instr->instr){
+      LOG_PANIC("Failed to malloc directive.\n");
+    }
+
+    ((Directive*)instr->instr)->directive = tk->type;
+
+    check_next_token(i, tokens, "Missing value after BASE directive.\n");
+    tk = tokvec_get(tokens, i++);
+    token_check_null(tk);
+
+    if(tk->type == NUM || tk->type == HEX || tk->type == BIN || tk->type == ID) {
+      if(tk->type == ID){
+        symtab_add_symbol(sym, tk->str);
+      }
+    }else{
+      LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing value after BASE directive or the value is not a constant or symbol.\n",
+              tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
+    }
+
+    ((Directive*)instr->instr)->tk = tk;
+
+    offset = 0;
+    break;
+
   case BYTE:
   case WORD:
     format = ZERO;
