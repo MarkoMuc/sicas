@@ -28,7 +28,6 @@
 #include "mnemonic.h"
 #endif
 
-
 // macros
 
 #define SYMTABLE_SIZE (size_t) 256

@@ -549,13 +549,16 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     break;
 
   default:
+    LOG_ERR("This token should not be here alone.\n");
     if(id){
       token_print(*id);
+      printf(" ");
+      token_print(*tk);
     }else{
       token_print(*tk);
     }
     printf("\n");
-    LOG_XERR("This token should not be here alone \n");
+    exit(1);
   }
 
   if(id){
@@ -909,6 +912,10 @@ void instruction_print(Instruction *instr) {
     case DIRECTIVE:{
       Directive *d = instr->instr;
       token_type_print(d->directive);
+      printf(" ");
+      if(d->tk){
+        token_print(*d->tk);
+      }
       break;
     }
     case INSTR:{
