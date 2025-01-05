@@ -843,7 +843,7 @@ SymValue *symtab_get_symbol(SymTable *table, char *symbol){
 void instruction_print(Instruction *instr) {
   switch(instr->type) {
     case INSTR:
-      printf("[INSTR, ");
+      printf("itype: INSTR, ");
       break;
     case IMEM:
       printf("itype: IMEM, ");

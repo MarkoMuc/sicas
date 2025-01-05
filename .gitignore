@@ -7,3 +7,4 @@ test/out/
 test/test-cases/
 
 run-tmux.sh
+TODO.md
