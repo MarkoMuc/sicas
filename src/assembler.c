@@ -63,10 +63,10 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
       if(instr->format == TWO) {
         Regs *regs = (Regs *)operation->oper;
         byte_rep[INSTR_B2] = regs->reg1 << 4 | regs->reg2;
-      }else if(instr->format == THREE){
+      }else if(instr->format == THREE || instr->format == FOUR){
         Mem *mem = (Mem *)operation->oper;
         uint8_t bit_flags = NI_SICXE_BITS;
-        uint32_t sym_addr = 0;
+        uint32_t disp_val = 0;
 
         if(mem->tk->type == ID) {
           SymValue *val = symtab_get_symbol(sym, mem->tk->str);
@@ -79,9 +79,9 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
             LOG_XERR("Symbol %s has not been defined yet.", mem->tk->str);
           }
 
-          sym_addr = val->addr;
+          disp_val = val->addr;
         }else {
-          sym_addr = token_to_long(mem->tk);
+          disp_val = token_to_long(mem->tk);
         }
 
         if(mem->mem_type == IMM) {
@@ -93,34 +93,52 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
         //TODO: Do i need to switch by 2?
         byte_rep[INSTR_B1] = (byte_rep[INSTR_B1] << 2) | bit_flags;
 
+        // Set indexed bit and shift flag for bp flags
         bit_flags = (mem->indexed ? INDEX_BIT : BIT_OFF) << 2;
-        int32_t diff = pc_reg - sym_addr;
 
-        if((diff < 0 && diff >= -2048) || (diff >= 0 && diff <= 2047)){
-          bit_flags = (bit_flags | PC_REL_BITS) << 1; 
-        }else {
-          if (diff > 0 && diff <= 4095){
-            diff = base_reg - sym_addr;
-            bit_flags = (bit_flags | BASE_REL_BITS) << 1; 
-          } else{
-            LOG_XERR("Instruction cannot be used with PC or BASE register addressing.\n");
+        if(instr->format == THREE) {
+          int32_t diff = pc_reg - disp_val;
+
+          if((diff < 0 && diff >= -2048) || (diff >= 0 && diff <= 2047)){
+            bit_flags = (bit_flags | PC_REL_BITS) << 1; 
+          }else {
+            if (diff > 0 && diff <= 4095){
+              diff = base_reg - disp_val;
+              bit_flags = (bit_flags | BASE_REL_BITS) << 1; 
+            } else{
+              LOG_XERR("Instruction cannot be used with PC or BASE register addressing.\n");
+            }
           }
+
+          bit_flags = (bit_flags | BIT_OFF) << 4;
+
+          // Use the upper 4 bytes and make sure to zero out all other values.
+          // FIXME: check if this correctly works with two's complement.
+          bit_flags = bit_flags | ((diff >> 8) & ((uint8_t)0xF));
+          byte_rep[INSTR_B2] = bit_flags;
+
+          // Only use the lower 8 bytes
+          diff = ((uint8_t)0xFF) & diff;
+          byte_rep[INSTR_B3] = diff;
+        } else {
+          //FIXME: Make sure how format four works.
+          if(disp_val > ((uint32_t)0xFFFFF)) {
+              LOG_XERR("Displacement too large for format four.\n");
+          }
+
+          // BP flags are already zeroed out
+          bit_flags = bit_flags << 1;
+
+          // Set format field
+          bit_flags = (bit_flags | FORMAT_BIT) << 4;
+
+          bit_flags = bit_flags | ((disp_val >> 16) & ((uint8_t) 0xFF));
+          byte_rep[INSTR_B2] = bit_flags;
+
+          byte_rep[INSTR_B3] = (disp_val >> 8) & ((uint8_t)0xFF);
+          byte_rep[INSTR_B4] = disp_val & ((uint8_t)0xFF);
         }
-        bit_flags = (bit_flags | BIT_OFF) << 4;
-
-        // Use the upper 4 bytes and make sure to zero out all other values.
-        // FIXME: check if this correctly works with two's complement
-        bit_flags = bit_flags | ((diff >> 8) & (0x1 << 4));
-        byte_rep[INSTR_B2] = bit_flags;
-
-        // Only use the lower 8 bytes
-        diff = (0x1 << 8) & diff;
-        byte_rep[INSTR_B3] = diff;
-
-      }else if(instr->format == FOUR){
-        //bp == 0
       }
-
     }
 
   }
