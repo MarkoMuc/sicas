@@ -1,7 +1,6 @@
 #ifndef SICAS_ASSEMBLER
 #define SICAS_ASSEMBLER
 #include "../includes/assembler.h"
-#include "parser.c"
 #endif
 
 void assemble_instructions(InstrVector *instrs, SymTable *sym, FILE *output){
@@ -28,14 +27,14 @@ void assemble_header(InstrVector *instrs, SymTable *sym, FILE *output){
 void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
   uint8_t *body = malloc(sizeof(*body) * (ASSEMBLER_BODY_LINE + 1));
   size_t instr_count = instrs->count;
- // size_t b_idx = 0;
+  size_t b_idx = 0;
   uint64_t start_addr = 0;
   uint32_t pc_reg = 0;
   uint32_t base_reg = 0;
   //bool reserved = false;
   //bool endline = false;
 
-  if(body) {
+  if(!body) {
     LOG_PANIC("Failed to allocate memory for a string.");
   }
 
@@ -160,6 +159,15 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
           byte_rep[INSTR_B4] = disp_val & ((uint8_t)0xFF);
         }
       }
+
+      carry_bits = instr->format - instr_to_text(body, byte_rep, &b_idx, instr->format, 0);
+
+      if(carry_bits) {
+        output_text(output, body, &b_idx, &start_addr, pc_reg - (instr->format - carry_bits));
+        instr_to_text(body, byte_rep, &b_idx, carry_bits, instr->format - carry_bits);
+      }
+
+      i++;
     }
 
   }
@@ -169,4 +177,26 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
 
 void assemble_end(InstrVector *instrs, SymTable *sym, FILE *output){
   fprintf(output, "E%06lx\n", instrs->end_addr);
+}
+
+void output_text(FILE* output, uint8_t *body, size_t *b_idx, uint64_t *start_addr, uint32_t pc_reg){
+  body[*b_idx] = '\0';
+  fprintf(output, "T%06lx%02lx%s\n", *start_addr, pc_reg - *start_addr, body);
+  *start_addr = pc_reg;
+  *b_idx = 0;
+}
+
+uint8_t nibble_to_hex(uint8_t nibble) {
+  return nibble + (nibble < 10 ? '0':('A' - 10));
+}
+
+uint8_t instr_to_text(uint8_t *body, uint8_t *array, size_t *b_idx, uint8_t size, uint8_t start) {
+  while(size && (*b_idx) + 1 < ASSEMBLER_BODY_LINE + 1) {
+    body[(*b_idx) + 1] = nibble_to_hex(array[start] >> 4);
+    body[(*b_idx) + 1] = nibble_to_hex(array[start] & ((uint8_t)0xF0));
+    start++;
+    size--;
+  }
+
+  return size;
 }
