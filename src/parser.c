@@ -389,12 +389,8 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     tk = tokvec_get(tokens, i++);
     token_check_null(tk);
 
-    if(tk->type == NUM) {
-        *loc_ctr = strtol(tk->str, NULL, 0);
-    } else if(tk->type == HEX){
-        *loc_ctr = strtol(tk->str, NULL, 16);
-    } else if (tk->type == BIN){
-        *loc_ctr = strtol(tk->str, NULL, 2);
+    if(tk->type == NUM || tk->type == HEX || tk->type == BIN) {
+        *loc_ctr = token_to_long(tk);
     }else{
       LOG_XERR("[%ld:%ld]|[%ld:%ld] Missing value after START directive or the value is not a constant.\n",
               tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
