@@ -1,6 +1,7 @@
 #ifndef SICAS_ASSEMBLER
 #define SICAS_ASSEMBLER
 #include "../includes/assembler.h"
+#include "parser.c"
 #endif
 
 void assemble_instructions(InstrVector *instrs, SymTable *sym, FILE *output){
@@ -52,6 +53,26 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
   while(i < instr_count) {
     if(instr->type == DIRECTIVE) {
       //TODO: set base register
+      Directive *d = (Directive *)instr->instr;
+
+      if(d->directive == BASE) {
+        enum ttype type = d->tk->type;
+        if(type == ID) {
+          SymValue *val = symtab_get_symbol(sym, d->tk->str);
+
+          if(!val){
+            LOG_XERR("Symbol %s has not been defined yet.", d->tk->str);
+          }
+
+          if(val->set == false) {
+            LOG_XERR("Symbol %s has not been defined yet.", d->tk->str);
+          }
+          base_reg = val->addr;
+        } else {
+          base_reg = token_to_long(d->tk);
+        }
+      }
+
       continue;
     }
 
@@ -113,7 +134,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
           bit_flags = (bit_flags | BIT_OFF) << 4;
 
           // Use the upper 4 bytes and make sure to zero out all other values.
-          // FIXME: check if this correctly works with two's complement.
+          // TODO: check if this correctly works with two's complement.
           bit_flags = bit_flags | ((diff >> 8) & ((uint8_t)0xF));
           byte_rep[INSTR_B2] = bit_flags;
 
@@ -121,7 +142,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
           diff = ((uint8_t)0xFF) & diff;
           byte_rep[INSTR_B3] = diff;
         } else {
-          //FIXME: Make sure how format four works.
+          //TODO: Make sure how format four works.
           if(disp_val > ((uint32_t)0xFFFFF)) {
               LOG_XERR("Displacement too large for format four.\n");
           }
