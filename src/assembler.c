@@ -3,36 +3,36 @@
 #include "../includes/assembler.h"
 #endif
 
-void assemble_instructions(InstrVector *instrs, SymTable *sym, FILE *output){
+void assemble_instructions(InstrVector *instrs, SymTable *sym, FILE *output) {
   assemble_header(instrs, sym, output);
- // assemble_body(instrs, sym, output);
+  assemble_body(instrs, sym, output);
   assemble_end(instrs, sym, output);
 }
 
-void assemble_header(InstrVector *instrs, SymTable *sym, FILE *output){
+void assemble_header(InstrVector *instrs, SymTable *sym, FILE *output) {
   fprintf(output, "H");
   Instruction *instr = instrvec_get(instrs, 0);
-  if(instr->type == DIRECTIVE ){
-        Directive *d = (Directive *) instr->instr;
-      if(d->directive == START){
-        fprintf(output,"%-6.6s", d->tk->str);
-      }
-  }else{
+  if(instr->type == DIRECTIVE) {
+    Directive *d = (Directive *)instr->instr;
+    if(d->directive == START) {
+      fprintf(output, "%-6.6s", d->tk->str);
+    }
+  } else {
     fprintf(output, "sicas");
   }
 
   fprintf(output, "%06lx%06lx\n", instrs->start_addr, instrs->end_addr - instrs->start_addr);
 }
 
-void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
+void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
   uint8_t *body = malloc(sizeof(*body) * (ASSEMBLER_BODY_LINE + 1));
   size_t instr_count = instrs->count;
   size_t b_idx = 0;
   uint64_t start_addr = 0;
   uint32_t pc_reg = 0;
   uint32_t base_reg = 0;
-  //bool reserved = false;
-  //bool endline = false;
+  // bool reserved = false;
+  // bool endline = false;
 
   if(!body) {
     LOG_PANIC("Failed to allocate memory for a string.");
@@ -44,14 +44,13 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
 
   size_t i = 0;
   Instruction *instr = instrvec_get(instrs, i++);
-  uint8_t byte_rep[ASSEMBLER_INSTR_MAX_SIZE] = {0, 0, 0, 0}; 
-  //uint8_t carry_bits = 0;
+  uint8_t byte_rep[ASSEMBLER_INSTR_MAX_SIZE] = {0, 0, 0, 0};
+  uint64_t carry_bits = 0;
   start_addr = instr->addr;
   pc_reg = start_addr;
 
   while(i < instr_count) {
     if(instr->type == DIRECTIVE) {
-      //TODO: set base register
       Directive *d = (Directive *)instr->instr;
 
       if(d->directive == BASE) {
@@ -59,7 +58,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
         if(type == ID) {
           SymValue *val = symtab_get_symbol(sym, d->tk->str);
 
-          if(!val){
+          if(!val) {
             LOG_XERR("Symbol %s has not been defined yet.", d->tk->str);
           }
 
@@ -83,7 +82,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
       if(instr->format == TWO) {
         Regs *regs = (Regs *)operation->oper;
         byte_rep[INSTR_B2] = regs->reg1 << 4 | regs->reg2;
-      }else if(instr->format == THREE || instr->format == FOUR){
+      } else if (instr->format == THREE || instr->format == FOUR) {
         Mem *mem = (Mem *)operation->oper;
         uint8_t bit_flags = NI_SICXE_BITS;
         uint32_t disp_val = 0;
@@ -91,7 +90,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
         if(mem->tk->type == ID) {
           SymValue *val = symtab_get_symbol(sym, mem->tk->str);
 
-          if(!val){
+          if(!val) {
             LOG_XERR("Symbol %s has not been defined yet.", mem->tk->str);
           }
 
@@ -100,17 +99,17 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
           }
 
           disp_val = val->addr;
-        }else {
+        } else {
           disp_val = token_to_long(mem->tk);
         }
 
         if(mem->mem_type == IMM) {
           bit_flags = NI_IMMEDIATE_BITS;
-        }else if(mem->mem_type == IND) {
+        } else if (mem->mem_type == IND) {
           bit_flags = NI_INDIRECT_BITS;
         }
 
-        //TODO: Do i need to switch by 2?
+        // TODO: Do i need to switch by 2?
         byte_rep[INSTR_B1] = (byte_rep[INSTR_B1] << 2) | bit_flags;
 
         // Set indexed bit and shift flag for bp flags
@@ -119,14 +118,15 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
         if(instr->format == THREE) {
           int32_t diff = pc_reg - disp_val;
 
-          if((diff < 0 && diff >= -2048) || (diff >= 0 && diff <= 2047)){
-            bit_flags = (bit_flags | PC_REL_BITS) << 1; 
-          }else {
-            if (diff > 0 && diff <= 4095){
+          if((diff < 0 && diff >= -2048) || (diff >= 0 && diff <= 2047)) {
+            bit_flags = (bit_flags | PC_REL_BITS) << 1;
+          } else {
+            if(diff > 0 && diff <= 4095) {
               diff = base_reg - disp_val;
-              bit_flags = (bit_flags | BASE_REL_BITS) << 1; 
-            } else{
-              LOG_XERR("Instruction cannot be used with PC or BASE register addressing.\n");
+              bit_flags = (bit_flags | BASE_REL_BITS) << 1;
+            } else {
+              LOG_XERR("Instruction cannot be used with PC or BASE register "
+                       "addressing.\n");
             }
           }
 
@@ -141,9 +141,9 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
           diff = ((uint8_t)0xFF) & diff;
           byte_rep[INSTR_B3] = diff;
         } else {
-          //TODO: Make sure how format four works.
+          // TODO: Make sure how format four works.
           if(disp_val > ((uint32_t)0xFFFFF)) {
-              LOG_XERR("Displacement too large for format four.\n");
+            LOG_XERR("Displacement too large for format four.\n");
           }
 
           // BP flags are already zeroed out
@@ -152,7 +152,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
           // Set format field
           bit_flags = (bit_flags | FORMAT_BIT) << 4;
 
-          bit_flags = bit_flags | ((disp_val >> 16) & ((uint8_t) 0xFF));
+          bit_flags = bit_flags | ((disp_val >> 16) & ((uint8_t)0xFF));
           byte_rep[INSTR_B2] = bit_flags;
 
           byte_rep[INSTR_B3] = (disp_val >> 8) & ((uint8_t)0xFF);
@@ -160,11 +160,12 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
         }
       }
 
-      carry_bits = instr->format - instr_to_text(body, byte_rep, &b_idx, instr->format, 0);
+      carry_bits = instr_to_text(body, byte_rep, &b_idx, instr->format, 0);
 
       if(carry_bits) {
-        output_text(output, body, &b_idx, &start_addr, pc_reg - (instr->format - carry_bits));
-        instr_to_text(body, byte_rep, &b_idx, carry_bits, instr->format - carry_bits);
+        output_text(output, body, &b_idx, &start_addr, pc_reg - carry_bits);
+        instr_to_text(body, byte_rep, &b_idx, carry_bits,
+                      instr->format - carry_bits);
       }
 
       i++;
@@ -172,14 +173,14 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output){
 
   }
 
- free(body);
+  free(body);
 }
 
-void assemble_end(InstrVector *instrs, SymTable *sym, FILE *output){
+void assemble_end(InstrVector *instrs, SymTable *sym, FILE *output) {
   fprintf(output, "E%06lx\n", instrs->end_addr);
 }
 
-void output_text(FILE* output, uint8_t *body, size_t *b_idx, uint64_t *start_addr, uint32_t pc_reg){
+void output_text(FILE *output, uint8_t *body, size_t *b_idx, uint64_t *start_addr, uint32_t pc_reg) {
   body[*b_idx] = '\0';
   fprintf(output, "T%06lx%02lx%s\n", *start_addr, pc_reg - *start_addr, body);
   *start_addr = pc_reg;
@@ -191,7 +192,7 @@ uint8_t nibble_to_hex(uint8_t nibble) {
 }
 
 uint8_t instr_to_text(uint8_t *body, uint8_t *array, size_t *b_idx, uint8_t size, uint8_t start) {
-  while(size && (*b_idx) + 1 < ASSEMBLER_BODY_LINE + 1) {
+  while(size && (*b_idx) + 1 < ASSEMBLER_BODY_LINE) {
     body[(*b_idx) + 1] = nibble_to_hex(msn(array[start]));
     body[(*b_idx) + 1] = nibble_to_hex(lsn(array[start]));
     start++;
