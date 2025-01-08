@@ -61,6 +61,7 @@ typedef struct {
   enum ttype type;
   uint64_t start_addr;
   uint64_t reserved;
+  uint64_t raw;
   Token *tk;
 } InitMemory;
 
