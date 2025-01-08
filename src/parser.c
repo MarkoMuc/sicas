@@ -497,7 +497,8 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
               tk->location.s_col, tk->location.s_row, tk->location.e_col, tk->location.e_row);
     }
 
-    offset = res_bytes + (res_bytes %(((InitMemory*)instr->instr)->type == WORD? SICAS_WORD_SIZE : SICAS_BYTE_SIZE));
+    uint8_t format_size = ((InitMemory*)instr->instr)->type == WORD? SICAS_WORD_SIZE : SICAS_BYTE_SIZE;
+    offset = format_size - (res_bytes % format_size);
 
     ((InitMemory*)instr->instr)->start_addr = *loc_ctr;
     ((InitMemory*)instr->instr)->reserved = offset;
