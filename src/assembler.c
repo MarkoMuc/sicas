@@ -50,6 +50,10 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
   pc_reg = start_addr;
 
   while(i < instr_count) {
+    if (b_idx >= ASSEMBLER_BODY_LINE) {
+      output_text(output, body, &b_idx, &start_addr, pc_reg);
+    }
+
     if(instr->type == DIRECTIVE) {
       Directive *d = (Directive *)instr->instr;
 
@@ -171,6 +175,69 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
       i++;
     }
 
+    if(instr->type == IMEM) {
+      InitMemory *init = (InitMemory *)instr->instr;
+      uint64_t append = init->reserved - init->raw;
+
+      while(append--) {
+        if (b_idx >= ASSEMBLER_BODY_LINE) {
+          output_text(output, body, &b_idx, &start_addr, pc_reg);
+        }
+        body[b_idx++] = '0';
+        pc_reg++;
+      }
+
+      if(init->tk->type == HEX || init->tk->type == STRING) {
+        char *str = init->tk->str;
+        size_t idx = 0;
+
+        while(str[idx] != '\0') {
+          uint8_t val = str[idx++];
+
+          if(b_idx >= ASSEMBLER_BODY_LINE) {
+            output_text(output, body, &b_idx, &start_addr, pc_reg);
+          }
+
+          if(init->tk->type == STRING) {
+            body[b_idx++] = nibble_to_hex(msn(val));
+            pc_reg++;
+
+            if(b_idx >= ASSEMBLER_BODY_LINE) {
+              output_text(output, body, &b_idx, &start_addr, pc_reg);
+            }
+
+            body[b_idx++] = nibble_to_hex(lsn(val));
+          } else {
+            body[b_idx++] = val;
+          }
+
+          pc_reg++;
+        }
+      } else{
+        uint64_t init_val = token_to_long(init->tk);
+        uint64_t bytes = init->raw;
+        while(bytes) {
+          //TODO: Is this correct?
+          uint8_t val = (uint8_t)(init_val & ((uint64_t)0xFF << bytes)) >> bytes;
+
+          if(b_idx >= ASSEMBLER_BODY_LINE) {
+            output_text(output, body, &b_idx, &start_addr, pc_reg);
+          }
+
+          body[b_idx++] = nibble_to_hex(msn(val));
+          pc_reg++;
+
+          if(b_idx >= ASSEMBLER_BODY_LINE) {
+            output_text(output, body, &b_idx, &start_addr, pc_reg);
+          }
+
+          body[b_idx++] = nibble_to_hex(lsn(val));
+          pc_reg++;
+
+          bytes--;
+        }
+      }
+    }
   }
 
   free(body);
