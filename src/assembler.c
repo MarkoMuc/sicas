@@ -192,8 +192,8 @@ uint8_t nibble_to_hex(uint8_t nibble) {
 
 uint8_t instr_to_text(uint8_t *body, uint8_t *array, size_t *b_idx, uint8_t size, uint8_t start) {
   while(size && (*b_idx) + 1 < ASSEMBLER_BODY_LINE + 1) {
-    body[(*b_idx) + 1] = nibble_to_hex(array[start] >> 4);
-    body[(*b_idx) + 1] = nibble_to_hex(array[start] & ((uint8_t)0xF0));
+    body[(*b_idx) + 1] = nibble_to_hex(msn(array[start]));
+    body[(*b_idx) + 1] = nibble_to_hex(lsn(array[start]));
     start++;
     size--;
   }

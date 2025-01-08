@@ -38,6 +38,9 @@
 #define BIT_OFF (uint8_t) 0x0
 #define BIT_ON (uint8_t) 0x1
 
+#define msn(byte) (uint8_t)((byte) >> 4)
+#define lsn(byte) (uint8_t)((byte) & ((uint8_t) 0x0F))
+
 // mfunc
 
 void assemble_instructions(InstrVector *instrs, SymTable *sym, FILE *output);
