@@ -498,7 +498,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     }
 
     uint8_t format_size = ((InitMemory*)instr->instr)->type == WORD? SICAS_WORD_SIZE : SICAS_BYTE_SIZE;
-    offset = format_size - (res_bytes % format_size);
+    offset = res_bytes + (format_size - (res_bytes % format_size));
 
     ((InitMemory*)instr->instr)->start_addr = *loc_ctr;
     ((InitMemory*)instr->instr)->reserved = offset;
@@ -550,7 +550,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     LOG_ERR("This token should not be here alone.\n");
     if(id){
       token_print(*id);
-      printf(" ");
+      printf("\n");
       token_print(*tk);
     }else{
       token_print(*tk);
