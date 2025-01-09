@@ -270,7 +270,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
 }
 
 void assemble_end(InstrVector *instrs, SymTable *sym, FILE *output) {
-  fprintf(output, "E%06lx\n", instrs->end_addr);
+  fprintf(output, "E%06lx\n", instrs->first_addr);
 }
 
 void output_text(FILE *output, uint8_t *body, size_t *b_idx, uint64_t *start_addr, uint32_t pc_reg) {
