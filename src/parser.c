@@ -837,6 +837,7 @@ void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr){
   for(size_t i = 0; i < count; i++){
     if(strcmp(table->map[key].values[i].symbol, symbol) == 0){
       table->map[key].values[i].addr = addr;
+      table->map[key].values[i].set = 1;
       return;
     }
   }
