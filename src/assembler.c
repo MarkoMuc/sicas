@@ -31,8 +31,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
   uint64_t start_addr = 0;
   uint32_t pc_reg = 0;
   uint32_t base_reg = 0;
-  // bool reserved = false;
-  // bool endline = false;
+  bool reserved = false;
 
   if(!body) {
     LOG_PANIC("Failed to allocate memory for a string.");
@@ -50,6 +49,25 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
   pc_reg = start_addr;
 
   while(i < instr_count) {
+
+     if(reserved || instr->type == RMEM) {
+       if(b_idx != 0) {
+         output_text(output, body, &b_idx, &start_addr, pc_reg);
+       }
+
+       reserved = true;
+       if(instr->type != RMEM) {
+         start_addr = instr->addr;
+         pc_reg = instr->addr;
+         reserved = false;
+       }else{
+         ResMemory *res = (ResMemory *)instr->instr;
+         pc_reg += res->reserved;
+         i++;
+         continue;
+       }
+     }
+
     if (b_idx >= ASSEMBLER_BODY_LINE) {
       output_text(output, body, &b_idx, &start_addr, pc_reg);
     }
