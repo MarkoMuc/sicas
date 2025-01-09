@@ -81,18 +81,19 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
           SymValue *val = symtab_get_symbol(sym, d->tk->str);
 
           if(!val) {
-            LOG_XERR("Symbol %s has not been defined yet.", d->tk->str);
+            LOG_XERR("Symbol %s has not been defined yet.\n", d->tk->str);
           }
 
           if(val->set == false) {
-            LOG_XERR("Symbol %s has not been defined yet.", d->tk->str);
+            LOG_XERR("Symbol %s has not been defined yet.\n", d->tk->str);
           }
           base_reg = val->addr;
         } else {
           base_reg = token_to_long(d->tk);
         }
       }
-
+ 
+      instr = instrvec_get(instrs, i++);
       continue;
     }
 
@@ -113,11 +114,11 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
           SymValue *val = symtab_get_symbol(sym, mem->tk->str);
 
           if(!val) {
-            LOG_XERR("Symbol %s has not been defined yet.", mem->tk->str);
+            LOG_XERR("Symbol %s has not been defined yet.\n", mem->tk->str);
           }
 
           if(val->set == false) {
-            LOG_XERR("Symbol %s has not been defined yet.", mem->tk->str);
+            LOG_XERR("Symbol %s has not been defined yet.\n", mem->tk->str);
           }
 
           disp_val = val->addr;
@@ -190,7 +191,8 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
                       instr->format - carry_bits);
       }
 
-      i++;
+      instr = instrvec_get(instrs, i++);
+      continue;
     }
 
     if(instr->type == IMEM) {
@@ -255,7 +257,13 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
           bytes--;
         }
       }
+      instr = instrvec_get(instrs, i++);
+      continue;
     }
+  }
+
+  if(b_idx > 0) {
+    output_text(output, body, &b_idx, &start_addr, pc_reg);
   }
 
   free(body);
@@ -277,12 +285,14 @@ uint8_t nibble_to_hex(uint8_t nibble) {
 }
 
 uint8_t instr_to_text(uint8_t *body, uint8_t *array, size_t *b_idx, uint8_t size, uint8_t start) {
+  size_t i = *b_idx;
+
   while(size && (*b_idx) + 1 < ASSEMBLER_BODY_LINE) {
-    body[(*b_idx) + 1] = nibble_to_hex(msn(array[start]));
-    body[(*b_idx) + 1] = nibble_to_hex(lsn(array[start]));
+    body[i++] = nibble_to_hex(msn(array[start]));
+    body[i++] = nibble_to_hex(lsn(array[start]));
     start++;
     size--;
   }
-
+  *b_idx = i;
   return size;
 }
