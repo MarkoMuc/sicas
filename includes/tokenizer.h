@@ -145,7 +145,7 @@ typedef struct {
         do {\
             if((idx) >= (token_vec)->count){ \
               Token *tk =  tokvec_get((token_vec), (idx) - 1); \
-              LOG_ERR( "[%ld:%ld]|[%ld:%ld]" error_msg, tk->location.s_col, tk->location.s_row,\
+              LOG_ERR("[%ld:%ld]|[%ld:%ld]" error_msg, tk->location.s_col, tk->location.s_row,\
                         tk->location.e_col, tk->location.e_row);exit(1);}\
         }while(0)
 

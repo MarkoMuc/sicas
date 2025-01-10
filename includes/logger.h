@@ -24,3 +24,14 @@
     fprintf(stderr, __VA_ARGS__); \
     exit(1);                      \
   } while(0)
+
+#define LOG_LERR(sl, l,...) \
+  do {                      \
+    fprintf(stderr, "[%ld, %ld]:[%ld, %ld] ", (sl).s_col, (sl).s_row, (l).e_col, (l).e_row);\
+    LOG_ERR(__VA_ARGS__);\
+  } while(0);
+#define LOG_XLERR(sl, l,...) \
+  do {                      \
+    fprintf(stderr, "[%ld, %ld]:[%ld, %ld] ", (sl).s_col, (sl).s_row, (l).e_col, (l).e_row);\
+    LOG_XERR(__VA_ARGS__);\
+  } while(0);
