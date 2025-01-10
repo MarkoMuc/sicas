@@ -18,6 +18,11 @@
 #include <string.h>
 #endif
 
+#ifndef STD_STRINGS
+#define STD_STRINGS
+#include <strings.h>
+#endif
+
 #ifndef SICAS_LOGGER
 #define SICAS_LOGGER
 #include "logger.h"

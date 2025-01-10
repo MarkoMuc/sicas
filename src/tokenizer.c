@@ -156,7 +156,7 @@ void fill(FILE *f, TokenVector *vec) {
           identf = 0;
           special = 0;
         } else {
-          str[idx] = c;
+          str[idx] = buffer[i];
           continue;
         }
       }
@@ -243,7 +243,7 @@ void fill(FILE *f, TokenVector *vec) {
             comment = 0;
           }
 
-          str[idx] = c;
+          str[idx] = buffer[i];
           continue;
         }
       }
@@ -440,212 +440,212 @@ Token gen_token(char *str, Location loc) {
   Token token = {0};
   uint8_t not_keyword = 0;
   enum ttype typ;
-  if (!strncmp(str, "a", 1)) {
+  if (!strncasecmp(str, "a", 1)) {
     if (strlen(str) == 1) {
       typ = REGISTER;
       token.str = str;
-    } else if (!strcmp(str, "add")) {
+    } else if (!strcasecmp(str, "add")) {
       typ = ADD;
-    } else if (!strcmp(str, "addf")) {
+    } else if (!strcasecmp(str, "addf")) {
       typ = ADDF;
-    } else if (!strcmp(str, "addr")) {
+    } else if (!strcasecmp(str, "addr")) {
       typ = ADDR;
-    } else if (!strcmp(str, "and")) {
+    } else if (!strcasecmp(str, "and")) {
       typ = AND;
     } else {
       not_keyword = 1;
     }
-  } else if (!strncmp(str, "b", 1)) {
-    if (!strcmp(str, "base")) {
+  } else if (!strncasecmp(str, "b", 1)) {
+    if (!strcasecmp(str, "base")) {
       typ = BASE;
-    } else if (!strcmp(str, "byte")) {
+    } else if (!strcasecmp(str, "byte")) {
       typ = BYTE;
-    } else if (!strcmp(str, "b")) {
+    } else if (!strcasecmp(str, "b")) {
       typ = REGISTER;
       token.str = str;
     }else{
       not_keyword = 1;
     }
-  } else if (!strncmp(str, "c", 1)) {
-    if (!strcmp(str, "clear")) {
+  } else if (!strncasecmp(str, "c", 1)) {
+    if (!strcasecmp(str, "clear")) {
       typ = CLEAR;
-    } else if (!strcmp(str, "comp")) {
+    } else if (!strcasecmp(str, "comp")) {
       typ = COMP;
-    } else if (!strcmp(str, "compf")) {
+    } else if (!strcasecmp(str, "compf")) {
       typ = COMPF;
-    } else if (!strcmp(str, "compr")) {
+    } else if (!strcasecmp(str, "compr")) {
       typ = COMPR;
-    } else if (!strcmp(str, "cc")) {
+    } else if (!strcasecmp(str, "cc")) {
       typ = REGISTER;
       token.str = str;
     } else {
       not_keyword = 1;
     }
-  } else if (!strncmp(str, "d", 1)) {
-    if (!strcmp(str, "div")) {
+  } else if (!strncasecmp(str, "d", 1)) {
+    if (!strcasecmp(str, "div")) {
       typ = DIV;
-    } else if (!strcmp(str, "divf")) {
+    } else if (!strcasecmp(str, "divf")) {
       typ = DIVF;
-    } else if (!strcmp(str, "divr")) {
+    } else if (!strcasecmp(str, "divr")) {
       typ = DIVR;
     } else {
       not_keyword = 1;
     }
-  } else if (!strncmp(str, "f", 1)) {
+  } else if (!strncasecmp(str, "f", 1)) {
     if (strlen(str) == 1) {
       typ = REGISTER;
       token.str = str;
-    } else if (!strcmp(str, "fix")) {
+    } else if (!strcasecmp(str, "fix")) {
       typ = FIX;
-    } else if (!strcmp(str, "float")) {
+    } else if (!strcasecmp(str, "float")) {
       typ = FLOAT;
     } else {
       not_keyword = 1;
     }
-  } else if (!strcmp(str, "hio")) {
+  } else if (!strcasecmp(str, "hio")) {
     typ = HIO;
-  } else if (!strncmp(str, "j", 1)) {
-    if (!strcmp(str, "j")) {
+  } else if (!strncasecmp(str, "j", 1)) {
+    if (!strcasecmp(str, "j")) {
       typ = J;
-    } else if (!strcmp(str, "jeq")) {
+    } else if (!strcasecmp(str, "jeq")) {
       typ = JEQ;
-    } else if (!strcmp(str, "jgt")) {
+    } else if (!strcasecmp(str, "jgt")) {
       typ = JGT;
-    } else if (!strcmp(str, "jlt")) {
+    } else if (!strcasecmp(str, "jlt")) {
       typ = JLT;
-    } else if (!strcmp(str, "jsub")) {
+    } else if (!strcasecmp(str, "jsub")) {
       typ = JSUB;
     } else {
       not_keyword = 1;
     }
-  } else if (!strncmp(str, "l", 1)) {
-    if (!strcmp(str, "lda")) {
+  } else if (!strncasecmp(str, "l", 1)) {
+    if (!strcasecmp(str, "lda")) {
       typ = LDA;
-    } else if (!strcmp(str, "ldb")) {
+    } else if (!strcasecmp(str, "ldb")) {
       typ = LDB;
-    } else if (!strcmp(str, "ldch")) {
+    } else if (!strcasecmp(str, "ldch")) {
       typ = LDCH;
-    } else if (!strcmp(str, "ldf")) {
+    } else if (!strcasecmp(str, "ldf")) {
       typ = LDF;
-    } else if (!strcmp(str, "ldl")) {
+    } else if (!strcasecmp(str, "ldl")) {
       typ = LDL;
-    } else if (!strcmp(str, "lds")) {
+    } else if (!strcasecmp(str, "lds")) {
       typ = LDS;
-    } else if (!strcmp(str, "ldt")) {
+    } else if (!strcasecmp(str, "ldt")) {
       typ = LDT;
-    } else if (!strcmp(str, "ldx")) {
+    } else if (!strcasecmp(str, "ldx")) {
       typ = LDX;
-    } else if (!strcmp(str, "lps")) {
+    } else if (!strcasecmp(str, "lps")) {
       typ = LPS;
     } else {
       not_keyword = 1;
     }
-  } else if (!strncmp(str, "m", 1)) {
-    if (!strcmp(str, "mul")) {
+  } else if (!strncasecmp(str, "m", 1)) {
+    if (!strcasecmp(str, "mul")) {
       typ = MUL;
-    } else if (!strcmp(str, "mulf")) {
+    } else if (!strcasecmp(str, "mulf")) {
       typ = MULF;
-    } else if (!strcmp(str, "mulr")) {
+    } else if (!strcasecmp(str, "mulr")) {
       typ = MULR;
     } else {
       not_keyword = 1;
     }
-  } else if (!strcmp(str, "norm")) {
+  } else if (!strcasecmp(str, "norm")) {
     typ = NORM;
-  } else if (!strcmp(str, "or")) {
+  } else if (!strcasecmp(str, "or")) {
     typ = OR;
-  } else if (!strcmp(str, "pc")) {
+  } else if (!strcasecmp(str, "pc")) {
     typ = REGISTER;
     token.str = str;
-  } else if (!strncmp(str, "r", 1)) {
-    if (!strcmp(str, "rd")) {
+  } else if (!strncasecmp(str, "r", 1)) {
+    if (!strcasecmp(str, "rd")) {
       typ = RD;
-    } else if (!strcmp(str, "rmo")) {
+    } else if (!strcasecmp(str, "rmo")) {
       typ = RMO;
-    } else if (!strcmp(str, "rsub")) {
+    } else if (!strcasecmp(str, "rsub")) {
       typ = RSUB;
-    } else if (!strcmp(str, "resb")) {
+    } else if (!strcasecmp(str, "resb")) {
       typ = RESB;
-    } else if (!strcmp(str, "resw")) {
+    } else if (!strcasecmp(str, "resw")) {
       typ = RESW;
     } else {
       not_keyword = 1;
     }
-  } else if (!strncmp(str, "s", 1)) {
+  } else if (!strncasecmp(str, "s", 1)) {
     if (strlen(str) == 1) {
       typ = REGISTER;
       token.str = str;
-    } else if (!strncmp(str, "sw", 2)) {
+    } else if (!strncasecmp(str, "sw", 2)) {
       typ = REGISTER;
       token.str = str;
-    } else if (!strcmp(str, "shiftl")) {
+    } else if (!strcasecmp(str, "shiftl")) {
       typ = SHIFTL;
-    } else if (!strcmp(str, "shiftr")) {
+    } else if (!strcasecmp(str, "shiftr")) {
       typ = SHIFTR;
-    } else if (!strcmp(str, "sio")) {
+    } else if (!strcasecmp(str, "sio")) {
       typ = SIO;
-    } else if (!strcmp(str, "ssk")) {
+    } else if (!strcasecmp(str, "ssk")) {
       typ = SSK;
-    } else if (!strcmp(str, "sta")) {
+    } else if (!strcasecmp(str, "sta")) {
       typ = STA;
-    } else if (!strcmp(str, "stb")) {
+    } else if (!strcasecmp(str, "stb")) {
       typ = STB;
-    } else if (!strcmp(str, "stch")) {
+    } else if (!strcasecmp(str, "stch")) {
       typ = STCH;
-    } else if (!strcmp(str, "stf")) {
+    } else if (!strcasecmp(str, "stf")) {
       typ = STF;
-    } else if (!strcmp(str, "sti")) {
+    } else if (!strcasecmp(str, "sti")) {
       typ = STI;
-    } else if (!strcmp(str, "stl")) {
+    } else if (!strcasecmp(str, "stl")) {
       typ = STL;
-    } else if (!strcmp(str, "sts")) {
+    } else if (!strcasecmp(str, "sts")) {
       typ = STS;
-    } else if (!strcmp(str, "stsw")) {
+    } else if (!strcasecmp(str, "stsw")) {
       typ = STSW;
-    } else if (!strcmp(str, "stt")) {
+    } else if (!strcasecmp(str, "stt")) {
       typ = STT;
-    } else if (!strcmp(str, "stx")) {
+    } else if (!strcasecmp(str, "stx")) {
       typ = STX;
-    } else if (!strcmp(str, "sub")) {
+    } else if (!strcasecmp(str, "sub")) {
       typ = SUB;
-    } else if (!strcmp(str, "subf")) {
+    } else if (!strcasecmp(str, "subf")) {
       typ = SUBF;
-    } else if (!strcmp(str, "subr")) {
+    } else if (!strcasecmp(str, "subr")) {
       typ = SUBR;
-    } else if (!strcmp(str, "svc")) {
+    } else if (!strcasecmp(str, "svc")) {
       typ = SVC;
-    } else if (!strcmp(str, "start")) {
+    } else if (!strcasecmp(str, "start")) {
       typ = START;
     } else {
       not_keyword = 1;
     }
-  } else if (!strncmp(str, "t", 1)) {
+  } else if (!strncasecmp(str, "t", 1)) {
     if (strlen(str) == 1) {
       typ = REGISTER;
       token.str = str;
-    } else if (!strcmp(str, "td")) {
+    } else if (!strcasecmp(str, "td")) {
       typ = TD;
-    } else if (!strcmp(str, "tio")) {
+    } else if (!strcasecmp(str, "tio")) {
       typ = TIO;
-    } else if (!strcmp(str, "tix")) {
+    } else if (!strcasecmp(str, "tix")) {
       typ = TIX;
-    } else if (!strcmp(str, "tixr")) {
+    } else if (!strcasecmp(str, "tixr")) {
       typ = TIXR;
     } else {
       not_keyword = 1;
     }
-  } else if (!strncmp(str, "w", 1)) {
-    if (!strcmp(str, "wd")) {
+  } else if (!strncasecmp(str, "w", 1)) {
+    if (!strcasecmp(str, "wd")) {
       typ = WD;
-    } else if (!strcmp(str, "word")) {
+    } else if (!strcasecmp(str, "word")) {
       typ = WORD;
     } else {
       not_keyword = 1;
     }
-  } else if (!strcmp(str, "x")) {
+  } else if (!strcasecmp(str, "x")) {
     typ = REGISTER;
     token.str = str;
-  } else if (!strcmp(str, "end")) {
+  } else if (!strcasecmp(str, "end")) {
     typ = END;
   } else {
     not_keyword = 1;
