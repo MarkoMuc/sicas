@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
     fill(f, &vec);
     fclose(f);
 #if defined(TOKENIZER_DEBUG_MODE) || defined(DEBUG_MODE)
-    tokvec_print(&vec);
+ //   tokvec_print(&vec);
 #endif
 
     SymTable symbols = {0};
@@ -46,13 +46,13 @@ int main(int argc, char **argv) {
 
     parse_vector(&vec, &instrs, &symbols);
 #if (defined(PARSER_DEBUG_MODE) && defined(TOKENIZER_DEBUG_MODE))|| defined(DEBUG_MODE)
-    printf("Instructions [%08lx:%08lx][%08lx]:\n", instrs.start_addr, instrs.end_addr, instrs.first_addr);
-    for(size_t i = 0; i < instrs.count; i++){
-      Instruction *instr = instrvec_get(&instrs, i);
-      instruction_print(instr);
-    }
-
-    printf("Symbols:\n");
+     printf("Instructions [%08lx:%08lx][%08lx]:\n", instrs.start_addr, instrs.end_addr, instrs.first_addr);
+     for(size_t i = 0; i < instrs.count; i++){
+       Instruction *instr = instrvec_get(&instrs, i);
+       instruction_print(instr);
+     }
+    
+     printf("Symbols:\n");
     symtab_print(&symbols);
 #endif
     assemble_instructions(&instrs, &symbols, stdout);
