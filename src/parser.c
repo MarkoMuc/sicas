@@ -1,6 +1,7 @@
 #ifndef SICAS_PARSER
 #define SICAS_PARSER
 #include "../includes/parser.h"
+#include <string.h>
 #endif
 
 Regs* parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx) {
@@ -20,8 +21,7 @@ Regs* parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx) {
     tk = tokvec_get(tokens, i++);
 
     if (tk->type != COMMA) {
-      Token *s_tk = tokvec_get(tokens, i - 3);
-      LOG_XLERR(s_tk->location, tk->location, "Instruction of type 2 is missing a separator between a registers.\n");
+      LOG_XLERR(instr->loc, tk->location, "Instruction of type 2 is missing a separator between a registers.\n");
     }
 
     check_next_token(i, tokens, "Missing second register for instruction of type 2.\n");
@@ -29,14 +29,14 @@ Regs* parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx) {
 
     if (tk->type == REGISTER) {
       regs->reg2 = mnemonic_get_reg(tk->str);
+      instr->loc.e_row = tk->location.e_row;
+      instr->loc.e_col = tk->location.e_col;
     } else {
-      Token *s_tk = tokvec_get(tokens, i - 4);
-      LOG_XLERR(s_tk->location, tk->location, "Instruction of type 2 is missing a register as second argument.\n");
+      LOG_XLERR(instr->loc, tk->location, "Instruction of type 2 is missing a register as second argument.\n");
     }
 
   } else {
-    Token *s_tk = tokvec_get(tokens, i - 2);
-    LOG_XLERR(s_tk->location, tk->location,"Instruction of type 2 is missing a register as first argument.\n");
+    LOG_XLERR(instr->loc, tk->location,"Instruction of type 2 is missing a register as first argument.\n");
   }
 
   *idx = i;
@@ -79,11 +79,13 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
         if(tk->type == ID){
           symtab_add_symbol(sym, tk->str);
         }
+
+        instr->loc.e_row = tk->location.e_row;
+        instr->loc.e_col = tk->location.e_col;
+
         break;
       } else if(tk->type != LITERAL){
-        Token *s_tk = tokvec_get(tokens, i-2);
-        token_check_null(s_tk);
-        LOG_XLERR(s_tk->location, tk->location, "Missing identifier or constant after indirect or immediate addressing.\n");
+        LOG_XLERR(instr->loc, tk->location, "Missing identifier or constant after indirect or immediate addressing.\n");
       }
       // If there is a literal, go forward.
     case LITERAL:
@@ -95,19 +97,19 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
 
       if (tk->type == FNUM) {
         if (float_instr == 0) {
-          Token *s_tk = tokvec_get(tokens, i-2);
-          token_check_null(s_tk);
-          LOG_XLERR(s_tk->location, tk->location, "Floats not allowed here.\n");
+          LOG_XLERR(instr->loc, tk->location, "Floats not allowed here.\n");
         }
 
         //tokvec_add(instr->vec, tk);
       } else if (tk->type == NUM || tk->type == HEX || tk->type == BIN || tk->type == STRING) {
         //tokvec_add(instr->vec, tk);
       } else {
-        Token *s_tk = tokvec_get(tokens, i-2);
-        token_check_null(s_tk);
-        LOG_XLERR(s_tk->location, tk->location, "Literal missing constant.\n");
+        LOG_XLERR(instr->loc, tk->location, "Literal missing constant.\n");
       }
+
+      instr->loc.e_row = tk->location.e_row;
+      instr->loc.e_col = tk->location.e_col;
+
       break;
 
     case ID:
@@ -122,6 +124,9 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
         LOG_XLERR(tk->location, tk->location, "Float constant not allowed here.\n");
       }
 
+      instr->loc.e_row = tk->location.e_row;
+      instr->loc.e_col = tk->location.e_col;
+
       mem->tk = tk;
       break;
 
@@ -135,20 +140,19 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
 
     if (tk->type == COMMA) {
       if(indexing_illegal){
-        Token *s_tk = tokvec_get(tokens, i-4);
-        token_check_null(s_tk);
-        LOG_XLERR(s_tk->location, tk->location, "Immediate and indirect addressing cannot be paired with indexed addressing.\n");
+        LOG_XLERR(instr->loc, tk->location, "Immediate and indirect addressing cannot be paired with indexed addressing.\n");
       }
 
       check_next_token(i, tokens, "Indexed addressing is missing X after the comma.\n");
       tk = tokvec_get(tokens, i++);
 
       if (tk->type != REGISTER && strcmp(tk->str, "X")) {
-        Token *s_tk = tokvec_get(tokens, i-5);
-        token_check_null(s_tk);
-        LOG_XLERR(s_tk->location, tk->location, "Offset should be register X.\n");
+        LOG_XLERR(instr->loc, tk->location, "Offset should be register X.\n");
       }
       mem->indexed = true;
+
+      instr->loc.e_row = tk->location.e_row;
+      instr->loc.e_col = tk->location.e_col;
     } else {
       i = i - 1;
     }
@@ -188,6 +192,14 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   }
 
   Instruction *instr = instr_create();
+
+  if(id) {
+    instr->loc.s_row = id->location.s_row;
+    instr->loc.s_col = id->location.s_col;
+  }else{
+    instr->loc.s_row = tk->location.s_row;
+    instr->loc.s_col = tk->location.s_col;
+  }
 
   switch (tk->type) {
   case ADD:
@@ -273,6 +285,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
 
     ((MInstr*)instr->instr)->op = tk->type;
     ((MInstr*)instr->instr)->oper = parse_regs(tokens, instr, &i);
+
     offset = format;
     break;
 
@@ -368,6 +381,9 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_XLERR(tk->location, tk->location, "Missing value after START directive or the value is not a constant.\n");
     }
 
+    instr->loc.e_row = tk->location.e_row;
+    instr->loc.e_col = tk->location.e_col;
+
     instrs->start_addr = *loc_ctr;
     offset = 0;
     break;
@@ -400,6 +416,9 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_XLERR(tk->location, tk->location, "Missing value after END directive or the value is not a constant/symbol.\n");
     }
 
+    instr->loc.e_row = tk->location.e_row;
+    instr->loc.e_col = tk->location.e_col;
+
     offset = 0;
     break;
 
@@ -428,6 +447,9 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     }
 
     ((Directive*)instr->instr)->tk = tk;
+
+    instr->loc.e_row = tk->location.e_row;
+    instr->loc.e_col = tk->location.e_col;
 
     offset = 0;
     break;
@@ -462,6 +484,9 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     } else{
       LOG_XLERR(tk->location, tk->location, "Missing value after WORD/BYTE or the value is not a constant.\n");
     }
+
+    instr->loc.e_row = tk->location.e_row;
+    instr->loc.e_col = tk->location.e_col;
 
     uint8_t format_size = ((InitMemory*)instr->instr)->type == WORD? SICAS_WORD_SIZE : SICAS_BYTE_SIZE;
     offset = res_bytes + (format_size - (res_bytes % format_size));
@@ -499,6 +524,9 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     } else{
       LOG_XLERR(tk->location, tk->location, "Missing value after RESW / RESB or the value is not a constant.\n");
     }
+
+    instr->loc.e_row = tk->location.e_row;
+    instr->loc.e_col = tk->location.e_col;
 
     if(tk->type == RESW){
         offset = SICAS_WORD_SIZE * offset;
@@ -883,6 +911,7 @@ void instruction_print(Instruction *instr) {
     case INSTR:{
       MInstr *m = instr->instr;
       token_type_print(m->op);
+      printf(" ");
       if(instr->format == TWO){
         Regs *r = m->oper;
         printf("%d, %d", r->reg1, r->reg2);
@@ -898,14 +927,16 @@ void instruction_print(Instruction *instr) {
     case IMEM:{
       InitMemory *m = instr->instr;
       token_type_print(m->type);
-      printf(" %08lx + %08lx ", m->start_addr, m->reserved);
+      printf(" ");
+      printf("%08lx + %08lx ", m->start_addr, m->reserved);
       token_print(*m->tk);
       break;
     }
     case RMEM:{
       ResMemory *m = instr->instr;
       token_type_print(m->type);
-      printf(" [%08lx->%08lx] %08lx", m->start_addr, m->start_addr + m->reserved, m->reserved);
+      printf(" ");
+      printf("[%08lx->%08lx] %08lx", m->start_addr, m->start_addr + m->reserved, m->reserved);
       break;
     }
     default:

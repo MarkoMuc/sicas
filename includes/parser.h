@@ -85,6 +85,7 @@ typedef struct {
 typedef struct {
   enum itype type;
   enum ftype format;
+  Location loc;
   uint64_t addr;
   void *instr;
 } Instruction;
