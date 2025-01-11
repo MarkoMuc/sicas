@@ -37,6 +37,7 @@
 #define hash_func djb2_hash
 #define SICAS_WORD_SIZE 3
 #define SICAS_BYTE_SIZE 1
+
 // enums
 
 enum itype { INSTR, DIRECTIVE, RMEM, IMEM, CEXPR };
@@ -143,6 +144,7 @@ void symtab_free_destructive(SymTable *table);
 uint8_t symtab_add_symbol(SymTable *table, char *symbol);
 void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr);
 SymValue *symtab_get_symbol(SymTable *table, char *symbol);
+uint64_t symtab_check_get_addr(SymTable *table, char *symbol, Instruction *instr);
 
 // debug
 

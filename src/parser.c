@@ -858,6 +858,20 @@ SymValue *symtab_get_symbol(SymTable *table, char *symbol){
   return NULL;
 }
 
+uint64_t symtab_check_get_addr(SymTable *table, char *symbol, Instruction *instr){
+  SymValue *val = symtab_get_symbol(table, symbol);
+
+  if(!val) {
+    LOG_PANIC("Symbol exist but is not present in the symbol table.\n");
+  }
+
+  if(val->set == false) {
+    LOG_XLERR(instr->loc, instr->loc,"Symbol %s has not been defined yet.\n", symbol);
+  }
+
+  return val->addr;
+}
+
 #if (defined(PARSER_DEBUG_MODE) && defined(TOKENIZER_DEBUG_MODE)) || defined(DEBUG_MODE)
 void instruction_print(Instruction *instr) {
   switch(instr->type) {

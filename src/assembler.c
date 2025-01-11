@@ -34,11 +34,11 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
   bool reserved = false;
 
   if(!body) {
-    LOG_PANIC("Failed to allocate memory for a string.");
+    LOG_PANIC("Failed to allocate memory for a string.\n");
   }
 
   if(instr_count < 1) {
-    LOG_XERR("No instructions found.\n");
+    LOG_XERR("Input contains no instruction.\n");
   }
 
   size_t i = 0;
@@ -78,16 +78,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
       if(d->directive == BASE) {
         enum ttype type = d->tk->type;
         if(type == ID) {
-          SymValue *val = symtab_get_symbol(sym, d->tk->str);
-
-          if(!val) {
-            LOG_XERR("Symbol %s has not been defined yet.\n", d->tk->str);
-          }
-
-          if(val->set == false) {
-            LOG_XERR("Symbol %s has not been defined yet.\n", d->tk->str);
-          }
-          base_reg = val->addr;
+          base_reg = symtab_check_get_addr(sym, d->tk->str, instr);
         } else {
           base_reg = token_to_long(d->tk);
         }
@@ -111,17 +102,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
         uint32_t disp_val = 0;
 
         if(mem->tk->type == ID) {
-          SymValue *val = symtab_get_symbol(sym, mem->tk->str);
-
-          if(!val) {
-            LOG_XERR("Symbol %s has not been defined yet.\n", mem->tk->str);
-          }
-
-          if(val->set == false) {
-            LOG_XERR("Symbol %s has not been defined yet.\n", mem->tk->str);
-          }
-
-          disp_val = val->addr;
+          disp_val = symtab_check_get_addr(sym, mem->tk->str, instr);
         } else {
           disp_val = token_to_long(mem->tk);
         }
@@ -148,8 +129,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
               diff = base_reg - disp_val;
               bit_flags = (bit_flags | BASE_REL_BITS) << 1;
             } else {
-              LOG_XERR("Instruction cannot be used with PC or BASE register "
-                       "addressing.\n");
+              LOG_XLERR(instr->loc, instr->loc, "Instruction cannot be used with PC or BASE register addressing.\n");
             }
           }
 
@@ -166,7 +146,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
         } else {
           // TODO: Make sure how format four works.
           if(disp_val > ((uint32_t)0xFFFFF)) {
-            LOG_XERR("Displacement too large for format four.\n");
+            LOG_XLERR(instr->loc, instr->loc, "Displacement too large for format four.\n");
           }
 
           // BP flags are already zeroed out
