@@ -19,17 +19,17 @@ void fill(FILE *f, TokenVector *vec) {
   uint64_t s_row = -1;
   uint64_t s_col = -1;
 
-  buffer = malloc(sizeof((*buffer)) * START_BUFFER_SIZE);
+  buffer = malloc(sizeof((*buffer)) * TOKENIZER_START_BUFFER_SIZE);
   if (!buffer) {
     LOG_PANIC("Error during inital buffer alloc for token.\n");
   }
 
-  str = malloc(sizeof((*str)) * START_STRING_SIZE);
+  str = malloc(sizeof((*str)) * TOKENIZER_START_STRING_SIZE);
   if (!str) {
     LOG_PANIC("Error during inital string alloc for token.\n");
   }
 
-  while ((read_c = fread(buffer, sizeof(char), START_BUFFER_SIZE, f)) > 1) {
+  while ((read_c = fread(buffer, sizeof(char), TOKENIZER_START_BUFFER_SIZE, f)) > 1) {
     for (size_t i = 0; i < read_c; i++) {
       char c = buffer[i];
       col++;
@@ -75,7 +75,7 @@ void fill(FILE *f, TokenVector *vec) {
           tokvec_add(vec, &el);
 
           if (el.str) {
-            str = malloc(sizeof((*str)) * START_STRING_SIZE);
+            str = malloc(sizeof((*str)) * TOKENIZER_START_STRING_SIZE);
             if (!str) {
               LOG_PANIC(
                   "[%ld, %ld]:[%ld, %ld] Error allocating string for token.\n",
@@ -145,7 +145,7 @@ void fill(FILE *f, TokenVector *vec) {
           tokvec_add(vec, &el);
 
           if (el.str) {
-            str = malloc(sizeof((*str)) * START_STRING_SIZE);
+            str = malloc(sizeof((*str)) * TOKENIZER_START_STRING_SIZE);
             if (!str) {
               LOG_PANIC("Error during string alloc after identifer.\n");
             }
@@ -199,7 +199,7 @@ void fill(FILE *f, TokenVector *vec) {
           tokvec_add(vec, &el);
 
           if (str) {
-            str = malloc(sizeof((*str)) * START_STRING_SIZE);
+            str = malloc(sizeof((*str)) * TOKENIZER_START_STRING_SIZE);
             if (!str) {
               LOG_PANIC("Error during string alloc after number.\n");
             }
@@ -252,13 +252,15 @@ void fill(FILE *f, TokenVector *vec) {
       case ' ':
         break;
       case '\t':
+        col = col - 1;
+        col += TOKENIZER_TAB_WIDTH - (col % TOKENIZER_TAB_WIDTH);
         break;
       case ',': {
         Token el = {
             .type = COMMA,
             .str = NULL,
             .location = {
-              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col}};
+              .s_row = row, .s_col = col, .e_row = row, .e_col = col}};
         tokvec_add(vec, &el);
         break;
       }
@@ -267,7 +269,7 @@ void fill(FILE *f, TokenVector *vec) {
             .type = LITERAL,
             .str = NULL,
             .location = {
-              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col}};
+              .s_row = row, .s_col = col, .e_row = row, .e_col = col}};
         tokvec_add(vec, &el);
         break;
       }
@@ -276,7 +278,7 @@ void fill(FILE *f, TokenVector *vec) {
             .type = HASH,
             .str = NULL,
             .location = {
-              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col}};
+              .s_row = row, .s_col = col, .e_row = row, .e_col = col}};
         tokvec_add(vec, &el);
         break;
       }
@@ -291,7 +293,7 @@ void fill(FILE *f, TokenVector *vec) {
             .type = PLUS,
             .str = NULL,
             .location = {
-              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col}};
+              .s_row = row, .s_col = col, .e_row = row, .e_col = col}};
         tokvec_add(vec, &el);
         break;
       }
@@ -300,7 +302,7 @@ void fill(FILE *f, TokenVector *vec) {
             .type = MINUS,
             .str = NULL,
             .location = {
-              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col}};
+              .s_row = row, .s_col = col, .e_row = row, .e_col = col}};
         tokvec_add(vec, &el);
         break;
       }
@@ -309,7 +311,7 @@ void fill(FILE *f, TokenVector *vec) {
             .type = AT,
             .str = NULL,
             .location = {
-              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col}};
+              .s_row = row, .s_col = col, .e_row = row, .e_col = col}};
         tokvec_add(vec, &el);
         break;
       }

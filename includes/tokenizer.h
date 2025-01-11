@@ -135,10 +135,11 @@ typedef struct {
   Token *items;
 } TokenVector;
 
-#define START_BUFFER_SIZE (size_t) 256
-#define START_STRING_SIZE (size_t) 128
+#define TOKENIZER_START_BUFFER_SIZE (size_t) 256
+#define TOKENIZER_START_STRING_SIZE (size_t) 128
 #define TOKVEC_INITIAL_CAPACITY (size_t) 256
 #define TOKVEC_RESIZE_MULTIPLIER 2
+#define TOKENIZER_TAB_WIDTH (uint8_t) 4
 
 #define token_check_null(tk) \
         do{                       \
