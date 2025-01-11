@@ -7,7 +7,7 @@ void fill(FILE *f, TokenVector *vec) {
   size_t read_c;
   char *buffer;
   char *str;
-  uint64_t row = 0;
+  uint64_t row = 1;
   uint64_t col = 0;
   size_t idx = 0;
   uint8_t num = 0;
@@ -58,7 +58,7 @@ void fill(FILE *f, TokenVector *vec) {
         if (c == '\'') {
           str[idx] = '\0';
           Location loc = {
-              .s_col = s_col, .s_row = s_row, .e_col = col, .e_row = row};
+              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col - 1};
           enum ttype type = HEX;
 
           if (special > 2) {
@@ -79,7 +79,7 @@ void fill(FILE *f, TokenVector *vec) {
             if (!str) {
               LOG_PANIC(
                   "[%ld, %ld]:[%ld, %ld] Error allocating string for token.\n",
-                  s_row, s_col, row, col);
+                    s_row, s_col, row, col);
             }
           }
 
@@ -140,7 +140,7 @@ void fill(FILE *f, TokenVector *vec) {
         if (!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'z') && c != '_') {
           str[idx] = '\0';
           Location loc = {
-              .s_col = s_col, .s_row = s_row, .e_col = col, .e_row = row};
+              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col - 1};
           Token el = gen_token(str, loc);
           tokvec_add(vec, &el);
 
@@ -195,7 +195,7 @@ void fill(FILE *f, TokenVector *vec) {
               .type = type,
               .str = str,
               .location = {
-                  .s_col = s_col, .s_row = s_row, .e_col = col, .e_row = row}};
+                .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col - 1}};
           tokvec_add(vec, &el);
 
           if (str) {
@@ -258,7 +258,7 @@ void fill(FILE *f, TokenVector *vec) {
             .type = COMMA,
             .str = NULL,
             .location = {
-                .s_col = col, .s_row = row, .e_col = col, .e_row = row}};
+              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col}};
         tokvec_add(vec, &el);
         break;
       }
@@ -267,7 +267,7 @@ void fill(FILE *f, TokenVector *vec) {
             .type = LITERAL,
             .str = NULL,
             .location = {
-                .s_col = col, .s_row = row, .e_col = col, .e_row = row}};
+              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col}};
         tokvec_add(vec, &el);
         break;
       }
@@ -276,7 +276,7 @@ void fill(FILE *f, TokenVector *vec) {
             .type = HASH,
             .str = NULL,
             .location = {
-                .s_col = col, .s_row = row, .e_col = col, .e_row = row}};
+              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col}};
         tokvec_add(vec, &el);
         break;
       }
@@ -291,7 +291,7 @@ void fill(FILE *f, TokenVector *vec) {
             .type = PLUS,
             .str = NULL,
             .location = {
-                .s_col = col, .s_row = row, .e_col = col, .e_row = row}};
+              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col}};
         tokvec_add(vec, &el);
         break;
       }
@@ -300,7 +300,7 @@ void fill(FILE *f, TokenVector *vec) {
             .type = MINUS,
             .str = NULL,
             .location = {
-                .s_col = col, .s_row = row, .e_col = col, .e_row = row}};
+              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col}};
         tokvec_add(vec, &el);
         break;
       }
@@ -309,7 +309,7 @@ void fill(FILE *f, TokenVector *vec) {
             .type = AT,
             .str = NULL,
             .location = {
-                .s_col = col, .s_row = row, .e_col = col, .e_row = row}};
+              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col}};
         tokvec_add(vec, &el);
         break;
       }
