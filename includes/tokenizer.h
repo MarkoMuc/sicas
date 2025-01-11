@@ -146,12 +146,12 @@ typedef struct {
             LOG_PANIC(("Token is NULL.\n"));}    \
         }while(0)
 
-#define check_next_token(idx, token_vec, error_msg) \
+#define check_next_token(idx, token_vec, loc, error_msg) \
         do {\
             if((idx) >= (token_vec)->count){ \
               Token *tk =  tokvec_get((token_vec), (idx) - 1); \
-              LOG_ERR("[%ld:%ld]|[%ld:%ld]" error_msg, tk->location.s_col, tk->location.s_row,\
-                        tk->location.e_col, tk->location.e_row);exit(1);}\
+              if (tk == NULL) { LOG_PANIC(("Token is NULL.\n"));}    \
+              LOG_XLERR((loc), tk->location, error_msg);}\
         }while(0)
 
 Token gen_token(char *str, Location loc);

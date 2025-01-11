@@ -11,25 +11,26 @@ Regs* parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx) {
     LOG_PANIC("Could not allocate memory for regs struct.\n");
   }
 
-  check_next_token(i, tokens, "Missing first register for instruction of format 2.\n");
+  check_next_token(i, tokens, instr->loc, "Missing first register for instruction of format 2.\n");
   Token *tk = tokvec_get(tokens, i++);
+  token_check_null(tk);
 
   if (tk->type == REGISTER) {
     regs->reg1 = mnemonic_get_reg(tk->str);
-    check_next_token(i, tokens, "Missing separating comma for instruction of format 2.\n");
+    check_next_token(i, tokens, tk->location, "Missing separating comma for instruction of format 2.\n");
     tk = tokvec_get(tokens, i++);
+    token_check_null(tk);
 
     if (tk->type != COMMA) {
       LOG_XLERR(instr->loc, tk->location, "Instruction of type 2 is missing a separator between a registers.\n");
     }
 
-    check_next_token(i, tokens, "Missing second register for instruction of type 2.\n");
+    check_next_token(i, tokens, tk->location,"Missing second register for instruction of type 2.\n");
     tk = tokvec_get(tokens, i++);
+    token_check_null(tk);
 
     if (tk->type == REGISTER) {
       regs->reg2 = mnemonic_get_reg(tk->str);
-      instr->loc.e_row = tk->location.e_row;
-      instr->loc.e_col = tk->location.e_col;
     } else {
       LOG_XLERR(instr->loc, tk->location, "Instruction of type 2 is missing a register as second argument.\n");
     }
@@ -37,6 +38,9 @@ Regs* parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx) {
   } else {
     LOG_XLERR(instr->loc, tk->location,"Instruction of type 2 is missing a register as first argument.\n");
   }
+
+  instr->loc.e_row = tk->location.e_row;
+  instr->loc.e_col = tk->location.e_col;
 
   *idx = i;
 
@@ -54,9 +58,8 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
 
   mem->indexed = false;
 
-  check_next_token(i, tokens, "Instruction has no address operand.\n");
+  check_next_token(i, tokens, instr->loc, "Instruction has no address operand.\n");
   Token *tk = tokvec_get(tokens, i++);
-
   token_check_null(tk);
 
   switch(tk->type) {
@@ -68,7 +71,7 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
         mem->mem_type = IMM;
       }
 
-      check_next_token(i, tokens, "Missing operand for indirect or immediate addressing.\n");
+      check_next_token(i, tokens, instr->loc, "Missing operand for indirect or immediate addressing.\n");
       tk = tokvec_get(tokens, i++);
       token_check_null(tk);
 
@@ -79,9 +82,6 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
           symtab_add_symbol(sym, tk->str);
         }
 
-        instr->loc.e_row = tk->location.e_row;
-        instr->loc.e_col = tk->location.e_col;
-
         break;
       } else if(tk->type != LITERAL){
         LOG_XLERR(instr->loc, tk->location, "Missing identifier or constant after indirect or immediate addressing.\n");
@@ -90,7 +90,7 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
     case LITERAL:
       LOG_PANIC("LITERALS not implemented yet.\n");
 
-      check_next_token(i, tokens, "No constant following a literal.\n");
+      check_next_token(i, tokens, instr->loc, "No constant following a literal.\n");
       tk = tokvec_get(tokens, i++);
       token_check_null(tk);
 
@@ -106,9 +106,6 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
         LOG_XLERR(instr->loc, tk->location, "Literal missing constant.\n");
       }
 
-      instr->loc.e_row = tk->location.e_row;
-      instr->loc.e_col = tk->location.e_col;
-
       break;
 
     case ID:
@@ -120,18 +117,18 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
     case FNUM:
       //FIXME: does float_instr even matter here?
       if(tk->type == FNUM && float_instr){
-        LOG_XLERR(tk->location, tk->location, "Float constant not allowed here.\n");
+        LOG_XLERR(instr->loc, tk->location, "Float constant not allowed here.\n");
       }
-
-      instr->loc.e_row = tk->location.e_row;
-      instr->loc.e_col = tk->location.e_col;
 
       mem->tk = tk;
       break;
 
     default:
-      LOG_XERR("Instruction does not contain a valid address.\n");
+      LOG_XLERR(instr->loc, tk->location, "Instruction does not contain a valid address.\n");
   }
+
+  instr->loc.e_row = tk->location.e_row;
+  instr->loc.e_col = tk->location.e_col;
 
   if(i < tokens->count){
     tk = tokvec_get(tokens, i++);
@@ -142,7 +139,7 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
         LOG_XLERR(instr->loc, tk->location, "Immediate and indirect addressing cannot be paired with indexed addressing.\n");
       }
 
-      check_next_token(i, tokens, "Indexed addressing is missing X after the comma.\n");
+      check_next_token(i, tokens, instr->loc, "Indexed addressing is missing X after the comma.\n");
       tk = tokvec_get(tokens, i++);
 
       if (tk->type != REGISTER && strcmp(tk->str, "X")) {
@@ -170,10 +167,14 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   enum itype type = INSTR;
 
   token_check_null(tk);
+  Instruction *instr = instr_create();
 
   if (tk->type == PLUS) {
     format = FOUR;
-    check_next_token(i, tokens, "Missing token after +.");
+    instr->loc.s_row = tk->location.s_row;
+    instr->loc.s_col = tk->location.s_col;
+
+    check_next_token(i, tokens, tk->location, "Missing token after +.");
     tk = tokvec_get(tokens, i++);
     token_check_null(tk);
   }
@@ -185,20 +186,21 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_XLERR(tk->location, tk->location, "Symbol %s has multiple definitions.\n", tk->str);
     }
 
-    check_next_token(i, tokens, "Missing token after +.");
+    check_next_token(i, tokens, tk->location, "Missing token after +.");
     tk = tokvec_get(tokens, i++);
     token_check_null(tk);
   }
 
-  Instruction *instr = instr_create();
-
-  if(id) {
+  if(id && format != FOUR) {
     instr->loc.s_row = id->location.s_row;
     instr->loc.s_col = id->location.s_col;
-  }else{
+  }else if(format != FOUR){
     instr->loc.s_row = tk->location.s_row;
     instr->loc.s_col = tk->location.s_col;
   }
+
+  instr->loc.e_row = tk->location.e_row;
+  instr->loc.e_col = tk->location.e_col;
 
   switch (tk->type) {
   case ADD:
@@ -272,7 +274,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   case RMO:
   case SUBR:
     if (format == FOUR) {
-      LOG_XLERR(tk->location, tk->location, "This instruction cannot be in format 4.\n");
+      LOG_XLERR(instr->loc, instr->loc, "This instruction cannot be in format 4.\n");
     }
 
     format = TWO;
@@ -360,28 +362,28 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     }
 
     if(*loc_ctr != 0) {
-      LOG_XLERR(tk->location, tk->location, "Duplicate START directive or START is not the first instruction.\n");
+      LOG_XLERR(instr->loc, instr->loc, "Duplicate START directive or START is not the first instruction.\n");
     }
 
-    if(id == NULL || id->type != ID) {
-      LOG_XLERR(tk->location, tk->location, "Missing program name before START directive.\n");
+    if(!id || id->type != ID) {
+      LOG_XLERR(instr->loc, instr->loc, "Missing program name before START directive.\n");
     }
 
     ((Directive*)instr->instr)->tk = id;
     ((Directive*)instr->instr)->directive = tk->type;
 
-    check_next_token(i, tokens, "Missing value after START directive.\n");
+    check_next_token(i, tokens, instr->loc, "Missing value after START directive.\n");
     tk = tokvec_get(tokens, i++);
     token_check_null(tk);
+
+    instr->loc.e_row = tk->location.e_row;
+    instr->loc.e_col = tk->location.e_col;
 
     if(tk->type == NUM || tk->type == HEX || tk->type == BIN) {
         *loc_ctr = token_to_long(tk);
     }else{
-      LOG_XLERR(tk->location, tk->location, "Missing value after START directive or the value is not a constant.\n");
+      LOG_XLERR(instr->loc, instr->loc, "Missing value after START directive or the value is not a constant.\n");
     }
-
-    instr->loc.e_row = tk->location.e_row;
-    instr->loc.e_col = tk->location.e_col;
 
     instrs->start_addr = *loc_ctr;
     offset = 0;
@@ -398,25 +400,24 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     }
 
     if(instrs->first_addr != 0) {
-      LOG_XLERR(tk->location, tk->location, "Duplicate START directive or START is not the first instruction.\n");
+      LOG_XLERR(instr->loc, instr->loc, "Duplicate START directive or START is not the first instruction.\n");
     }
 
     ((Directive*)instr->instr)->directive = tk->type;
 
-    check_next_token(i, tokens, "Missing value after END directive.\n");
+    check_next_token(i, tokens, instr->loc, "Missing value after END directive.\n");
     tk = tokvec_get(tokens, i++);
     token_check_null(tk);
 
     ((Directive*)instr->instr)->tk = tk;
+    instr->loc.e_row = tk->location.e_row;
+    instr->loc.e_col = tk->location.e_col;
 
     if (tk->type == NUM || tk->type == HEX || tk->type == BIN ){
         instrs->first_addr = token_to_long(tk);
     } else if (tk->type != ID){
-      LOG_XLERR(tk->location, tk->location, "Missing value after END directive or the value is not a constant/symbol.\n");
+      LOG_XLERR(instr->loc, instr->loc, "Missing value after END directive or the value is not a constant/symbol.\n");
     }
-
-    instr->loc.e_row = tk->location.e_row;
-    instr->loc.e_col = tk->location.e_col;
 
     offset = 0;
     break;
@@ -433,22 +434,22 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
 
     ((Directive*)instr->instr)->directive = tk->type;
 
-    check_next_token(i, tokens, "Missing value after BASE directive.\n");
+    check_next_token(i, tokens, instr->loc, "Missing value after BASE directive.\n");
     tk = tokvec_get(tokens, i++);
     token_check_null(tk);
+
+    instr->loc.e_row = tk->location.e_row;
+    instr->loc.e_col = tk->location.e_col;
 
     if(tk->type == NUM || tk->type == HEX || tk->type == BIN || tk->type == ID) {
       if(tk->type == ID){
         symtab_add_symbol(sym, tk->str);
       }
     }else{
-      LOG_XLERR(tk->location, tk->location, "Missing value after BASE directive or the value is not a constant or symbol.\n");
+      LOG_XLERR(instr->loc, instr->loc, "Missing value after BASE directive or the value is not a constant or symbol.\n");
     }
 
     ((Directive*)instr->instr)->tk = tk;
-
-    instr->loc.e_row = tk->location.e_row;
-    instr->loc.e_col = tk->location.e_col;
 
     offset = 0;
     break;
@@ -466,13 +467,16 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
 
     ((InitMemory*)instr->instr)->type = tk->type;
 
-    if(id == NULL || id->type != ID) {
-      LOG_XLERR(tk->location, tk->location, "Missing program label before BYTE or WORD directive.\n");
+    if(!id || id->type != ID) {
+      LOG_XLERR(instr->loc, instr->loc, "Missing program label before BYTE or WORD directive.\n");
     }
 
-    check_next_token(i, tokens, "Missing value after BYTE or WORD directive.\n");
+    check_next_token(i, tokens, instr->loc, "Missing value after BYTE or WORD directive.\n");
     tk = tokvec_get(tokens, i++);
     token_check_null(tk);
+
+    instr->loc.e_row = tk->location.e_row;
+    instr->loc.e_col = tk->location.e_col;
 
     uint64_t res_bytes = 0;
     if (tk->type == NUM || tk->type == HEX || tk->type == BIN ){
@@ -481,11 +485,8 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       //FIXME: Take into account special characters.
         while(tk->str[res_bytes++] != '\0');
     } else{
-      LOG_XLERR(tk->location, tk->location, "Missing value after WORD/BYTE or the value is not a constant.\n");
+      LOG_XLERR(instr->loc, instr->loc, "Missing value after WORD/BYTE or the value is not a constant.\n");
     }
-
-    instr->loc.e_row = tk->location.e_row;
-    instr->loc.e_col = tk->location.e_col;
 
     uint8_t format_size = ((InitMemory*)instr->instr)->type == WORD? SICAS_WORD_SIZE : SICAS_BYTE_SIZE;
     offset = res_bytes + (format_size - (res_bytes % format_size));
@@ -510,22 +511,22 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
 
     ((ResMemory*)instr->instr)->type = tk->type;
 
-    if(id == NULL || id->type != ID) {
-      LOG_XLERR(tk->location, tk->location, "Missing program label before RESB or RESW directive.\n");
+    if(!id || id->type != ID) {
+      LOG_XLERR(instr->loc, instr->loc, "Missing program label before RESB or RESW directive.\n");
     }
 
-    check_next_token(i, tokens, "Missing value after RESW or RESB directive.\n");
+    check_next_token(i, tokens, instr->loc, "Missing value after RESW or RESB directive.\n");
     tk = tokvec_get(tokens, i++);
     token_check_null(tk);
+
+    instr->loc.e_row = tk->location.e_row;
+    instr->loc.e_col = tk->location.e_col;
 
     if (tk->type == NUM || tk->type == HEX || tk->type == BIN ){
         offset = token_to_long(tk);
     } else{
       LOG_XLERR(tk->location, tk->location, "Missing value after RESW / RESB or the value is not a constant.\n");
     }
-
-    instr->loc.e_row = tk->location.e_row;
-    instr->loc.e_col = tk->location.e_col;
 
     if(tk->type == RESW){
         offset = SICAS_WORD_SIZE * offset;
