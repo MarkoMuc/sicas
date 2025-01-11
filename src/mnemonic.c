@@ -70,23 +70,23 @@ uint8_t mnemonic_get_opcode(enum ttype operation){
 }
 
 uint8_t mnemonic_get_reg(char *reg){
-    if(!strcmp(reg, "A")){
+    if(!strcasecmp(reg, "A")){
       return 0x0;
-    }else if(!strcmp(reg, "X")){
+    }else if(!strcasecmp(reg, "X")){
       return 0x1;
-    }else if(!strcmp(reg, "L")){
+    }else if(!strcasecmp(reg, "L")){
       return 0x2;
-    }else if(!strcmp(reg, "B")){
+    }else if(!strcasecmp(reg, "B")){
       return 0x3;
-    }else if(!strcmp(reg, "S")){
+    }else if(!strcasecmp(reg, "S")){
       return 0x4;
-    }else if(!strcmp(reg, "T")){
+    }else if(!strcasecmp(reg, "T")){
       return 0x5;
-    }else if(!strcmp(reg, "F")){
+    }else if(!strcasecmp(reg, "F")){
       return 0x6;
-    }else if(!strcmp(reg, "PC")){
+    }else if(!strcasecmp(reg, "PC")){
       return 0x8;
-    }else if(!strcmp(reg, "F")){
+    }else if(!strcasecmp(reg, "F")){
       return 0x9;
     }else{
       LOG_PANIC("Invalid register.\n");
