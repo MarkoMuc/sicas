@@ -45,10 +45,15 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
   Instruction *instr = instrvec_get(instrs, i++);
   uint8_t byte_rep[ASSEMBLER_INSTR_MAX_SIZE] = {0, 0, 0, 0};
   uint64_t carry_bits = 0;
+
+  if(!instr){
+    LOG_PANIC("Input contains no instructions but it has not been caught yet.\n");
+  }
+
   start_addr = instr->addr;
   pc_reg = start_addr;
 
-  while(i < instr_count) {
+  while(true) {
 
      if(reserved || instr->type == RMEM) {
        if(b_idx != 0) {
@@ -170,7 +175,9 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
         instr_to_text(body, byte_rep, &b_idx, carry_bits,
                       instr->format - carry_bits);
       }
-
+      if(i >= instr_count) {
+        break;
+      }
       instr = instrvec_get(instrs, i++);
       continue;
     }
@@ -184,6 +191,12 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
           output_text(output, body, &b_idx, &start_addr, pc_reg);
         }
         body[b_idx++] = '0';
+
+        if (b_idx >= ASSEMBLER_BODY_LINE) {
+          output_text(output, body, &b_idx, &start_addr, pc_reg);
+        }
+        body[b_idx++] = '0';
+
         pc_reg++;
       }
 
@@ -200,7 +213,6 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
 
           if(init->tk->type == STRING) {
             body[b_idx++] = nibble_to_hex(msn(val));
-            pc_reg++;
 
             if(b_idx >= ASSEMBLER_BODY_LINE) {
               output_text(output, body, &b_idx, &start_addr, pc_reg);
@@ -208,6 +220,12 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
 
             body[b_idx++] = nibble_to_hex(lsn(val));
           } else {
+            body[b_idx++] = '0';
+
+            if(b_idx >= ASSEMBLER_BODY_LINE) {
+              output_text(output, body, &b_idx, &start_addr, pc_reg);
+            }
+
             body[b_idx++] = val;
           }
 
@@ -215,9 +233,9 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
         }
       } else{
         uint64_t init_val = token_to_long(init->tk);
-        uint64_t bytes = init->raw;
-        while(bytes) {
-          //TODO: Is this correct?
+        uint64_t bytes = init->raw / 8;
+
+        do{
           uint8_t val = (uint8_t)(init_val & ((uint64_t)0xFF << bytes)) >> bytes;
 
           if(b_idx >= ASSEMBLER_BODY_LINE) {
@@ -225,7 +243,6 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
           }
 
           body[b_idx++] = nibble_to_hex(msn(val));
-          pc_reg++;
 
           if(b_idx >= ASSEMBLER_BODY_LINE) {
             output_text(output, body, &b_idx, &start_addr, pc_reg);
@@ -235,8 +252,13 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
           pc_reg++;
 
           bytes--;
-        }
+        }while(bytes);
       }
+
+      if(i >= instr_count) {
+        break;
+      }
+
       instr = instrvec_get(instrs, i++);
       continue;
     }
@@ -267,12 +289,13 @@ uint8_t nibble_to_hex(uint8_t nibble) {
 uint8_t instr_to_text(uint8_t *body, uint8_t *array, size_t *b_idx, uint8_t size, uint8_t start) {
   size_t i = *b_idx;
 
-  while(size && (*b_idx) + 1 < ASSEMBLER_BODY_LINE) {
+  while(size && (i) + 1 < ASSEMBLER_BODY_LINE) {
     body[i++] = nibble_to_hex(msn(array[start]));
     body[i++] = nibble_to_hex(lsn(array[start]));
     start++;
     size--;
   }
+
   *b_idx = i;
   return size;
 }
