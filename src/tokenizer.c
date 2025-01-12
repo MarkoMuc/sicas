@@ -429,6 +429,11 @@ Token *tokvec_get(TokenVector *v, size_t idx) {
     LOG_PANIC("Error while adding an element to the token vector.\n");
   }
 
+  if (idx >= v->count) {
+    LOG_PANIC("Error while getting token from index %ld count is %ld.\n", idx,
+            v->count);
+  }
+
   if (idx >= v->capacity) {
     LOG_PANIC("Error while getting token from index %ld capacity is %ld.\n", idx,
             v->capacity);

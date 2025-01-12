@@ -743,6 +743,11 @@ Instruction *instrvec_get(InstrVector *v, size_t idx){
     LOG_PANIC("Error while adding an element to the instruction vector.\n");
   }
 
+  if (idx >= v->count) {
+    LOG_PANIC("Error while getting instruction from index %ld count is %ld.\n", idx,
+            v->count);
+  }
+
   if (idx >= v->capacity) {
     LOG_PANIC("Error while getting instruction from index %ld capacity is %ld.\n", idx,
             v->capacity);
