@@ -129,7 +129,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
         bit_flags = (mem->indexed ? INDEX_BIT : BIT_OFF) << 2;
 
         if(instr->format == THREE) {
-          int32_t diff = pc_reg - disp_val;
+          int32_t diff = disp_val - pc_reg;
 
           if((diff < 0 && diff >= -2048) || (diff >= 0 && diff <= 2047)) {
             bit_flags = (bit_flags | PC_REL_BITS) << 1;
