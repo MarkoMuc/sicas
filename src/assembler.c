@@ -123,8 +123,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
           bit_flags = NI_INDIRECT_BITS;
         }
 
-        // TODO: Do i need to switch by 2?
-        byte_rep[INSTR_B1] = (byte_rep[INSTR_B1] << 2) | bit_flags;
+        byte_rep[INSTR_B1] = (byte_rep[INSTR_B1]) | bit_flags;
 
         // Set indexed bit and shift flag for bp flags
         bit_flags = (mem->indexed ? INDEX_BIT : BIT_OFF) << 2;
