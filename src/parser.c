@@ -481,6 +481,11 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     uint64_t res_bytes = 0;
     if (tk->type == NUM || tk->type == HEX || tk->type == BIN ){
         res_bytes = long_log2(token_to_long(tk));
+        if(res_bytes % 8) {
+          res_bytes = res_bytes /8 + 1;
+        }else{
+          res_bytes = res_bytes /8;
+        }
     } else if (tk->type == STRING) {
       //FIXME: Take into account special characters.
         while(tk->str[res_bytes++] != '\0');
@@ -493,7 +498,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
 
     ((InitMemory*)instr->instr)->start_addr = *loc_ctr;
     ((InitMemory*)instr->instr)->reserved = offset;
-    ((InitMemory*)instr->instr)->raw = res_bytes;
+    ((InitMemory*)instr->instr)->raw = res_bytes == 0? 1 : res_bytes;
     ((InitMemory*)instr->instr)->tk = tk;
 
     break;
