@@ -68,7 +68,12 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
        }else{
          ResMemory *res = (ResMemory *)instr->instr;
          pc_reg += res->reserved;
-         i++;
+
+         if(i >= instr_count) {
+            break;
+         }
+
+         instr = instrvec_get(instrs, i++);
          continue;
        }
      }
