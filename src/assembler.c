@@ -131,7 +131,10 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
         if(instr->format == THREE) {
           int32_t diff = disp_val - pc_reg;
 
-          if((diff < 0 && diff >= -2048) || (diff >= 0 && diff <= 2047)) {
+          if(mem->mem_type == IMM) {
+            bit_flags = (((bit_flags | 0) << 1) | 0) << 1;
+            diff = disp_val;
+          } else if((diff < 0 && diff >= -2048) || (diff >= 0 && diff <= 2047)) {
             bit_flags = (bit_flags | PC_REL_BITS) << 1;
           } else {
             if(diff > 0 && diff <= 4095) {
@@ -144,12 +147,10 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
 
           bit_flags = (bit_flags | BIT_OFF) << 4;
 
-          // Use the upper 4 bytes and make sure to zero out all other values.
           // TODO: check if this correctly works with two's complement.
           bit_flags = bit_flags | ((diff >> 8) & ((uint8_t)0xF));
           byte_rep[INSTR_B2] = bit_flags;
 
-          // Only use the lower 8 bytes
           diff = ((uint8_t)0xFF) & diff;
           byte_rep[INSTR_B3] = diff;
         } else {
@@ -237,10 +238,11 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
         }
       } else{
         uint64_t init_val = token_to_long(init->tk);
-        uint64_t bytes = init->raw / 8;
+        uint64_t bytes = init->raw;
 
-        do{
-          uint8_t val = (uint8_t)(init_val & ((uint64_t)0xFF << bytes)) >> bytes;
+        while(bytes){
+
+          uint8_t val = (uint8_t)(init_val & ((uint64_t)0xFF << (bytes - 1))) >> (bytes - 1);
 
           if(b_idx >= ASSEMBLER_BODY_LINE) {
             output_text(output, body, &b_idx, &start_addr, pc_reg);
@@ -256,7 +258,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
           pc_reg++;
 
           bytes--;
-        }while(bytes);
+        }
       }
 
       if(i >= instr_count) {
