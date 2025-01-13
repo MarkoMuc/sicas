@@ -5,6 +5,7 @@ set -xe
 INCLUDES="-I ./includes/"
 DBG_CFLAGS=" -Wall -ggdb -fanalyzer -pedantic -std=c99"
 REL_CFLAGS="-O2"
+DEBUG_FLAG="-D""PARSER_DEBUG_MODE"
 
 mode=${1:-"dbg"}
 execute=${2:-""}
@@ -17,7 +18,7 @@ fi
 if [ "$mode" == "dbg" ]; then
 	mkdir -p ./target/dbg
 	target_path="./target/dbg/sicas"
-	gcc $DBG_CFLAGS $INCLUDES -o "$target_path" src/* -DDEBUG_MODE
+	gcc $DBG_CFLAGS $INCLUDES -o "$target_path" src/* "$DEBUG_FLAG"
 elif [ "$mode" == "rel" ]; then 
 	mkdir -p ./target/rel
 	target_path="./target/rel/sicas"

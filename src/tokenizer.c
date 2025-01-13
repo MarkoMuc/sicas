@@ -111,9 +111,7 @@ void fill(FILE *f, TokenVector *vec) {
             fraction += 1;
             if (num_delimiter > 1) {
               str[idx] = '\0';
-              LOG_XERR(
-                  "[%ld, %ld]:[%ld, %ld] %s float not in correct format, one "
-                  "too many seperators.\n",
+              LOG_XERR( "[%ld, %ld]:[%ld, %ld] %s float not in correct format, one too many seperators.\n",
                   s_row, s_col, row, col, str);
             }
           }
@@ -669,7 +667,7 @@ Token gen_token(char *str, Location loc) {
   return token;
 }
 
-#if defined(TOKENIZER_DEBUG_MODE) || defined(DEBUG_MODE)
+#if defined(TOKENIZER_DEBUG_MODE) || defined(PARSER_DEBUG_MODE) || defined(DEBUG_MODE)
 void tokvec_print(TokenVector *v) {
   for(size_t i = 0; i < v->count; i++) {
     Token t = v->items[i];

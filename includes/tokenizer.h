@@ -166,7 +166,7 @@ void tokvec_replace(TokenVector *v, Token *el, size_t idx);
 void tokvec_rm(TokenVector *v, size_t idx);
 Token *tokvec_get(TokenVector *v, size_t idx);
 
-#if defined(TOKENIZER_DEBUG_MODE) || defined (DEBUG_MODE)
+#if defined(TOKENIZER_DEBUG_MODE) || defined(PARSER_DEBUG_MODE) || defined (DEBUG_MODE)
 void tokvec_print(TokenVector *v);
 void token_print(Token t);
 void token_type_print(enum ttype tk_type);

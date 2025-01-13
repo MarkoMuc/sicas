@@ -148,7 +148,7 @@ uint64_t symtab_check_get_addr(SymTable *table, char *symbol, Instruction *instr
 
 // debug
 
-#if (defined(PARSER_DEBUG_MODE) && defined(TOKENIZER_DEBUG_MODE)) || defined(DEBUG_MODE)
+#if defined(PARSER_DEBUG_MODE) || defined(DEBUG_MODE)
 void instruction_print(Instruction *instr);
 void symtab_print(SymTable *table);
 #endif

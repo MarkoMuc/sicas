@@ -882,7 +882,7 @@ uint64_t symtab_check_get_addr(SymTable *table, char *symbol, Instruction *instr
   return val->addr;
 }
 
-#if (defined(PARSER_DEBUG_MODE) && defined(TOKENIZER_DEBUG_MODE)) || defined(DEBUG_MODE)
+#if defined(PARSER_DEBUG_MODE) || defined(DEBUG_MODE)
 void instruction_print(Instruction *instr) {
   printf("[%ld, %ld]:[%ld, %ld] ", instr->loc.s_row, instr->loc.s_col, instr->loc.e_row, instr->loc.e_col);\
 
