@@ -28,6 +28,31 @@
 #include "logger.h"
 #endif
 
+// macros
+
+#define TOKENIZER_START_BUFFER_SIZE (size_t) 256
+#define TOKENIZER_START_STRING_SIZE (size_t) 128
+#define TOKVEC_INITIAL_CAPACITY (size_t) 256
+#define TOKVEC_RESIZE_MULTIPLIER 2
+#define TOKENIZER_TAB_WIDTH (uint8_t) 4
+
+#define token_check_null(tk) \
+        do{                       \
+          if ((tk) == NULL) {     \
+            LOG_PANIC(("Token is NULL.\n"));}    \
+        }while(0)
+
+#define check_next_token(idx, token_vec, loc, error_msg) \
+        do {\
+            if((idx) >= (token_vec)->count){ \
+              Token *tk =  tokvec_get((token_vec), (idx) - 1); \
+              if (tk == NULL) { LOG_PANIC(("Token is NULL.\n"));}    \
+              LOG_XLERR((loc), tk->location, error_msg);}\
+        }while(0)
+
+
+// enums
+
 enum ttype {
   // -- CPU Instructions
   ADD,
@@ -116,6 +141,8 @@ enum ttype {
   MINUS
 };
 
+//structs
+
 typedef struct {
   uint64_t s_row;
   uint64_t s_col;
@@ -135,28 +162,12 @@ typedef struct {
   Token *items;
 } TokenVector;
 
-#define TOKENIZER_START_BUFFER_SIZE (size_t) 256
-#define TOKENIZER_START_STRING_SIZE (size_t) 128
-#define TOKVEC_INITIAL_CAPACITY (size_t) 256
-#define TOKVEC_RESIZE_MULTIPLIER 2
-#define TOKENIZER_TAB_WIDTH (uint8_t) 4
-
-#define token_check_null(tk) \
-        do{                       \
-          if ((tk) == NULL) {     \
-            LOG_PANIC(("Token is NULL.\n"));}    \
-        }while(0)
-
-#define check_next_token(idx, token_vec, loc, error_msg) \
-        do {\
-            if((idx) >= (token_vec)->count){ \
-              Token *tk =  tokvec_get((token_vec), (idx) - 1); \
-              if (tk == NULL) { LOG_PANIC(("Token is NULL.\n"));}    \
-              LOG_XLERR((loc), tk->location, error_msg);}\
-        }while(0)
+// mfunc
 
 Token gen_token(char *str, Location loc);
 void fill(FILE *f, TokenVector *vec);
+
+// ufunc
 
 void tokvec_init(TokenVector *v);
 void tokvec_free(TokenVector *v);
@@ -165,6 +176,8 @@ void tokvec_add(TokenVector *v, Token *el);
 void tokvec_replace(TokenVector *v, Token *el, size_t idx);
 void tokvec_rm(TokenVector *v, size_t idx);
 Token *tokvec_get(TokenVector *v, size_t idx);
+
+// debug
 
 #if defined(TOKENIZER_DEBUG_MODE) || defined(PARSER_DEBUG_MODE) || defined (DEBUG_MODE)
 void tokvec_print(TokenVector *v);

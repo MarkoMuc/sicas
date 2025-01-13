@@ -2,6 +2,8 @@
 #include <stdio.h>
 #endif
 
+// macros
+
 #define LOG(...)                  \
   do {                            \
     fprintf(stdout, __VA_ARGS__); \
