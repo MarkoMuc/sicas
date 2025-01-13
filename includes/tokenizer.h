@@ -50,6 +50,9 @@
               LOG_XLERR((loc), tk->location, error_msg);}\
         }while(0)
 
+#define is_alphabetic(c) ((c) >= 'a' && (c) <= 'z')
+#define is_numeric(c) ((c) >= '0' && (c) <= '9')
+#define is_alphanumeric(c) (((c) >= 'a' && (c) <= 'z') || ((c) >= '0' && (c) <= '9'))
 
 // enums
 
