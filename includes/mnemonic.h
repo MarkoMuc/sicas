@@ -18,5 +18,7 @@
 #include "logger.h"
 #endif
 
+// mfunc
+
 uint8_t mnemonic_get_opcode(enum ttype operation);
 uint8_t mnemonic_get_reg(char *reg);
