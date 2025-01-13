@@ -170,3 +170,4 @@ There are two versions of SIC, one is the basic SIC the other one is known as SI
 - For instructions that do not specify neither immediate nor indirect addressing, the SIC assembler sets bits `n` and `i` to `0`, while the SIC/XE assembler sets this bits to `1`. This is because 8-bit binary instructions for all of the SIC instruction end in `00`.
 - SIC/XE interprets bits `b`, `p` and `e` as part of the address field, if bits `n` and `i` are set to `0`.
 - SIC/XE has I/O channels.
+- SIC/XE has Floats, Floating point operations load 5bytes from memory.
