@@ -13,11 +13,11 @@ void fill(FILE *f, TokenVector *vec) {
   uint8_t num = 0;
   uint8_t identf = 0;
   uint8_t comment = 0;
-  uint8_t special = 0;
+  enum special_token special = NON_T;
   int32_t num_delimiter = 0;
   int8_t fraction = -1;
-  uint64_t s_row = -1;
-  uint64_t s_col = -1;
+  uint64_t s_row = 0;
+  uint64_t s_col = 0;
 
   buffer = malloc(sizeof((*buffer)) * TOKENIZER_START_BUFFER_SIZE);
   if (!buffer) {
@@ -39,15 +39,15 @@ void fill(FILE *f, TokenVector *vec) {
         c = c + 32;
       }
 
-      if (special == 0 && c == 'x') {
-        special = 1;
-      } else if (special == 0 && c == 'c') {
-        special = 3;
-      } else if (special == 0 && c == 'f' && !num) {
-        special = 5;
-      } else if (special == 0 && c == 'b' && !num) {
-        special = 7;
-      } else if (special && idx == 1 && c == '\'') {
+      if (special == NON_T && c == 'x' && !comment) {
+        special = HEXP_T;
+      } else if (special == NON_T && c == 'c' && !comment) {
+        special = CHARP_T;
+      } else if (special == NON_T && c == 'f' && !num && !comment) {
+        special = FLOATP_T;
+      } else if (special == NON_T && c == 'b' && !num && !comment) {
+        special = BINP_T;
+      } else if (special % 2 != 0 && idx == 1 && c == '\'') {
         special++;
         idx = -1;
         identf = 0;
@@ -57,18 +57,20 @@ void fill(FILE *f, TokenVector *vec) {
       if (special % 2 == 0 && special) {
         if (c == '\'') {
           str[idx] = '\0';
-          Location loc = {
-              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col - 1};
+          Location loc = { .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col - 1};
           enum ttype type = HEX;
 
-          if (special > 2) {
-            type = special == 4 ? STRING : FNUM;
-            type = special == 8 ? BIN : type;
+          if (special > HEX_T) {
+            type = special == CHAR_T ? STRING : FNUM;
+            type = special == BIN_T ? BIN : type;
           }
 
-          if (fraction == 0) {
-            LOG_XERR("[%ld, %ld]:[%ld, %ld] %s float missing fractional part.\n",
-                    s_row, s_col, row, col, str);
+          if (type == FNUM && (fraction < 0 || str[idx-1] == '.')) {
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] %s float missing fractional part.\n", s_row, s_col, row, col, str);
+          }
+
+          if(idx < 1 && special != CHAR_T) {
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] %s only a char or string can be empty.\n", s_row, s_col, row, col, str);
           }
 
           Token el = {.str = str, .type = type, .location = loc};
@@ -77,42 +79,40 @@ void fill(FILE *f, TokenVector *vec) {
           if (el.str) {
             str = malloc(sizeof((*str)) * TOKENIZER_START_STRING_SIZE);
             if (!str) {
-              LOG_PANIC(
-                  "[%ld, %ld]:[%ld, %ld] Error allocating string for token.\n",
-                    s_row, s_col, row, col);
+              LOG_PANIC("[%ld,%ld]:[%ld,%ld] Error allocating string for token.\n", s_row, s_col, row, col);
             }
           }
 
-          s_row = -1;
           idx = 0;
-          special = 0;
+          special = NON_T;
           num_delimiter = 0;
           fraction = -1;
           continue;
         } else {
-          if (special == 2 && !(c >= '0' && c <= '9') &&
-              !(c >= 'a' && c <= 'f')) {
-            LOG_XERR("[%ld, %ld]:[%ld, %ld] %c is not a valid hex symbol.\n",
-                    s_row, s_col, row, col, buffer[i]);
-          } else if (special == 6 && !(c >= '0' && c <= '9') && !(c == '.')) {
-            LOG_XERR("[%ld, %ld]:[%ld, %ld] %c is not a valid float symbol.\n",
-                    s_row, s_col, row, col, buffer[i]);
-          } else if (special == 8 && !(c == '0' || c == '1')) {
-            LOG_XERR("[%ld, %ld]:[%ld, %ld] %c is not a valid binary symbol.\n",
-                    s_row, s_col, row, col, buffer[i]);
+          if (special == HEX_T && !is_numeric(c) && !(c >= 'a' && c <= 'f')) {
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] %c is not a valid hex symbol.\n", s_row, s_col, row, col, buffer[i]);
+          } else if (special == FLOAT_T && !is_numeric(c) && !(c == '.')) {
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] %c is not a valid float symbol.\n", s_row, s_col, row, col, buffer[i]);
+          } else if (special == BIN_T && !(c == '0' || c == '1')) {
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] %c is not a valid binary symbol.\n", s_row, s_col, row, col, buffer[i]);
           }
 
           if (fraction > -1) {
             fraction++;
           }
 
-          if (special == 6 && c == '.') {
-            num_delimiter += 1;
-            fraction += 1;
-            if (num_delimiter > 1) {
-              str[idx] = '\0';
-              LOG_XERR( "[%ld, %ld]:[%ld, %ld] %s float not in correct format, one too many seperators.\n",
-                  s_row, s_col, row, col, str);
+          if (special == FLOAT_T) {
+            if(c == '.') {
+              if(fraction == -1 && idx < 1) {
+                str[idx] = '\0';
+                LOG_XERR("[%ld,%ld]:[%ld,%ld] %s float is missing the decimal part.\n", s_row, s_col, row, col, str);
+              }
+              num_delimiter += 1;
+              fraction += 1;
+              if (num_delimiter > 1) {
+                str[idx] = '\0';
+                LOG_XERR("[%ld,%ld]:[%ld,%ld] %s float not in correct format, one too many seperators.\n", s_row, s_col, row, col, str);
+              }
             }
           }
 
@@ -127,7 +127,7 @@ void fill(FILE *f, TokenVector *vec) {
         continue;
       }
 
-      if (!comment && !num && !identf && ((c >= 'a' && c <= 'z') || c == '_')) {
+      if (!comment && !num && !identf && (is_alphabetic(c) || c == '_')) {
         s_row = row;
         s_col = col;
         idx = 0;
@@ -135,10 +135,9 @@ void fill(FILE *f, TokenVector *vec) {
       }
 
       if (identf) {
-        if (!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'z') && c != '_') {
+        if (!is_alphanumeric(c) && c != '_') {
           str[idx] = '\0';
-          Location loc = {
-              .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col - 1};
+          Location loc = { .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col - 1};
           Token el = gen_token(str, loc);
           tokvec_add(vec, &el);
 
@@ -149,17 +148,16 @@ void fill(FILE *f, TokenVector *vec) {
             }
           }
 
-          s_row = -1;
           idx = 0;
           identf = 0;
-          special = 0;
+          special = NON_T;
         } else {
           str[idx] = buffer[i];
           continue;
         }
       }
 
-      if (!comment && !num && !identf && (c >= '0' && c <= '9')) {
+      if (!comment && !num && !identf && is_numeric(c)) {
         s_row = row;
         s_col = col;
         idx = 0;
@@ -167,7 +165,7 @@ void fill(FILE *f, TokenVector *vec) {
       }
 
       if (num) {
-        if (!(c >= '0' && c <= '9') &&
+        if (!is_numeric(c) &&
             !(str[0] == '0' && c == 'x' && idx == 1) &&
             !(str[0] == '0' && c == 'b' && idx == 1) &&
             !(num_delimiter == -1 && c >= 'a' && c <= 'f') &&
@@ -180,20 +178,21 @@ void fill(FILE *f, TokenVector *vec) {
             type = num_delimiter == -2 ? BIN : type;
           }
 
-          if (fraction == 0) {
-            LOG_XERR("[%ld, %ld]:[%ld, %ld] %s float missing fractional part.\n",
-                    s_row, s_col, row, col, str);
-          } else if (c == '.' && num_delimiter >= 1) {
-            LOG_XERR("[%ld, %ld]:[%ld, %ld] %s float not in correct format, one "
-                    "too many seperators.\n",
-                    s_row, s_col, row, col, str);
+          if (type == FNUM ) {
+            if (c == '.' && num_delimiter >= 1) {
+              LOG_XERR("[%ld,%ld]:[%ld,%ld] %s float not in correct format, one too many seperators.\n", s_row, s_col, row, col, str);
+            } else if(fraction <= 0){
+              LOG_XERR("[%ld,%ld]:[%ld,%ld] %s float missing fractional part.\n", s_row, s_col, row, col, str);
+            }
+          }
+          if(idx < 1){
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] %s only characters or strings can be empty.\n", s_row, s_col, row, col, str);
           }
 
           Token el = {
               .type = type,
               .str = str,
-              .location = {
-                .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col - 1}};
+              .location = { .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col - 1}};
           tokvec_add(vec, &el);
 
           if (str) {
@@ -203,7 +202,6 @@ void fill(FILE *f, TokenVector *vec) {
             }
           }
 
-          s_row = -1;
           idx = 0;
           num = 0;
           num_delimiter = 0;
@@ -227,8 +225,7 @@ void fill(FILE *f, TokenVector *vec) {
           }
 
           if (num_delimiter == -2 && (c != '0' && c != '1')) {
-            LOG_XERR("[%ld, %ld]:[%ld, %ld] %c is not a valid binary symbol.\n",
-                    s_row, s_col, row, col, buffer[i]);
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] %c is not a valid binary symbol.\n", s_row, s_col, row, col, buffer[i]);
           }
 
           if (fraction > -1) {
@@ -236,6 +233,10 @@ void fill(FILE *f, TokenVector *vec) {
           }
 
           if (num_delimiter > 0 && c == '.') {
+            if(num_delimiter == 1 && idx < 1) {
+                str[idx] = '\0';
+                LOG_XERR("[%ld,%ld]:[%ld,%ld] float is missing the decimal part.\n", s_row, s_col, row, col);
+            }
             num_delimiter++;
             fraction += 1;
             comment = 0;
@@ -255,28 +256,22 @@ void fill(FILE *f, TokenVector *vec) {
         break;
       case ',': {
         Token el = {
-            .type = COMMA,
-            .str = NULL,
-            .location = {
-              .s_row = row, .s_col = col, .e_row = row, .e_col = col}};
+            .type = COMMA, .str = NULL,
+            .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
         tokvec_add(vec, &el);
         break;
       }
       case '=': {
         Token el = {
-            .type = LITERAL,
-            .str = NULL,
-            .location = {
-              .s_row = row, .s_col = col, .e_row = row, .e_col = col}};
+            .type = LITERAL, .str = NULL,
+            .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
         tokvec_add(vec, &el);
         break;
       }
       case '#': {
         Token el = {
-            .type = HASH,
-            .str = NULL,
-            .location = {
-              .s_row = row, .s_col = col, .e_row = row, .e_col = col}};
+            .type = HASH, .str = NULL,
+            .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
         tokvec_add(vec, &el);
         break;
       }
@@ -288,28 +283,22 @@ void fill(FILE *f, TokenVector *vec) {
       }
       case '+': {
         Token el = {
-            .type = PLUS,
-            .str = NULL,
-            .location = {
-              .s_row = row, .s_col = col, .e_row = row, .e_col = col}};
+            .type = PLUS, .str = NULL,
+            .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
         tokvec_add(vec, &el);
         break;
       }
       case '-': {
         Token el = {
-            .type = MINUS,
-            .str = NULL,
-            .location = {
-              .s_row = row, .s_col = col, .e_row = row, .e_col = col}};
+            .type = MINUS, .str = NULL,
+            .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
         tokvec_add(vec, &el);
         break;
       }
       case '@': {
         Token el = {
-            .type = AT,
-            .str = NULL,
-            .location = {
-              .s_row = row, .s_col = col, .e_row = row, .e_col = col}};
+            .type = AT, .str = NULL,
+            .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
         tokvec_add(vec, &el);
         break;
       }
@@ -680,11 +669,10 @@ void token_print(Token t) {
   token_type_print(t.type);
   if(t.type == NUM || t.type == FNUM || t.type == BIN || t.type == ID ||
      t.type == HEX || t.type == STRING ||t.type == REGISTER){
-    printf(" %s", t.str);
+    printf(" '%s", t.str);
   }
 
-  printf(" [%ld:%ld] [%ld:%ld]",t.location.s_row,
-           t.location.s_col, t.location.e_row, t.location.e_col);
+  printf("' [%ld:%ld] [%ld:%ld]",t.location.s_row, t.location.s_col, t.location.e_row, t.location.e_col);
 }
 
 void token_type_print(enum ttype tk_type){

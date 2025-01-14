@@ -56,6 +56,18 @@
 
 // enums
 
+enum special_token {
+  NON_T = 0,
+  HEXP_T = 1,
+  HEX_T = 2,
+  CHARP_T = 3,
+  CHAR_T = 4,
+  FLOATP_T = 5,
+  FLOAT_T = 6,
+  BINP_T = 7,
+  BIN_T = 8
+};
+
 enum ttype {
   // -- CPU Instructions
   ADD,
