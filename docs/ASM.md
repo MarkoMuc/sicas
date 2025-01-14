@@ -15,9 +15,9 @@ Memory:
 
 Constants:
 - `C'CHAR'` -> At least a single character or a string.
+- `DECIMAL` -> Integer constant in decimal.
 - `X'HEX'` or `0xHEX` -> Integer constant in hexadecimal.
 - `B'BIN'` or `0bBIN`-> Integer constant in binary.
-- `D'DEC'` or `DECIMAL` -> Integer constant in decimal.
 - `F'FLOAT'` or `0fFLOAT` -> Floating point constant in decimal.
 
 Addressing:
