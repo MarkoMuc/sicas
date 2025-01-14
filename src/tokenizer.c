@@ -65,12 +65,12 @@ void fill(FILE *f, TokenVector *vec) {
             type = special == BIN_T ? BIN : type;
           }
 
-          if (type == FNUM && (fraction < 0 || str[idx-1] == '.')) {
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] %s float missing fractional part.\n", s_row, s_col, row, col, str);
+          if(idx < 1 && special != CHAR_T) {
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] Only a char or string can be empty.\n", s_row, s_col, row, col);
           }
 
-          if(idx < 1 && special != CHAR_T) {
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] %s only a char or string can be empty.\n", s_row, s_col, row, col, str);
+          if (type == FNUM && (fraction < 0 || str[idx-1] == '.')) {
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] '%s' float missing fractional part.\n", s_row, s_col, row, col, str);
           }
 
           Token el = {.str = str, .type = type, .location = loc};
@@ -90,11 +90,11 @@ void fill(FILE *f, TokenVector *vec) {
           continue;
         } else {
           if (special == HEX_T && !is_numeric(c) && !(c >= 'a' && c <= 'f')) {
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] %c is not a valid hex symbol.\n", s_row, s_col, row, col, buffer[i]);
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] '%c' is not a valid hex symbol.\n", s_row, s_col, row, col, buffer[i]);
           } else if (special == FLOAT_T && !is_numeric(c) && !(c == '.')) {
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] %c is not a valid float symbol.\n", s_row, s_col, row, col, buffer[i]);
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] '%c' is not a valid float symbol.\n", s_row, s_col, row, col, buffer[i]);
           } else if (special == BIN_T && !(c == '0' || c == '1')) {
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] %c is not a valid binary symbol.\n", s_row, s_col, row, col, buffer[i]);
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] '%c' is not a valid binary symbol.\n", s_row, s_col, row, col, buffer[i]);
           }
 
           if (fraction > -1) {
@@ -105,13 +105,13 @@ void fill(FILE *f, TokenVector *vec) {
             if(c == '.') {
               if(fraction == -1 && idx < 1) {
                 str[idx] = '\0';
-                LOG_XERR("[%ld,%ld]:[%ld,%ld] %s float is missing the decimal part.\n", s_row, s_col, row, col, str);
+                LOG_XERR("[%ld,%ld]:[%ld,%ld] Float is missing the decimal part.\n", s_row, s_col, row, col);
               }
               num_delimiter += 1;
               fraction += 1;
               if (num_delimiter > 1) {
                 str[idx] = '\0';
-                LOG_XERR("[%ld,%ld]:[%ld,%ld] %s float not in correct format, one too many seperators.\n", s_row, s_col, row, col, str);
+                LOG_XERR("[%ld,%ld]:[%ld,%ld] '%s' float is not in correct format, one too many seperators.\n", s_row, s_col, row, col, str);
               }
             }
           }
@@ -180,13 +180,13 @@ void fill(FILE *f, TokenVector *vec) {
 
           if (type == FNUM ) {
             if (c == '.' && num_delimiter >= 1) {
-              LOG_XERR("[%ld,%ld]:[%ld,%ld] %s float not in correct format, one too many seperators.\n", s_row, s_col, row, col, str);
+              LOG_XERR("[%ld,%ld]:[%ld,%ld] '%s' Float not in correct format, one too many seperators.\n", s_row, s_col, row, col, str);
             } else if(fraction <= 0){
-              LOG_XERR("[%ld,%ld]:[%ld,%ld] %s float missing fractional part.\n", s_row, s_col, row, col, str);
+              LOG_XERR("[%ld,%ld]:[%ld,%ld] '%s' Float missing fractional part.\n", s_row, s_col, row, col, str);
             }
           }
           if(idx < 1){
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] %s only characters or strings can be empty.\n", s_row, s_col, row, col, str);
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] Only characters or strings can be empty.\n", s_row, s_col, row, col);
           }
 
           Token el = {
@@ -225,7 +225,7 @@ void fill(FILE *f, TokenVector *vec) {
           }
 
           if (num_delimiter == -2 && (c != '0' && c != '1')) {
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] %c is not a valid binary symbol.\n", s_row, s_col, row, col, buffer[i]);
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] '%c' is not a valid binary symbol.\n", s_row, s_col, row, col, buffer[i]);
           }
 
           if (fraction > -1) {
@@ -235,7 +235,7 @@ void fill(FILE *f, TokenVector *vec) {
           if (num_delimiter > 0 && c == '.') {
             if(num_delimiter == 1 && idx < 1) {
                 str[idx] = '\0';
-                LOG_XERR("[%ld,%ld]:[%ld,%ld] float is missing the decimal part.\n", s_row, s_col, row, col);
+                LOG_XERR("[%ld,%ld]:[%ld,%ld] Float is missing the decimal part.\n", s_row, s_col, row, col);
             }
             num_delimiter++;
             fraction += 1;
@@ -304,7 +304,7 @@ void fill(FILE *f, TokenVector *vec) {
       }
       default:
         if (!comment) {
-          LOG_XERR("[%ld:%ld] %c is an illegal symbol.\n", row, col, buffer[i]);
+          LOG_XERR("[%ld:%ld] '%c' is an illegal symbol.\n", row, col, buffer[i]);
         }
         break;
       }
