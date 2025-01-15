@@ -178,15 +178,16 @@ void fill(FILE *f, TokenVector *vec) {
             type = num_delimiter == -2 ? BIN : type;
           }
 
+          if(idx < 1){
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] Only characters or strings can be empty.\n", s_row, s_col, row, col);
+          }
+
           if (type == FNUM ) {
             if (c == '.' && num_delimiter >= 1) {
               LOG_XERR("[%ld,%ld]:[%ld,%ld] '%s' Float not in correct format, one too many seperators.\n", s_row, s_col, row, col, str);
             } else if(fraction <= 0){
               LOG_XERR("[%ld,%ld]:[%ld,%ld] '%s' Float missing fractional part.\n", s_row, s_col, row, col, str);
             }
-          }
-          if(idx < 1){
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] Only characters or strings can be empty.\n", s_row, s_col, row, col);
           }
 
           Token el = {
