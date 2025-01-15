@@ -8,6 +8,11 @@
 #include <stdint.h>
 #endif
 
+#ifndef STD_BOOL
+#define STD_BOOL
+#include <stdbool.h>
+#endif
+
 #ifndef STD_LIB
 #define STD_LIB
 #include <stdlib.h>

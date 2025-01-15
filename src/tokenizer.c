@@ -10,9 +10,9 @@ void fill(FILE *f, TokenVector *vec) {
   uint64_t row = 1;
   uint64_t col = 0;
   size_t idx = 0;
-  uint8_t num = 0;
-  uint8_t identf = 0;
-  uint8_t comment = 0;
+  bool num = false;
+  bool identf = false;
+  bool comment = false;
   enum special_token special = NON_T;
   int32_t num_delimiter = 0;
   int8_t fraction = -1;
@@ -50,7 +50,7 @@ void fill(FILE *f, TokenVector *vec) {
       } else if (special % 2 != 0 && idx == 1 && c == '\'') {
         special++;
         idx = -1;
-        identf = 0;
+        identf = false;
         continue;
       }
 
@@ -122,7 +122,7 @@ void fill(FILE *f, TokenVector *vec) {
       }
 
       if (c == '.') {
-        comment = 1;
+        comment = true;
       } else if (comment && c != '\n') {
         continue;
       }
@@ -131,7 +131,7 @@ void fill(FILE *f, TokenVector *vec) {
         s_row = row;
         s_col = col;
         idx = 0;
-        identf = 1;
+        identf = true;
       }
 
       if (identf) {
@@ -149,7 +149,7 @@ void fill(FILE *f, TokenVector *vec) {
           }
 
           idx = 0;
-          identf = 0;
+          identf = false;
           special = NON_T;
         } else {
           str[idx] = buffer[i];
@@ -161,7 +161,7 @@ void fill(FILE *f, TokenVector *vec) {
         s_row = row;
         s_col = col;
         idx = 0;
-        num = 1;
+        num = true;
       }
 
       if (num) {
@@ -203,11 +203,11 @@ void fill(FILE *f, TokenVector *vec) {
           }
 
           idx = 0;
-          num = 0;
+          num = false;
           num_delimiter = 0;
           fraction = -1;
-          if (type == FNUM) {
-            comment = 0;
+          if(type == FNUM) {
+            comment = false;
           }
         } else {
           if (idx == 1 && str[0] == '0' && c == 'x') {
@@ -239,7 +239,7 @@ void fill(FILE *f, TokenVector *vec) {
             }
             num_delimiter++;
             fraction += 1;
-            comment = 0;
+            comment = false;
           }
 
           str[idx] = buffer[i];
@@ -276,7 +276,7 @@ void fill(FILE *f, TokenVector *vec) {
         break;
       }
       case '\n': {
-        comment = 0;
+        comment = false;
         row += 1;
         col = 0;
         break;
