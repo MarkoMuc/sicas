@@ -13,6 +13,7 @@ void fill(FILE *f, TokenVector *vec) {
   bool num = false;
   bool identf = false;
   bool comment = false;
+  bool special_char = false;
   enum special_token special = NON_T;
   int32_t num_delimiter = 0;
   int8_t fraction = -1;
@@ -69,7 +70,9 @@ void fill(FILE *f, TokenVector *vec) {
             LOG_XERR("[%ld,%ld]:[%ld,%ld] Only a char or string can be empty.\n", s_row, s_col, row, col);
           }
 
-          if (type == FNUM && (fraction < 0 || str[idx-1] == '.')) {
+          if(type == STRING && special_char){
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] '%s' string or char has an invalid escape sequence.\n", s_row, s_col, row, col, str);
+          }else if (type == FNUM && (fraction < 0 || str[idx-1] == '.')) {
             LOG_XERR("[%ld,%ld]:[%ld,%ld] '%s' float missing fractional part.\n", s_row, s_col, row, col, str);
           }
 
@@ -95,10 +98,18 @@ void fill(FILE *f, TokenVector *vec) {
             LOG_XERR("[%ld,%ld]:[%ld,%ld] '%c' is not a valid float symbol.\n", s_row, s_col, row, col, buffer[i]);
           } else if (special == BIN_T && !(c == '0' || c == '1')) {
             LOG_XERR("[%ld,%ld]:[%ld,%ld] '%c' is not a valid binary symbol.\n", s_row, s_col, row, col, buffer[i]);
+          } else if (special == CHAR_T && special_char && !is_specialchar(c)){
+            LOG_XERR("[%ld,%ld]:[%ld,%ld] '%c' is not a valid special character.\n", s_row, s_col, row, col, buffer[i]);
           }
 
           if (fraction > -1) {
             fraction++;
+          }
+
+          if(special_char){
+            special_char = false;
+          }else if(special == CHAR_T && c == '\\'){
+            special_char = true;
           }
 
           if (special == FLOAT_T) {

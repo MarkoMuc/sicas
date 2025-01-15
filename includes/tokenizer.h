@@ -58,6 +58,7 @@
 #define is_alphabetic(c) ((c) >= 'a' && (c) <= 'z')
 #define is_numeric(c) ((c) >= '0' && (c) <= '9')
 #define is_alphanumeric(c) (((c) >= 'a' && (c) <= 'z') || ((c) >= '0' && (c) <= '9'))
+#define is_specialchar(c) ((c) == '0' || (c) == '\\' || (c) == 'n' || (c) == 'r' || (c) == 't' || (c) == 'v')
 
 // enums
 
