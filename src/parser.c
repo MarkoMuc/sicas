@@ -480,12 +480,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
 
     uint64_t res_bytes = 0;
     if (tk->type == NUM || tk->type == HEX || tk->type == BIN ){
-        res_bytes = long_log2(token_to_long(tk));
-        if(res_bytes % 8) {
-          res_bytes = res_bytes /8 + 1;
-        }else{
-          res_bytes = res_bytes /8;
-        }
+        res_bytes = long_ceil(long_log2(token_to_long(tk)), 8);
     } else if (tk->type == STRING) {
         bool escape = false;
         size_t counter = 0;
