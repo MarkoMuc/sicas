@@ -494,6 +494,12 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
           counter++;
           escape = false;
         }
+
+        if(counter == 3) {
+          if(tk->str[0] == 'E' && tk->str[1] == 'O' && tk->str[2] == 'F'){
+            res_bytes = 1;
+          }
+        }
     } else{
       LOG_XLERR(instr->loc, instr->loc, "Missing value after WORD/BYTE or the value is not a constant.\n");
     }
