@@ -487,8 +487,18 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
           res_bytes = res_bytes /8;
         }
     } else if (tk->type == STRING) {
-      //FIXME: Take into account special characters.
-        while(tk->str[res_bytes++] != '\0');
+        bool escape = false;
+        size_t counter = 0;
+        while(tk->str[counter] != '\0'){
+          if(!escape && tk->str[counter] == '\\'){
+            escape = true;
+            counter++;
+            continue;
+          }
+          res_bytes++;
+          counter++;
+          escape = false;
+        }
     } else{
       LOG_XLERR(instr->loc, instr->loc, "Missing value after WORD/BYTE or the value is not a constant.\n");
     }
