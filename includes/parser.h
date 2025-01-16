@@ -128,6 +128,7 @@ Instruction* instr_create();
 size_t djb2_hash(char* key);
 uint64_t long_log2(uint64_t num);
 uint64_t token_to_long(Token *tk);
+uint64_t long_ceil(uint64_t num1, uint64_t div);
 
 // ufunc
 

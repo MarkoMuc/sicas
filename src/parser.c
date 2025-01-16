@@ -504,7 +504,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     }
 
     uint8_t format_size = ((InitMemory*)instr->instr)->type == WORD? SICAS_WORD_SIZE : SICAS_BYTE_SIZE;
-    offset = res_bytes + (format_size - (res_bytes % format_size));
+    offset = format_size*(long_ceil(res_bytes, format_size));
 
     ((InitMemory*)instr->instr)->start_addr = *loc_ctr;
     ((InitMemory*)instr->instr)->reserved = offset;
@@ -620,6 +620,18 @@ uint64_t token_to_long(Token *tk){
   }
 
   return res;
+}
+
+uint64_t long_ceil(uint64_t num1, uint64_t div){
+  if(num1 == 0) {
+    return 1;
+  }
+
+  if(num1 % div != 0){
+     return (num1/div) + 1;
+  }
+
+  return num1/div;
 }
 
 uint64_t long_log2(uint64_t num){
