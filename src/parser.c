@@ -977,7 +977,7 @@ void instruction_print(Instruction *instr) {
       InitMemory *m = instr->instr;
       token_type_print(m->type);
       printf(" ");
-      printf("%08lx + %08lx ", m->start_addr, m->reserved);
+      printf("%08lx + %08lx (%08lx) ", m->start_addr, m->reserved, m->raw);
       token_print(*m->tk);
       break;
     }
