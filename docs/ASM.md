@@ -41,7 +41,6 @@ Literals:
 - `LTORG` -> Dumps the **literal pool**, containing all the literals since the last `LTORG`, at the location where the directive was encountered.
 
 Extra:
-- `EOF` -> End of file value `0x454F46`. This value is only valid as a string e.g C`EOF` also it needs to not contain anything else in the string to be interpreted as such.
 - `*` -> Refers to the current value of the location counter. Can be used in-place of a constant value.
 - `\0, \\, \n, \r, \t, \v` -> This are the valid escape sequences.
 
