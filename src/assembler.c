@@ -245,6 +245,21 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
 
           pc_reg++;
         }
+
+        if(idx == 0) {
+          if(b_idx >= ASSEMBLER_BODY_LINE) {
+            output_text(output, body, &b_idx, &start_addr, pc_reg);
+          }
+
+          body[b_idx++] = nibble_to_hex(msn('\0'));
+
+          if(b_idx >= ASSEMBLER_BODY_LINE) {
+            output_text(output, body, &b_idx, &start_addr, pc_reg);
+          }
+          body[b_idx++] = nibble_to_hex(msn('\0'));
+
+          pc_reg++;
+        }
       } else{
         uint64_t init_val = token_to_long(init->tk);
         uint64_t bytes = init->raw;
