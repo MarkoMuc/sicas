@@ -208,6 +208,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
       if(init->tk->type == HEX || init->tk->type == STRING) {
         char *str = init->tk->str;
         size_t idx = 0;
+        bool special = false;
 
         while(str[idx] != '\0') {
           uint8_t val = str[idx++];
@@ -217,6 +218,14 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
           }
 
           if(init->tk->type == STRING) {
+            if(!special && val == '\\'){
+              special = true;
+              continue;
+            }else if(special){
+              val = escapeseq_to_char(val);
+              special = false;
+            }
+
             body[b_idx++] = nibble_to_hex(msn(val));
 
             if(b_idx >= ASSEMBLER_BODY_LINE) {
@@ -304,4 +313,23 @@ uint8_t instr_to_text(uint8_t *body, uint8_t *array, size_t *b_idx, uint8_t size
 
   *b_idx = i;
   return size;
+}
+
+uint8_t escapeseq_to_char(uint8_t c){
+  switch(c) {
+    case '0':
+      return '\0';
+    case '\\':
+      return '\\';
+    case 'n':
+      return '\n';
+    case 'r':
+      return '\r';
+    case 't':
+      return '\t';
+    case 'v':
+      return '\v';
+    default:
+      LOG_PANIC("Invalid escape sequence, this character should not be here.\n");
+  }
 }

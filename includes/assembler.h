@@ -50,3 +50,4 @@ void assemble_end(InstrVector *instrs, SymTable *sym, FILE *output);
 uint8_t instr_to_text(uint8_t *body, uint8_t *array, uint64_t *b_idx, uint8_t size, uint8_t start);
 uint8_t nibble_to_hex(uint8_t nibble);
 void output_text(FILE* output, uint8_t *body, size_t *b_idx, uint64_t *start_addr, uint32_t pc_reg);
+uint8_t escapeseq_to_char(uint8_t c);
