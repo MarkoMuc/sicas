@@ -312,21 +312,32 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
    // offset = format;
     break;
 
-  case HIO:
-  case SIO:
-  case TIO:
   case FIX:
   case FLOAT:
+  case HIO:
   case NORM:
+  case SIO:
+  case TIO:
+    if (format == FOUR) {
+      LOG_XLERR(instr->loc, instr->loc, "This instruction cannot be in format 4.\n");
+    }
+
+    format = ONE;
+
+    instr->instr = malloc(sizeof(MInstr));
+
+    if(!instr->instr){
+      LOG_PANIC("Failed to malloc minstr.\n");
+    }
+
+    ((MInstr*)instr->instr)->op = tk->type;
+    ((MInstr*)instr->instr)->oper = NULL;
+
+    offset = format;
+    break;
+
   case RSUB:
     LOG_PANIC("Instruction has not been implemented\n");
-   // if (format == FOUR) {
-   //   LOG_XLERR(tk, tk, "This instruction cannot be in format 4.\n");
-   // }
-
-   // format = ONE;
-   // tokvec_add(instr->vec, tk);
-   // offset = format;
     break;
 
   case SHIFTL:
