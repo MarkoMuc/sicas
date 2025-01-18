@@ -358,20 +358,53 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
 
   case SHIFTL:
   case SHIFTR:
-    LOG_PANIC("Instruction has not been implemented\n");
-   // tokvec_add(instr->vec, tk);
-   // tk = tokvec_get(tokens, i++);
+    if (format == FOUR) {
+      LOG_XLERR(instr->loc, instr->loc, "This instruction cannot be in format 4.\n");
+    }
 
-   // if (tk->type == REGISTER) {
-   // tokvec_add(instr->vec, tk);
-   // } else {
-   //   Token *s_tk = tokvec_get(instr->vec, 0);
-   //   LOG_XLERR(s_tk, tk, "Argument 1 is not a register.\n");
-   // }
+    format = TWO;
+    instr->instr = malloc(sizeof(MInstr));
 
-   // tk = tokvec_get(tokens, i++);
-   // tokvec_add(instr->vec, tk);
-   // offset = format;
+    if(!instr->instr){
+      LOG_PANIC("Failed to malloc minstr.\n");
+    }
+
+    ((MInstr*)instr->instr)->op = tk->type;
+    ((MInstr*)instr->instr)->oper = malloc(sizeof(Regs));
+
+    if(!((MInstr*)instr->instr)->oper){
+      LOG_PANIC("Failed to malloc regs struct.\n");
+    }
+
+    check_next_token(i, tokens, instr->loc, "Missing first register for instruction of format 2.\n");
+    tk = tokvec_get(tokens, i++);
+    token_check_null(tk);
+
+    if(tk->type != REGISTER) {
+      LOG_XLERR(instr->loc, tk->location, "Operand one should be a register.\n");
+    }
+
+    ((Regs *)((MInstr*)instr->instr)->oper)->reg1 = mnemonic_get_reg(tk->str);
+
+    check_next_token(i, tokens, instr->loc, "Missing integer for  format 2.\n");
+    tk = tokvec_get(tokens, i++);
+    token_check_null(tk);
+
+    if(tk->type != HEX && tk->type != NUM && tk->type != BIN) {
+      LOG_XLERR(instr->loc, tk->location, "Operand one should be a register.\n");
+    }
+
+    instr->loc.e_row = tk->location.e_row;
+    instr->loc.e_col = tk->location.e_col;
+
+    uint64_t shift = token_to_long(tk);
+    if(shift < 1 || shift > 16) {
+      LOG_XLERR(instr->loc, instr->loc, "Shift can only be between 1 and 16\n");
+    }
+
+    ((Regs *)((MInstr*)instr->instr)->oper)->reg2 = (uint8_t) (shift - 1);
+
+    offset = format;
     break;
 
   case SVC:
