@@ -313,6 +313,12 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_XLERR(instr->loc, tk->location, "Operand should be a register.\n");
     }
 
+
+    if(tk->type != HEX && tk->type != NUM && tk->type != BIN) {
+      LOG_XLERR(instr->loc, tk->location, "Operand one should be a register.\n");
+    }
+
+
     instr->loc.e_row = tk->location.e_row;
     instr->loc.e_col = tk->location.e_col;
 
@@ -408,7 +414,51 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     break;
 
   case SVC:
-    LOG_PANIC("Instruction has not been implemented\n");
+    if (format == FOUR) {
+      LOG_XLERR(instr->loc, instr->loc, "This instruction cannot be in format 4.\n");
+    }
+
+    format = TWO;
+    instr->instr = malloc(sizeof(MInstr));
+
+    if(!instr->instr){
+      LOG_PANIC("Failed to malloc minstr.\n");
+    }
+
+    ((MInstr*)instr->instr)->oper = malloc(sizeof(Regs));
+
+    if(!((MInstr*)instr->instr)->oper){
+      LOG_PANIC("Failed to malloc regs struct.\n");
+    }
+
+    ((MInstr*)instr->instr)->op = tk->type;
+
+    check_next_token(i, tokens, instr->loc, "Missing integer.\n");
+    tk = tokvec_get(tokens, i++);
+    token_check_null(tk);
+
+    if(tk->type != HEX && tk->type != NUM && tk->type != BIN) {
+      LOG_XLERR(instr->loc, tk->location, "Operand one should be a register.\n");
+    }
+
+    instr->loc.e_row = tk->location.e_row;
+    instr->loc.e_col = tk->location.e_col;
+
+    uint64_t interrupt = token_to_long(tk);
+    if(interrupt < 1 || interrupt > 16) {
+      LOG_XLERR(instr->loc, instr->loc, "Interrupt can only be between 1 and 16\n");
+    }
+
+    ((Regs *)((MInstr*)instr->instr)->oper)->reg1 = (uint8_t) interrupt;
+    ((Regs *)((MInstr*)instr->instr)->oper)->reg2 = (uint8_t) 0x0;
+
+    instr->loc.e_row = tk->location.e_row;
+    instr->loc.e_col = tk->location.e_col;
+
+    ((Regs *)((MInstr*)instr->instr)->oper)->reg1 = mnemonic_get_reg(tk->str);
+    ((Regs *)((MInstr*)instr->instr)->oper)->reg2 = 0x0;
+
+    offset = format;
     break;
 
   case START:
