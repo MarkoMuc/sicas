@@ -359,7 +359,38 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     break;
 
   case RSUB:
-    LOG_PANIC("Instruction has not been implemented\n");
+    if(format == FOUR) {
+      LOG_XLERR(instr->loc, instr->loc, "This instruction cannot be in format 4.\n");
+    }
+
+    instr->instr = malloc(sizeof(MInstr));
+
+    if(!instr->instr) {
+      LOG_PANIC("Failed to malloc minstr.\n");
+    }
+
+    DIRECT_INSTR(instr)->op = tk->type;
+
+    DIRECT_INSTR(instr)->oper = malloc(sizeof(Mem));
+    if(!DIRECT_INSTR(instr)->oper) {
+      LOG_PANIC("Could not allocate memory for mem struct.\n");
+    }
+
+    DIRECT_MEM(instr)->indexed = false;
+    DIRECT_MEM(instr)->mem_type = IMM;
+    DIRECT_MEM(instr)->tk = malloc(sizeof(Token));
+
+    if(!DIRECT_MEM(instr)->tk) {
+      LOG_PANIC("Could not allocate memory for token struct.\n");
+    }
+
+    DIRECT_MEM(instr)->tk->type = NUM;
+    DIRECT_MEM(instr)->tk->location.s_col = 0;
+    DIRECT_MEM(instr)->tk->location.s_row = 0;
+    DIRECT_MEM(instr)->tk->location.e_col = 0;
+    DIRECT_MEM(instr)->tk->location.e_row = 0;
+    DIRECT_MEM(instr)->tk->str = "0";
+
     break;
 
   case SHIFTL:

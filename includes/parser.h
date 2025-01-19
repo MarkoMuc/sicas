@@ -38,6 +38,9 @@
 #define SICAS_BYTE_SIZE 1
 #define SICAS_WORD_SIZE SICAS_BYTE_SIZE * 3
 
+#define DIRECT_INSTR(instr) ((MInstr*)((instr)->instr))
+#define DIRECT_MEM(instr) ((Mem*)DIRECT_INSTR(instr)->oper)
+
 // enums
 
 enum itype { INSTR, DIRECTIVE, RMEM, IMEM, CEXPR };

@@ -173,6 +173,11 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
         }
       }
 
+      if(operation->op == RSUB) {
+        byte_rep[INSTR_B2] = 0x0;
+        byte_rep[INSTR_B3] = 0x0;
+      }
+
       carry_bits = instr_to_text(body, byte_rep, &b_idx, instr->format, 0);
 
       if(carry_bits) {
