@@ -57,6 +57,7 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
   }
 
   mem->indexed = false;
+  mem->mem_type = SIM;
 
   check_next_token(i, tokens, instr->loc, "Instruction has no address operand.\n");
   Token *tk = tokvec_get(tokens, i++);
@@ -119,7 +120,6 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
       if(tk->type == FNUM && float_instr){
         LOG_XLERR(instr->loc, tk->location, "Float constant not allowed here.\n");
       }
-
       mem->tk = tk;
       break;
 
