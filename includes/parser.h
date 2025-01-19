@@ -39,7 +39,11 @@
 #define SICAS_WORD_SIZE SICAS_BYTE_SIZE * 3
 
 #define DIRECT_INSTR(instr) ((MInstr*)((instr)->instr))
+#define DIRECT_DIR(instr) ((Directive*)((instr)->instr))
+#define DIRECT_IMEM(instr) ((InitMemory*)((instr)->instr))
+#define DIRECT_RMEM(instr) ((ResMemory*)((instr)->instr))
 #define DIRECT_MEM(instr) ((Mem*)DIRECT_INSTR(instr)->oper)
+#define DIRECT_REGS(instr) ((Regs*)DIRECT_INSTR(instr)->oper)
 
 // enums
 

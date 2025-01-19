@@ -241,9 +241,8 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     if(!instr->instr){
       LOG_PANIC("Failed to malloc minstr.\n");
     }
-
-    ((MInstr*)instr->instr)->op = tk->type;
-    ((MInstr*)instr->instr)->oper = parse_mem_addr(tokens, instr, sym, &i, 0);
+    DIRECT_INSTR(instr)->op = tk->type;
+    DIRECT_INSTR(instr)->oper = parse_mem_addr(tokens, instr, sym, &i, 0);
 
     offset = format;
     break;
@@ -261,8 +260,8 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_PANIC("Failed to malloc minstr.\n");
     }
 
-    ((MInstr*)instr->instr)->op = tk->type;
-    ((MInstr*)instr->instr)->oper = parse_mem_addr(tokens, instr, sym, &i, 1);
+    DIRECT_INSTR(instr)->op = tk->type;
+    DIRECT_INSTR(instr)->oper = parse_mem_addr(tokens, instr, sym, &i, 1);
 
     offset = format;
     break;
@@ -284,8 +283,8 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_PANIC("Failed to malloc minstr.\n");
     }
 
-    ((MInstr*)instr->instr)->op = tk->type;
-    ((MInstr*)instr->instr)->oper = parse_regs(tokens, instr, &i);
+    DIRECT_INSTR(instr)->op = tk->type;
+    DIRECT_INSTR(instr)->oper = parse_regs(tokens, instr, &i);
 
     offset = format;
     break;
@@ -303,7 +302,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_PANIC("Failed to malloc minstr.\n");
     }
 
-    ((MInstr*)instr->instr)->op = tk->type;
+    DIRECT_INSTR(instr)->op = tk->type;
 
     check_next_token(i, tokens, instr->loc, "Missing first register for instruction of format 2.\n");
     tk = tokvec_get(tokens, i++);
@@ -318,18 +317,17 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_XLERR(instr->loc, tk->location, "Operand one should be a register.\n");
     }
 
-
     instr->loc.e_row = tk->location.e_row;
     instr->loc.e_col = tk->location.e_col;
 
-    ((MInstr*)instr->instr)->oper = malloc(sizeof(Regs));
+    DIRECT_INSTR(instr)->oper = malloc(sizeof(Regs));
 
-    if(!((MInstr*)instr->instr)->oper){
+    if(!DIRECT_INSTR(instr)->oper){
       LOG_PANIC("Failed to malloc regs struct.\n");
     }
 
-    ((Regs *)((MInstr*)instr->instr)->oper)->reg1 = mnemonic_get_reg(tk->str);
-    ((Regs *)((MInstr*)instr->instr)->oper)->reg2 = 0x0;
+    DIRECT_REGS(instr)->reg1 = mnemonic_get_reg(tk->str);
+    DIRECT_REGS(instr)->reg2 = 0x0;
 
     offset = format;
     break;
@@ -352,8 +350,8 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_PANIC("Failed to malloc minstr.\n");
     }
 
-    ((MInstr*)instr->instr)->op = tk->type;
-    ((MInstr*)instr->instr)->oper = NULL;
+    DIRECT_INSTR(instr)->op = tk->type;
+    DIRECT_INSTR(instr)->oper = NULL;
 
     offset = format;
     break;
@@ -391,6 +389,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
     DIRECT_MEM(instr)->tk->location.e_row = 0;
     DIRECT_MEM(instr)->tk->str = "0";
 
+    offset = format;
     break;
 
   case SHIFTL:
@@ -406,10 +405,10 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_PANIC("Failed to malloc minstr.\n");
     }
 
-    ((MInstr*)instr->instr)->op = tk->type;
-    ((MInstr*)instr->instr)->oper = malloc(sizeof(Regs));
+    DIRECT_INSTR(instr)->op = tk->type;
+    DIRECT_INSTR(instr)->oper = malloc(sizeof(Regs));
 
-    if(!((MInstr*)instr->instr)->oper){
+    if(!DIRECT_INSTR(instr)->oper){
       LOG_PANIC("Failed to malloc regs struct.\n");
     }
 
@@ -421,7 +420,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_XLERR(instr->loc, tk->location, "Operand one should be a register.\n");
     }
 
-    ((Regs *)((MInstr*)instr->instr)->oper)->reg1 = mnemonic_get_reg(tk->str);
+    DIRECT_REGS(instr)->reg1 = mnemonic_get_reg(tk->str);
 
     check_next_token(i, tokens, instr->loc, "Missing integer for  format 2.\n");
     tk = tokvec_get(tokens, i++);
@@ -439,7 +438,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_XLERR(instr->loc, instr->loc, "Shift can only be between 1 and 16\n");
     }
 
-    ((Regs *)((MInstr*)instr->instr)->oper)->reg2 = (uint8_t) (shift - 1);
+    DIRECT_REGS(instr)->reg2 = (uint8_t) (shift - 1);
 
     offset = format;
     break;
@@ -456,13 +455,13 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_PANIC("Failed to malloc minstr.\n");
     }
 
-    ((MInstr*)instr->instr)->oper = malloc(sizeof(Regs));
+    DIRECT_INSTR(instr)->oper = malloc(sizeof(Regs));
 
-    if(!((MInstr*)instr->instr)->oper){
+    if(!DIRECT_INSTR(instr)->oper){
       LOG_PANIC("Failed to malloc regs struct.\n");
     }
 
-    ((MInstr*)instr->instr)->op = tk->type;
+    DIRECT_INSTR(instr)->op = tk->type;
 
     check_next_token(i, tokens, instr->loc, "Missing integer.\n");
     tk = tokvec_get(tokens, i++);
@@ -480,14 +479,14 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_XLERR(instr->loc, instr->loc, "Interrupt can only be between 1 and 16\n");
     }
 
-    ((Regs *)((MInstr*)instr->instr)->oper)->reg1 = (uint8_t) interrupt;
-    ((Regs *)((MInstr*)instr->instr)->oper)->reg2 = (uint8_t) 0x0;
+    DIRECT_REGS(instr)->reg1 = (uint8_t) interrupt;
+    DIRECT_REGS(instr)->reg2 = (uint8_t) 0x0;
 
     instr->loc.e_row = tk->location.e_row;
     instr->loc.e_col = tk->location.e_col;
 
-    ((Regs *)((MInstr*)instr->instr)->oper)->reg1 = mnemonic_get_reg(tk->str);
-    ((Regs *)((MInstr*)instr->instr)->oper)->reg2 = 0x0;
+    DIRECT_REGS(instr)->reg1 = mnemonic_get_reg(tk->str);
+    DIRECT_REGS(instr)->reg2 = 0x0;
 
     offset = format;
     break;
@@ -510,8 +509,8 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_XLERR(instr->loc, instr->loc, "Missing program name before START directive.\n");
     }
 
-    ((Directive*)instr->instr)->tk = id;
-    ((Directive*)instr->instr)->directive = tk->type;
+    DIRECT_DIR(instr)->tk = id;
+    DIRECT_DIR(instr)->directive = tk->type;
 
     check_next_token(i, tokens, instr->loc, "Missing value after START directive.\n");
     tk = tokvec_get(tokens, i++);
@@ -544,13 +543,13 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_XLERR(instr->loc, instr->loc, "Duplicate START directive or START is not the first instruction.\n");
     }
 
-    ((Directive*)instr->instr)->directive = tk->type;
+    DIRECT_DIR(instr)->directive = tk->type;
 
     check_next_token(i, tokens, instr->loc, "Missing value after END directive.\n");
     tk = tokvec_get(tokens, i++);
     token_check_null(tk);
 
-    ((Directive*)instr->instr)->tk = tk;
+    DIRECT_DIR(instr)->tk = tk;
     instr->loc.e_row = tk->location.e_row;
     instr->loc.e_col = tk->location.e_col;
 
@@ -573,7 +572,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_PANIC("Failed to malloc directive.\n");
     }
 
-    ((Directive*)instr->instr)->directive = tk->type;
+    DIRECT_DIR(instr)->directive = tk->type;
 
     check_next_token(i, tokens, instr->loc, "Missing value after BASE directive.\n");
     tk = tokvec_get(tokens, i++);
@@ -590,7 +589,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_XLERR(instr->loc, instr->loc, "Missing value after BASE directive or the value is not a constant or symbol.\n");
     }
 
-    ((Directive*)instr->instr)->tk = tk;
+    DIRECT_DIR(instr)->tk = tk;
 
     offset = 0;
     break;
@@ -606,7 +605,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_PANIC("Failed to malloc initialized memory.\n");
     }
 
-    ((InitMemory*)instr->instr)->type = tk->type;
+    DIRECT_IMEM(instr)->type = tk->type;
 
     if(!id || id->type != ID) {
       LOG_XLERR(instr->loc, instr->loc, "Missing program label before BYTE or WORD directive.\n");
@@ -639,13 +638,13 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_XLERR(instr->loc, instr->loc, "Missing value after WORD/BYTE or the value is not a constant.\n");
     }
 
-    uint8_t format_size = ((InitMemory*)instr->instr)->type == WORD? SICAS_WORD_SIZE : SICAS_BYTE_SIZE;
+    uint8_t format_size = DIRECT_IMEM(instr)->type == WORD? SICAS_WORD_SIZE : SICAS_BYTE_SIZE;
     offset = format_size*(long_ceil(res_bytes, format_size));
 
-    ((InitMemory*)instr->instr)->start_addr = *loc_ctr;
-    ((InitMemory*)instr->instr)->reserved = offset;
-    ((InitMemory*)instr->instr)->raw = res_bytes == 0? 1 : res_bytes;
-    ((InitMemory*)instr->instr)->tk = tk;
+    DIRECT_IMEM(instr)->start_addr = *loc_ctr;
+    DIRECT_IMEM(instr)->reserved = offset;
+    DIRECT_IMEM(instr)->raw = res_bytes == 0? 1 : res_bytes;
+    DIRECT_IMEM(instr)->tk = tk;
 
     break;
 
@@ -660,7 +659,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
       LOG_PANIC("Failed to malloc reserved memory.\n");
     }
 
-    ((ResMemory*)instr->instr)->type = tk->type;
+    DIRECT_RMEM(instr)->type = tk->type;
 
     if(!id || id->type != ID) {
       LOG_XLERR(instr->loc, instr->loc, "Missing program label before RESB or RESW directive.\n");
@@ -683,8 +682,8 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
         offset = SICAS_WORD_SIZE * offset;
     }
 
-    ((ResMemory*)instr->instr)->start_addr = *loc_ctr;
-    ((ResMemory*)instr->instr)->reserved = offset;
+    DIRECT_RMEM(instr)->start_addr = *loc_ctr;
+    DIRECT_RMEM(instr)->reserved = offset;
 
     break;
 
