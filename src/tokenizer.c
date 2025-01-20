@@ -92,7 +92,10 @@ void fill(FILE *f, TokenVector *vec) {
           fraction = -1;
           continue;
         } else {
-          if (special == HEX_T && !is_numeric(c) && !(c >= 'a' && c <= 'f')) {
+          if(special != CHAR_T && idx >= 1 && c == '_') {
+            idx--;
+            continue;
+          } else if (special == HEX_T && !is_numeric(c) && !(c >= 'a' && c <= 'f')) {
             LOG_XERR("[%ld,%ld]:[%ld,%ld] '%c' is not a valid hex symbol.\n", s_row, s_col, row, col, buffer[i]);
           } else if (special == FLOAT_T && !is_numeric(c) && !(c == '.')) {
             LOG_XERR("[%ld,%ld]:[%ld,%ld] '%c' is not a valid float symbol.\n", s_row, s_col, row, col, buffer[i]);
@@ -177,6 +180,7 @@ void fill(FILE *f, TokenVector *vec) {
 
       if (num) {
         if (!is_numeric(c) &&
+            !(c == '_' && idx >= 1) &&
             !(str[0] == '0' && c == 'x' && idx == 1) &&
             !(str[0] == '0' && c == 'b' && idx == 1) &&
             !(num_delimiter == -1 && c >= 'a' && c <= 'f') &&
@@ -222,6 +226,11 @@ void fill(FILE *f, TokenVector *vec) {
             comment = false;
           }
         } else {
+          if(idx >= 1 && c == '_') {
+            idx--;
+            continue;
+          }
+
           if (idx == 1 && str[0] == '0' && c == 'x') {
             num_delimiter = -1;
             idx = -1;
