@@ -6,10 +6,10 @@
 void assemble_instructions(InstrVector *instrs, SymTable *sym, FILE *output) {
   assemble_header(instrs, sym, output);
   assemble_body(instrs, sym, output);
-  assemble_end(instrs, sym, output);
+  assemble_end(instrs, output);
 }
 
-void assemble_header(InstrVector *instrs, SymTable *sym, FILE *output) {
+void assemble_header(InstrVector *instrs, const SymTable *sym, FILE *output) {
   fprintf(output, "H");
   const Instruction *instr = instrvec_get(instrs, 0);
   if(instr->type == DIRECTIVE) {
@@ -322,22 +322,22 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
   free(body);
 }
 
-void assemble_end(InstrVector *instrs, SymTable *sym, FILE *output) {
+void assemble_end(const InstrVector *instrs, FILE *output) {
   fprintf(output, "E%06lx\n", instrs->first_addr);
 }
 
-void output_text(FILE *output, uint8_t *body, size_t *b_idx, uint64_t *start_addr, uint32_t pc_reg) {
+void output_text(FILE *output, uint8_t *body, size_t *b_idx, uint64_t *start_addr, const uint32_t pc_reg) {
   body[*b_idx] = '\0';
   fprintf(output, "T%06lx%02lx%s\n", *start_addr, pc_reg - *start_addr, body);
   *start_addr = pc_reg;
   *b_idx = 0;
 }
 
-uint8_t nibble_to_hex(uint8_t nibble) {
+uint8_t nibble_to_hex(const uint8_t nibble) {
   return nibble + (nibble < 10 ? '0':('A' - 10));
 }
 
-uint8_t instr_to_text(uint8_t *body, uint8_t *array, size_t *b_idx, uint8_t size, uint8_t start) {
+uint8_t instr_to_text(uint8_t *body, const uint8_t *array, size_t *b_idx, uint8_t size, uint8_t start) {
   size_t i = *b_idx;
 
   while(size && (i) + 1 < ASSEMBLER_BODY_LINE) {
@@ -351,7 +351,7 @@ uint8_t instr_to_text(uint8_t *body, uint8_t *array, size_t *b_idx, uint8_t size
   return size;
 }
 
-uint8_t escapeseq_to_char(uint8_t c){
+uint8_t escapeseq_to_char(const uint8_t c){
   switch(c) {
     case '0':
       return '\0';

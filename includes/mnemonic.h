@@ -20,5 +20,5 @@
 
 // mfunc
 
-uint8_t mnemonic_get_opcode(enum ttype operation);
-uint8_t mnemonic_get_reg(char *reg);
+uint8_t mnemonic_get_opcode(const enum ttype operation);
+uint8_t mnemonic_get_reg(const char *reg);

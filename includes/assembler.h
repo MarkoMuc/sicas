@@ -44,10 +44,10 @@
 // mfunc
 
 void assemble_instructions(InstrVector *instrs, SymTable *sym, FILE *output);
-void assemble_header(InstrVector *instrs, SymTable *sym, FILE *output);
+void assemble_header(InstrVector *instrs, const SymTable *sym, FILE *output);
 void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output);
-void assemble_end(InstrVector *instrs, SymTable *sym, FILE *output);
-uint8_t instr_to_text(uint8_t *body, uint8_t *array, uint64_t *b_idx, uint8_t size, uint8_t start);
-uint8_t nibble_to_hex(uint8_t nibble);
-void output_text(FILE* output, uint8_t *body, size_t *b_idx, uint64_t *start_addr, uint32_t pc_reg);
-uint8_t escapeseq_to_char(uint8_t c);
+void assemble_end(const InstrVector *instrs, FILE *output);
+uint8_t instr_to_text(uint8_t *body, const uint8_t *array, uint64_t *b_idx, uint8_t size, uint8_t start);
+uint8_t nibble_to_hex(const uint8_t nibble);
+void output_text(FILE* output, uint8_t *body, size_t *b_idx, uint64_t *start_addr, const uint32_t pc_reg);
+uint8_t escapeseq_to_char(const uint8_t c);

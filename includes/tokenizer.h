@@ -185,7 +185,7 @@ typedef struct {
 
 // mfunc
 
-Token gen_token(char *str, Location loc);
+Token gen_token(char *str, const Location loc);
 void fill(FILE *f, TokenVector *vec);
 
 // ufunc
@@ -193,10 +193,10 @@ void fill(FILE *f, TokenVector *vec);
 void tokvec_init(TokenVector *v);
 void tokvec_free(TokenVector *v);
 void tokvec_free_destructive(TokenVector *v);
-void tokvec_add(TokenVector *v, Token *el);
-void tokvec_replace(TokenVector *v, Token *el, size_t idx);
-void tokvec_rm(TokenVector *v, size_t idx);
-Token *tokvec_get(TokenVector *v, size_t idx);
+void tokvec_add(TokenVector *v, const Token *el);
+void tokvec_replace(TokenVector *v, const Token *el, const size_t idx);
+void tokvec_rm(TokenVector *v, const size_t idx);
+Token *tokvec_get(const TokenVector *v, const size_t idx);
 
 // debug
 

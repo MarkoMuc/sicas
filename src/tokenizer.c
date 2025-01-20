@@ -374,7 +374,7 @@ void tokvec_free_destructive(TokenVector *v) {
   free(v->items);
 }
 
-void tokvec_add(TokenVector *v, Token *el) {
+void tokvec_add(TokenVector *v, const Token *el) {
   if (!v || !el) {
     LOG_PANIC("Error while adding an element to the token vector.\n");
   }
@@ -392,7 +392,7 @@ void tokvec_add(TokenVector *v, Token *el) {
   v->items[v->count++] = *el;
 }
 
-void tokvec_replace(TokenVector *v, Token *el, size_t idx) {
+void tokvec_replace(TokenVector *v, const Token *el, const size_t idx) {
   if (!v || !el || idx < 0) {
     LOG_PANIC("Error while replacing an element in the token vector.\n");
   }
@@ -414,7 +414,7 @@ void tokvec_replace(TokenVector *v, Token *el, size_t idx) {
   tokvec_add(v, &old);
 }
 
-void tokvec_rm(TokenVector *v, size_t idx) {
+void tokvec_rm(TokenVector *v, const size_t idx) {
   if (!v || idx < 0) {
     LOG_PANIC("Error while removing an element from the token vector.\n");
   }
@@ -433,7 +433,7 @@ void tokvec_rm(TokenVector *v, size_t idx) {
   v->count -= 1;
 }
 
-Token *tokvec_get(TokenVector *v, size_t idx) {
+Token *tokvec_get(const TokenVector *v, const size_t idx) {
   if (!v || idx < 0) {
     LOG_PANIC("Error while adding an element to the token vector.\n");
   }
@@ -452,7 +452,7 @@ Token *tokvec_get(TokenVector *v, size_t idx) {
 }
 
 //FIXME: This can literally just be a comparison, why am I using a function?
-Token gen_token(char *str, Location loc) {
+Token gen_token(char *str, const Location loc) {
   Token token = {0};
   uint8_t not_keyword = 0;
   enum ttype typ;

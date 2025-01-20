@@ -3,7 +3,7 @@
 #include "../includes/mnemonic.h"
 #endif
 
-uint8_t mnemonic_get_opcode(enum ttype operation){
+uint8_t mnemonic_get_opcode(const enum ttype operation){
   switch (operation) {
     case ADD: return 0x18;
     case ADDF: return 0x58;
@@ -69,7 +69,7 @@ uint8_t mnemonic_get_opcode(enum ttype operation){
   }
 }
 
-uint8_t mnemonic_get_reg(char *reg){
+uint8_t mnemonic_get_reg(const char *reg){
     if(!strcasecmp(reg, "A")){
       return 0x0;
     }else if(!strcasecmp(reg, "X")){
