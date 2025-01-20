@@ -716,7 +716,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
 }
 
 void parse_vector(TokenVector *vec, InstrVector *instrs, SymTable *sym) {
-  long vec_size = vec->count;
+  const long vec_size = vec->count;
   size_t i = 0;
   uint64_t loc_ctr = 0;
 
@@ -798,8 +798,8 @@ void instrvec_free(InstrVector *v){
   if (!v) {
     LOG_PANIC("Error while deallocating the instruction vector.\n");
   }
-
-  for(size_t i = 0; i < v->count; i++) {
+  const size_t count = v->count;
+  for(size_t i = 0; i < count; i++) {
     Instruction *instr = v->items[i];
     if(instr->instr){
       if(instr->type == INSTR) {
@@ -817,7 +817,8 @@ void instrvec_free_destructive(InstrVector *v){
     LOG_PANIC("Error while deallocating the instruction vector.\n");
   }
 
-  for(size_t i = 0; i < v->count; i++) {
+  const size_t count = v->count;
+  for(size_t i = 0; i < count; i++) {
     Instruction *instr = v->items[i];
 
     if(instr->instr){
@@ -870,9 +871,10 @@ void instrvec_replace(InstrVector *v, Instruction *el, size_t idx){
             v->count);
   }
 
+  const size_t count = v->count;
   Instruction *old = v->items[idx];
   v->items[idx] = el;
-  for (size_t i = idx + 1; i < v->count; i++) {
+  for (size_t i = idx + 1; i < count; i++) {
     Instruction *inter = v->items[i];
     v->items[i] = old;
     old = inter;
@@ -891,7 +893,7 @@ void instrvec_rm(InstrVector *v, size_t idx){
             v->capacity);
   }
 
-  int count = v->count;
+  const int count = v->count;
 
   for (size_t i = idx + 1; i < count; i++) {
     v->items[i - 1] = v->items[i];
@@ -957,7 +959,7 @@ void symtab_free_destructive(SymTable *table){
   }
 
   for(size_t i = 0; i < SYMTABLE_INITIAL_CAPACITY; i++){
-    size_t count = table->map[i].count;
+    const size_t count = table->map[i].count;
     for(size_t j = 0; j < count; j++){
       free(table->map[i].values[j].symbol);
     }
@@ -967,8 +969,8 @@ void symtab_free_destructive(SymTable *table){
 }
 
 uint8_t symtab_add_symbol(SymTable *table, char *symbol){
-  size_t key = hash_func(symbol);
-  size_t count = table->map[key].count;
+  const size_t key = hash_func(symbol);
+  const size_t count = table->map[key].count;
 
   for(size_t i = 0; i < count; i++){
     if(strcmp(table->map[key].values[i].symbol, symbol) == 0){
@@ -985,12 +987,13 @@ uint8_t symtab_add_symbol(SymTable *table, char *symbol){
   if(table->map[key].count >= SYMTABLE_SIZE){
     LOG_PANIC("SYMTABLE has been completely filled.");
   }
+
   return 0;
 }
 
 void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr){
-  size_t key = hash_func(symbol);
-  size_t count = table->map[key].count;
+  const size_t key = hash_func(symbol);
+  const size_t count = table->map[key].count;
 
   for(size_t i = 0; i < count; i++){
     if(strcmp(table->map[key].values[i].symbol, symbol) == 0){
@@ -1013,8 +1016,8 @@ void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr){
 }
 
 SymValue *symtab_get_symbol(SymTable *table, char *symbol){
-  size_t key = hash_func(symbol);
-  size_t count = table->map[key].count;
+  const size_t key = hash_func(symbol);
+  const size_t count = table->map[key].count;
 
   for(size_t i = 0; i < count; i++){
     if(strcmp(table->map[key].values[i].symbol, symbol) == 0){
@@ -1026,7 +1029,7 @@ SymValue *symtab_get_symbol(SymTable *table, char *symbol){
 }
 
 uint64_t symtab_check_get_addr(SymTable *table, char *symbol, Instruction *instr){
-  SymValue *val = symtab_get_symbol(table, symbol);
+  const SymValue *val = symtab_get_symbol(table, symbol);
 
   if(!val) {
     LOG_PANIC("Symbol exist but is not present in the symbol table.\n");

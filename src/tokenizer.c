@@ -361,7 +361,8 @@ void tokvec_free_destructive(TokenVector *v) {
     LOG_PANIC("Error while deallocating the token vector.\n");
   }
 
-  for (size_t i = 0; i < v->count; i++) {
+  const size_t count = v->count;
+  for (size_t i = 0; i < count; i++) {
     Token token = v->items[i];
     if (token.str != NULL) {
       free(token.str);
@@ -401,10 +402,10 @@ void tokvec_replace(TokenVector *v, Token *el, size_t idx) {
             v->count);
   }
 
+  const size_t count = v->count;
   Token old = v->items[idx];
   v->items[idx] = *el;
-
-  for(size_t i = idx + 1; i < v->count; i++) {
+  for(size_t i = idx + 1; i < count; i++) {
     Token inter = v->items[i];
     v->items[i] = old;
     old = inter;
@@ -423,7 +424,7 @@ void tokvec_rm(TokenVector *v, size_t idx) {
             v->capacity);
   }
 
-  int count = v->count;
+  const int count = v->count;
 
   for (size_t i = idx + 1; i < count; i++) {
     v->items[i - 1] = v->items[i];

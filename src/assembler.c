@@ -11,7 +11,7 @@ void assemble_instructions(InstrVector *instrs, SymTable *sym, FILE *output) {
 
 void assemble_header(InstrVector *instrs, SymTable *sym, FILE *output) {
   fprintf(output, "H");
-  Instruction *instr = instrvec_get(instrs, 0);
+  const Instruction *instr = instrvec_get(instrs, 0);
   if(instr->type == DIRECTIVE) {
     Directive *d = (Directive *)instr->instr;
     if(d->directive == START) {
@@ -26,7 +26,7 @@ void assemble_header(InstrVector *instrs, SymTable *sym, FILE *output) {
 
 void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
   uint8_t *body = malloc(sizeof(*body) * (ASSEMBLER_BODY_LINE + 1));
-  size_t instr_count = instrs->count;
+  const size_t instr_count = instrs->count;
   size_t b_idx = 0;
   uint64_t start_addr = 0;
   uint32_t pc_reg = 0;
@@ -66,7 +66,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
          pc_reg = instr->addr;
          reserved = false;
        }else{
-         ResMemory *res = (ResMemory *)instr->instr;
+         const ResMemory *res = (ResMemory *)instr->instr;
          pc_reg += res->reserved;
 
          if(i >= instr_count) {
@@ -83,10 +83,10 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
     }
 
     if(instr->type == DIRECTIVE) {
-      Directive *d = (Directive *)instr->instr;
+      const Directive *d = (Directive *)instr->instr;
 
       if(d->directive == BASE) {
-        enum ttype type = d->tk->type;
+        const enum ttype type = d->tk->type;
         if(type == ID) {
           base_reg = symtab_check_get_addr(sym, d->tk->str, instr);
         } else {
@@ -99,15 +99,15 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
     }
 
     if(instr->type == INSTR) {
-      MInstr *operation = (MInstr *)instr->instr;
+      const MInstr *operation = (MInstr *)instr->instr;
       byte_rep[INSTR_B1] = mnemonic_get_opcode(operation->op);
       pc_reg += instr->format;
 
       if(instr->format == TWO) {
-        Regs *regs = (Regs *)operation->oper;
+        const Regs *regs = (Regs *)operation->oper;
         byte_rep[INSTR_B2] = regs->reg1 << 4 | regs->reg2;
       } else if (instr->format == THREE || instr->format == FOUR) {
-        Mem *mem = (Mem *)operation->oper;
+        const Mem *mem = (Mem *)operation->oper;
         uint8_t bit_flags = NI_SICXE_BITS;
         uint32_t disp_val = 0;
 
@@ -209,7 +209,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
     }
 
     if(instr->type == IMEM) {
-      InitMemory *init = (InitMemory *)instr->instr;
+      const InitMemory *init = (InitMemory *)instr->instr;
       uint64_t append = init->reserved - init->raw;
 
       while(append--) {
@@ -227,7 +227,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
       }
 
       if(init->tk->type == HEX || init->tk->type == STRING) {
-        char *str = init->tk->str;
+        const char *str = init->tk->str;
         size_t idx = 0;
         bool special = false;
 
@@ -282,7 +282,7 @@ void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
           pc_reg++;
         }
       } else{
-        uint64_t init_val = token_to_long(init->tk);
+        const uint64_t init_val = token_to_long(init->tk);
         uint64_t bytes = init->raw;
 
         while(bytes){
