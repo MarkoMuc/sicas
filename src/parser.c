@@ -825,16 +825,12 @@ void instrvec_free_destructive(InstrVector *v){
       if(instr->type == DIRECTIVE){
         free(DIRECT_DIR(instr)->tk);
       }else if(instr->type == INSTR) {
-        if(instr->format == TWO) {
-          free(DIRECT_INSTR(instr)->oper);
-        }else if(instr->format == THREE || instr->format == FOUR){
+        if(instr->format == THREE || instr->format == FOUR){
           free(DIRECT_MEM(instr)->tk);
-        } else{
-          LOG_PANIC("Instructions of this format should not exist.\n");
         }
-      }else{
-        //FIXME: implement others
-        LOG_PANIC("Not implemented this type of instruction yet.\n");
+        free(DIRECT_INSTR(instr)->oper);
+      }else if(instr->type == IMEM){
+        free(DIRECT_IMEM(instr)->tk);
       }
 
       free(instr->instr);
