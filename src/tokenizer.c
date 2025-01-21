@@ -686,7 +686,7 @@ void tokvec_print(TokenVector *v) {
     printf("\n");
   }
 }
-
+#endif
 void token_print(Token t) {
   token_type_print(t.type);
   if(t.type == NUM || t.type == FNUM || t.type == BIN || t.type == ID ||
@@ -942,4 +942,3 @@ void token_type_print(enum ttype tk_type){
   }
 }
 
-#endif
