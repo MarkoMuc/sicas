@@ -638,7 +638,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
       LOG_XLERR(instr->loc, instr->loc, "Missing value after WORD/BYTE or the value is not a constant.\n");
     }
 
-    uint8_t format_size = DIRECT_IMEM(instr)->type == WORD? SICAS_WORD_SIZE : SICAS_BYTE_SIZE;
+    const uint8_t format_size = DIRECT_IMEM(instr)->type == WORD? SICAS_WORD_SIZE : SICAS_BYTE_SIZE;
     offset = format_size*(long_ceil(res_bytes, format_size));
 
     DIRECT_IMEM(instr)->start_addr = *loc_ctr;
@@ -803,7 +803,7 @@ void instrvec_free(InstrVector *v){
     Instruction *instr = v->items[i];
     if(instr->instr){
       if(instr->type == INSTR) {
-        free(((MInstr*)instr->instr)->oper);
+        free(DIRECT_INSTR(instr)->oper);
       }
       free(instr->instr);
     }
@@ -823,13 +823,13 @@ void instrvec_free_destructive(InstrVector *v){
 
     if(instr->instr){
       if(instr->type == DIRECTIVE){
-        free(((Directive*)instr->instr)->tk);
+        free(DIRECT_DIR(instr)->tk);
       }else if(instr->type == INSTR) {
         if(instr->format == TWO) {
-          free(((MInstr*)instr->instr)->oper);
-        }else if(instr->format == TWO || instr->format == THREE){
-          free(((Mem*)((MInstr*)instr->instr)->oper)->tk);
-        }else{
+          free(DIRECT_INSTR(instr)->oper);
+        }else if(instr->format == THREE || instr->format == FOUR){
+          free(DIRECT_MEM(instr)->tk);
+        } else{
           LOG_PANIC("Instructions of this format should not exist.\n");
         }
       }else{
