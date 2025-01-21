@@ -3,7 +3,7 @@
 #include "../includes/parser.h"
 #endif
 
-Regs* parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx) {
+Regs* parse_regs(const TokenVector *tokens, Instruction *instr, size_t *idx) {
   size_t i = *idx;
   Regs *regs = malloc(sizeof(*regs));
 
@@ -47,7 +47,7 @@ Regs* parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx) {
   return regs;
 }
 
-Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, uint8_t float_instr) {
+Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, const uint8_t float_instr) {
   Mem *mem = malloc(sizeof(*mem));
   size_t i = *idx;
   bool indexing_illegal = 0;
@@ -158,7 +158,7 @@ Mem *parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size
   return mem;
 }
 
-size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx, uint64_t *loc_ctr) {
+size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx, uint64_t *loc_ctr) {
   size_t i = *idx;
   Token *id = NULL;
   uint64_t offset = 0;
@@ -715,7 +715,7 @@ size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *
   return i;
 }
 
-void parse_vector(TokenVector *vec, InstrVector *instrs, SymTable *sym) {
+void parse_vector(const TokenVector *vec, InstrVector *instrs, SymTable *sym) {
   const long vec_size = vec->count;
   size_t i = 0;
   uint64_t loc_ctr = 0;
@@ -734,7 +734,7 @@ Instruction *instr_create() {
     LOG_PANIC("Failed to allocate memory for the instruction.\n");
   }
 
-  instr->type = 1;
+  instr->type = ONE;
   instr->addr = 0;
   instr->format = 0;
   instr->instr = NULL;
@@ -742,7 +742,7 @@ Instruction *instr_create() {
   return instr;
 }
 
-uint64_t token_to_long(Token *tk){
+uint64_t token_to_long(const Token *tk){
   uint64_t res = 0;
   if (tk->type == NUM){
       res = strtol(tk->str, NULL, 0);
@@ -861,7 +861,7 @@ void instrvec_add(InstrVector *v, Instruction *el){
   v->items[v->count++] = el;
 }
 
-void instrvec_replace(InstrVector *v, Instruction *el, size_t idx){
+void instrvec_replace(InstrVector *v, Instruction *el, const size_t idx){
   if (!v || !el || idx < 0) {
     LOG_PANIC("Error while replacing element in the instruction vector.\n");
   }
@@ -883,7 +883,7 @@ void instrvec_replace(InstrVector *v, Instruction *el, size_t idx){
   instrvec_add(v, old);
 }
 
-void instrvec_rm(InstrVector *v, size_t idx){
+void instrvec_rm(InstrVector *v, const size_t idx){
   if (!v|| idx < 0) {
     LOG_PANIC("Error while removing an instruction from the vector.\n");
   }
@@ -894,7 +894,6 @@ void instrvec_rm(InstrVector *v, size_t idx){
   }
 
   const int count = v->count;
-
   for (size_t i = idx + 1; i < count; i++) {
     v->items[i - 1] = v->items[i];
   }
@@ -902,7 +901,7 @@ void instrvec_rm(InstrVector *v, size_t idx){
   v->count -= 1;
 }
 
-Instruction *instrvec_get(InstrVector *v, size_t idx){
+Instruction *instrvec_get(const InstrVector *v, const size_t idx){
   if (!v || idx < 0) {
     LOG_PANIC("Error while adding an element to the instruction vector.\n");
   }
@@ -920,7 +919,7 @@ Instruction *instrvec_get(InstrVector *v, size_t idx){
   return v->items[idx];
 }
 
-size_t djb2_hash(char* str){
+size_t djb2_hash(const char* str){
   size_t hash = 5381;
   char c;
 
@@ -991,7 +990,7 @@ uint8_t symtab_add_symbol(SymTable *table, char *symbol){
   return 0;
 }
 
-void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr){
+void symtab_add_addr(SymTable *table, char *symbol, const uint64_t addr){
   const size_t key = hash_func(symbol);
   const size_t count = table->map[key].count;
 
@@ -1015,7 +1014,7 @@ void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr){
   }
 }
 
-SymValue *symtab_get_symbol(SymTable *table, char *symbol){
+SymValue *symtab_get_symbol(const SymTable *table, const char *symbol){
   const size_t key = hash_func(symbol);
   const size_t count = table->map[key].count;
 
@@ -1028,7 +1027,7 @@ SymValue *symtab_get_symbol(SymTable *table, char *symbol){
   return NULL;
 }
 
-uint64_t symtab_check_get_addr(SymTable *table, char *symbol, Instruction *instr){
+uint64_t symtab_check_get_addr(const SymTable *table, const char *symbol, const Instruction *instr){
   const SymValue *val = symtab_get_symbol(table, symbol);
 
   if(!val) {

@@ -3,13 +3,13 @@
 #include "../includes/assembler.h"
 #endif
 
-void assemble_instructions(InstrVector *instrs, SymTable *sym, FILE *output) {
+void assemble_instructions(const InstrVector *instrs, const SymTable *sym, FILE *output) {
   assemble_header(instrs, sym, output);
   assemble_body(instrs, sym, output);
   assemble_end(instrs, output);
 }
 
-void assemble_header(InstrVector *instrs, const SymTable *sym, FILE *output) {
+void assemble_header(const InstrVector *instrs, const SymTable *sym, FILE *output) {
   fprintf(output, "H");
   const Instruction *instr = instrvec_get(instrs, 0);
   if(instr->type == DIRECTIVE) {
@@ -24,7 +24,7 @@ void assemble_header(InstrVector *instrs, const SymTable *sym, FILE *output) {
   fprintf(output, "%06lx%06lx\n", instrs->start_addr, instrs->end_addr - instrs->start_addr);
 }
 
-void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output) {
+void assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output) {
   uint8_t *body = malloc(sizeof(*body) * (ASSEMBLER_BODY_LINE + 1));
   const size_t instr_count = instrs->count;
   size_t b_idx = 0;

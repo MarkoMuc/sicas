@@ -43,9 +43,9 @@
 
 // mfunc
 
-void assemble_instructions(InstrVector *instrs, SymTable *sym, FILE *output);
-void assemble_header(InstrVector *instrs, const SymTable *sym, FILE *output);
-void assemble_body(InstrVector *instrs, SymTable *sym, FILE *output);
+void assemble_instructions(const InstrVector *instrs, const SymTable *sym, FILE *output);
+void assemble_header(const InstrVector *instrs, const SymTable *sym, FILE *output);
+void assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output);
 void assemble_end(const InstrVector *instrs, FILE *output);
 uint8_t instr_to_text(uint8_t *body, const uint8_t *array, uint64_t *b_idx, uint8_t size, uint8_t start);
 uint8_t nibble_to_hex(const uint8_t nibble);

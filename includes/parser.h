@@ -126,15 +126,15 @@ typedef struct {
 
 // mfunc
 
-Regs* parse_regs(TokenVector *tokens, Instruction *instr, size_t *idx);
-Mem* parse_mem_addr(TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, uint8_t float_instr);
-size_t builder(TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx, uint64_t *loc_ctr);
-void parse_vector(TokenVector *vec, InstrVector *instrs, SymTable *sym);
+Regs* parse_regs(const TokenVector *tokens, Instruction *instr, size_t *idx);
+Mem* parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, const uint8_t float_instr);
+size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx, uint64_t *loc_ctr);
+void parse_vector(const TokenVector *vec, InstrVector *instrs, SymTable *sym);
 Instruction* instr_create();
 
-size_t djb2_hash(char* key);
+size_t djb2_hash(const char* key);
 uint64_t long_log2(uint64_t num);
-uint64_t token_to_long(Token *tk);
+uint64_t token_to_long(const Token *tk);
 uint64_t long_ceil(uint64_t num1, uint64_t div);
 
 // ufunc
@@ -143,16 +143,16 @@ void instrvec_init(InstrVector *v);
 void instrvec_free(InstrVector *v);
 void instrvec_add(InstrVector *v, Instruction *el);
 void instrvec_replace(InstrVector *v, Instruction *el, size_t idx);
-void instrvec_rm(InstrVector *v, size_t idx);
-Instruction *instrvec_get(InstrVector *v, size_t idx);
+void instrvec_rm(InstrVector *v, const size_t idx);
+Instruction *instrvec_get(const InstrVector *v, const size_t idx);
 
 void symtab_init(SymTable *table);
 void symtab_free(SymTable *table);
 void symtab_free_destructive(SymTable *table);
 uint8_t symtab_add_symbol(SymTable *table, char *symbol);
-void symtab_add_addr(SymTable *table, char *symbol, uint64_t addr);
-SymValue *symtab_get_symbol(SymTable *table, char *symbol);
-uint64_t symtab_check_get_addr(SymTable *table, char *symbol, Instruction *instr);
+void symtab_add_addr(SymTable *table, char *symbol, const uint64_t addr);
+SymValue *symtab_get_symbol(const SymTable *table, const char *symbol);
+uint64_t symtab_check_get_addr(const SymTable *table, const char *symbol, const Instruction *instr);
 
 // debug
 
