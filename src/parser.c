@@ -733,6 +733,9 @@ void parse_vector(const TokenVector *vec, InstrVector *instrs, SymTable *sym) {
   }
   instrs->end_addr = loc_ctr;
   instrs->first_addr = instrs->first_addr == 0? instrs->start_addr : instrs->first_addr;
+  if(!instrs->prog_name) {
+    instrs->prog_name = "a";
+  }
 }
 
 Instruction *instr_create() {

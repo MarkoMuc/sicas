@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  for (int arg = 1; arg < argc; arg++) {
+  for (size_t arg = 1; arg < argc; arg++) {
     if(argv[arg][0] == '-'){
       if(!strcmp(argv[arg], "-h") || !strcmp(argv[arg], "--help")){
         printf(help);
@@ -34,6 +34,7 @@ int main(int argc, char **argv) {
 
     fill(f, &vec);
     fclose(f);
+
 #if defined(TOKENIZER_DEBUG_MODE) || defined(DEBUG_MODE)
     tokvec_print(&vec);
 #endif
@@ -55,11 +56,33 @@ int main(int argc, char **argv) {
      printf("Symbols:\n");
     symtab_print(&symbols);
 #endif
-    assemble_instructions(&instrs, &symbols, stdout);
+    FILE *out;
+    char *prog_name;
+    if(instrs.prog_name){
+      size_t name_size = 0;
+      while(instrs.prog_name[name_size++] != '\0');
+      name_size += 5;
+
+      prog_name = malloc(sizeof(*prog_name) * (name_size));
+      if(!prog_name){
+        LOG_PANIC("Could not allocate program name.\n");
+      }
+
+      sprintf(prog_name, "%s.obj", instrs.prog_name);
+      prog_name[name_size - 1] = '\0';
+      out = fopen(prog_name,"w");
+    }else{
+      LOG_PANIC("Output file has no name.\n");
+    }
+
+    out = fopen(prog_name,"w");
+    assemble_instructions(&instrs, &symbols, out);
 
     tokvec_free(&vec);
     symtab_free(&symbols);
     instrvec_free(&instrs);
+    fclose(out);
+    free(prog_name);
   }
 
   exit(0);
