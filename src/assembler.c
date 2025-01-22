@@ -11,14 +11,10 @@ void assemble_instructions(const InstrVector *instrs, const SymTable *sym, FILE 
 
 void assemble_header(const InstrVector *instrs, const SymTable *sym, FILE *output) {
   fprintf(output, "H");
-  const Instruction *instr = instrvec_get(instrs, 0);
-  if(instr->type == DIRECTIVE) {
-    Directive *d = (Directive *)instr->instr;
-    if(d->directive == START) {
-      fprintf(output, "%-6.6s", d->tk->str);
-    }
+  if(instrs->prog_name) {
+      fprintf(output, "%-6.6s", instrs->prog_name);
   } else {
-    fprintf(output, "sicas");
+      fprintf(output, "%-6.6s", "sic");
   }
 
   fprintf(output, "%06lx%06lx\n", instrs->start_addr, instrs->end_addr - instrs->start_addr);

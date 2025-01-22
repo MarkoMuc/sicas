@@ -104,6 +104,7 @@ typedef struct {
   uint64_t first_addr;
   uint64_t start_addr;
   uint64_t end_addr;
+  char *prog_name;
   Instruction **items;
 } InstrVector;
 
@@ -152,6 +153,7 @@ void symtab_free_destructive(SymTable *table);
 uint8_t symtab_add_symbol(SymTable *table, char *symbol);
 void symtab_add_addr(SymTable *table, char *symbol, const uint64_t addr);
 SymValue *symtab_get_symbol(const SymTable *table, const char *symbol);
+void symtab_rm_symbol(SymTable *table, const char *symbol);
 uint64_t symtab_check_get_addr(const SymTable *table, const char *symbol, const Instruction *instr);
 
 // debug

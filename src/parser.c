@@ -160,6 +160,7 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
 
 size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx, uint64_t *loc_ctr) {
   size_t i = *idx;
+  bool prog_name = false;
   Token *id = NULL;
   uint64_t offset = 0;
   Token *tk = tokvec_get(tokens, i++);
@@ -179,7 +180,6 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     token_check_null(tk);
   }
 
-  //FIXME: Program name can overlap with a label
   if(tk->type == ID){
     id = tk;
     if(symtab_add_symbol(sym, tk->str)) {
@@ -494,6 +494,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
   case START:
     format = ZERO;
     type = DIRECTIVE;
+    prog_name = true;
 
     instr->instr = malloc(sizeof(Directive));
 
@@ -502,7 +503,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     }
 
     if(*loc_ctr != 0) {
-      LOG_XLERR(instr->loc, instr->loc, "Duplicate START directive or START is not the first instruction.\n");
+      LOG_XLERR(instr->loc, instr->loc, "START is not the first instruction.\n");
     }
 
     if(!id || id->type != ID) {
@@ -523,6 +524,12 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
         *loc_ctr = token_to_long(tk);
     }else{
       LOG_XLERR(instr->loc, instr->loc, "Missing value after START directive or the value is not a constant.\n");
+    }
+
+    if(!instrs->prog_name){
+      instrs->prog_name = id->str;
+    }else{
+      LOG_XLERR(instr->loc, instr->loc, "Duplicate START directive.\n");
     }
 
     instrs->start_addr = *loc_ctr;
@@ -700,7 +707,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     exit(1);
   }
 
-  if(id){
+  if(id && !prog_name){
     symtab_add_addr(sym, id->str, *loc_ctr);
   }
 
@@ -734,7 +741,7 @@ Instruction *instr_create() {
     LOG_PANIC("Failed to allocate memory for the instruction.\n");
   }
 
-  instr->type = ONE;
+  instr->type = INSTR;
   instr->addr = 0;
   instr->format = 0;
   instr->instr = NULL;
@@ -787,6 +794,7 @@ void instrvec_init(InstrVector *v){
   v->start_addr = 0;
   v->end_addr = 0;
   v->capacity = INSTRVEC_INITIAL_CAPACITY;
+  v->prog_name = NULL;
   v->items = malloc(sizeof(*(v->items)) * v->capacity);
 
   if (!v->items) {
@@ -984,6 +992,26 @@ uint8_t symtab_add_symbol(SymTable *table, char *symbol){
   }
 
   return 0;
+}
+
+void symtab_rm_symbol(SymTable *table, const char *symbol){
+  const size_t key = hash_func(symbol);
+  const size_t count = table->map[key].count;
+  bool found = false;
+
+  for(size_t i = 0; i < count; i++){
+    if(found) {
+      table->map[key].values[i-1] = table->map[key].values[i];
+    } else if(strcmp(table->map[key].values[i].symbol, symbol) == 0){
+      found = true;
+    }
+  }
+
+  if(!found) {
+    LOG_PANIC("Removing symbol %s that is not in the symbol table.\n", symbol);
+  }
+
+  table->map[key].count -= 1;
 }
 
 void symtab_add_addr(SymTable *table, char *symbol, const uint64_t addr){
