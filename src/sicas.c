@@ -23,10 +23,18 @@ int main(int argc, char **argv) {
     }
 
 
+    struct stat stats;
+    if(stat(argv[arg], &stats) == 0) {
+      if(stats.st_size == 0){
+        break;
+      }
+    } else{
+      LOG_XERR("Failed to open file %s\n", argv[arg]);
+    }
+
     FILE *f = fopen(argv[arg], "r");
-    if (f == NULL) {
-      printf("File not found.");
-      exit(1);
+    if (!f) {
+      LOG_XERR("Failed to open file %s\b", argv[arg]);
     }
 
     TokenVector vec = {0};
