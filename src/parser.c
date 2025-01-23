@@ -722,7 +722,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
   return i;
 }
 
-void parse_vector(const TokenVector *vec, InstrVector *instrs, SymTable *sym) {
+bool parse_vector(const TokenVector *vec, InstrVector *instrs, SymTable *sym) {
   const long vec_size = vec->count;
   size_t i = 0;
   uint64_t loc_ctr = 0;
@@ -736,6 +736,8 @@ void parse_vector(const TokenVector *vec, InstrVector *instrs, SymTable *sym) {
   if(!instrs->prog_name) {
     instrs->prog_name = "a";
   }
+
+  return instrs->count == 0;
 }
 
 Instruction *instr_create() {

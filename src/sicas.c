@@ -58,7 +58,14 @@ int main(int argc, char **argv) {
     InstrVector instrs = {0};
     instrvec_init(&instrs);
 
-    parse_vector(&vec, &instrs, &symbols);
+    err_val = parse_vector(&vec, &instrs, &symbols);
+    if(err_val) {
+      tokvec_free(&vec);
+      symtab_free(&symbols);
+      instrvec_free(&instrs);
+      break;
+    }
+
 #if defined(PARSER_DEBUG_MODE) || defined(DEBUG_MODE)
      printf("Instructions [%08lx:%08lx][%08lx]:\n", instrs.start_addr, instrs.end_addr, instrs.first_addr);
      for(size_t i = 0; i < instrs.count; i++){

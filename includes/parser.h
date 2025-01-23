@@ -130,7 +130,7 @@ typedef struct {
 Regs* parse_regs(const TokenVector *tokens, Instruction *instr, size_t *idx);
 Mem* parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, const uint8_t float_instr);
 size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx, uint64_t *loc_ctr);
-void parse_vector(const TokenVector *vec, InstrVector *instrs, SymTable *sym);
+bool parse_vector(const TokenVector *vec, InstrVector *instrs, SymTable *sym);
 Instruction* instr_create();
 
 size_t djb2_hash(const char* key);
