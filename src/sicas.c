@@ -100,10 +100,10 @@ int main(int argc, char **argv) {
     fclose(out);
 
     if(err_val) {
-      LOG_ERR("Error writting to file '%s'.\n", prog_name);
       if(out != stdout && out != stderr) {
         remove(prog_name);
       }
+      LOG_XERR("Error writting to file '%s'.\n", prog_name);
     }
 
     free(prog_name);
