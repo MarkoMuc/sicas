@@ -3,24 +3,39 @@
 #include "../includes/assembler.h"
 #endif
 
-void assemble_instructions(const InstrVector *instrs, const SymTable *sym, FILE *output) {
-  assemble_header(instrs, sym, output);
-  assemble_body(instrs, sym, output);
-  assemble_end(instrs, output);
-}
-
-void assemble_header(const InstrVector *instrs, const SymTable *sym, FILE *output) {
-  fprintf(output, "H");
-  if(instrs->prog_name) {
-      fprintf(output, "%-6.6s", instrs->prog_name);
-  } else {
-      fprintf(output, "%-6.6s", "sic");
+bool assemble_instructions(const InstrVector *instrs, const SymTable *sym, FILE *output) {
+  if(assemble_header(instrs, sym, output)) {
+    return true;
   }
 
-  fprintf(output, "%06lx%06lx\n", instrs->start_addr, instrs->end_addr - instrs->start_addr);
+  if(assemble_body(instrs, sym, output)) {
+    return true;
+  }
+
+  return assemble_end(instrs, output);
 }
 
-void assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output) {
+bool assemble_header(const InstrVector *instrs, const SymTable *sym, FILE *output) {
+  int out_bytes = fprintf(output, "H");
+  if(out_bytes == 0) {
+    return true;
+  }
+
+  if(instrs->prog_name) {
+      out_bytes = fprintf(output, "%-6.6s", instrs->prog_name);
+  } else {
+      out_bytes = fprintf(output, "%-6.6s", "sic");
+  }
+  if(out_bytes == 0) {
+    return true;
+  }
+
+  out_bytes = fprintf(output, "%06lx%06lx\n", instrs->start_addr, instrs->end_addr - instrs->start_addr);
+
+  return out_bytes == 0;
+}
+
+bool assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output) {
   uint8_t *body = malloc(sizeof(*body) * (ASSEMBLER_BODY_LINE + 1));
   const size_t instr_count = instrs->count;
   size_t b_idx = 0;
@@ -53,7 +68,9 @@ void assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
 
      if(reserved || instr->type == RMEM) {
        if(b_idx != 0) {
-         output_text(output, body, &b_idx, &start_addr, pc_reg);
+         if (output_text(output, body, &b_idx, &start_addr, pc_reg)) {
+            return true;
+         }
        }
 
        reserved = true;
@@ -75,7 +92,9 @@ void assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
      }
 
     if (b_idx >= ASSEMBLER_BODY_LINE) {
-      output_text(output, body, &b_idx, &start_addr, pc_reg);
+      if (output_text(output, body, &b_idx, &start_addr, pc_reg)) {
+        return true;
+      }
     }
 
     if(instr->type == DIRECTIVE) {
@@ -193,9 +212,10 @@ void assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
       carry_bits = instr_to_text(body, byte_rep, &b_idx, instr->format, 0);
 
       if(carry_bits) {
-        output_text(output, body, &b_idx, &start_addr, pc_reg - carry_bits);
-        instr_to_text(body, byte_rep, &b_idx, carry_bits,
-                      instr->format - carry_bits);
+        if (output_text(output, body, &b_idx, &start_addr, pc_reg - carry_bits)) {
+          return true;
+        }
+        instr_to_text(body, byte_rep, &b_idx, carry_bits, instr->format - carry_bits);
       }
       if(i >= instr_count) {
         break;
@@ -210,12 +230,16 @@ void assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
 
       while(append--) {
         if (b_idx >= ASSEMBLER_BODY_LINE) {
-          output_text(output, body, &b_idx, &start_addr, pc_reg);
+          if (output_text(output, body, &b_idx, &start_addr, pc_reg)) {
+            return true;
+          }
         }
         body[b_idx++] = '0';
 
         if (b_idx >= ASSEMBLER_BODY_LINE) {
-          output_text(output, body, &b_idx, &start_addr, pc_reg);
+          if (output_text(output, body, &b_idx, &start_addr, pc_reg)) {
+            return true;
+          }
         }
         body[b_idx++] = '0';
 
@@ -231,7 +255,9 @@ void assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
           uint8_t val = str[idx++];
 
           if(b_idx >= ASSEMBLER_BODY_LINE) {
-            output_text(output, body, &b_idx, &start_addr, pc_reg);
+            if (output_text(output, body, &b_idx, &start_addr, pc_reg)) {
+              return true;
+            }
           }
 
           if(init->tk->type == STRING) {
@@ -246,7 +272,9 @@ void assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
             body[b_idx++] = nibble_to_hex(msn(val));
 
             if(b_idx >= ASSEMBLER_BODY_LINE) {
-              output_text(output, body, &b_idx, &start_addr, pc_reg);
+              if (output_text(output, body, &b_idx, &start_addr, pc_reg)) {
+                return true;
+              }
             }
 
             body[b_idx++] = nibble_to_hex(lsn(val));
@@ -254,7 +282,9 @@ void assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
             body[b_idx++] = '0';
 
             if(b_idx >= ASSEMBLER_BODY_LINE) {
-              output_text(output, body, &b_idx, &start_addr, pc_reg);
+              if (output_text(output, body, &b_idx, &start_addr, pc_reg)) {
+                return true;
+              }
             }
 
             body[b_idx++] = val;
@@ -265,13 +295,17 @@ void assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
 
         if(idx == 0) {
           if(b_idx >= ASSEMBLER_BODY_LINE) {
-            output_text(output, body, &b_idx, &start_addr, pc_reg);
+            if (output_text(output, body, &b_idx, &start_addr, pc_reg)) {
+              return true;
+            }
           }
 
           body[b_idx++] = nibble_to_hex(msn('\0'));
 
           if(b_idx >= ASSEMBLER_BODY_LINE) {
-            output_text(output, body, &b_idx, &start_addr, pc_reg);
+            if (output_text(output, body, &b_idx, &start_addr, pc_reg)) {
+              return true;
+            }
           }
           body[b_idx++] = nibble_to_hex(msn('\0'));
 
@@ -286,13 +320,17 @@ void assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
           uint8_t val = (uint8_t)(init_val & ((uint64_t)0xFF << (bytes - 1))) >> (bytes - 1);
 
           if(b_idx >= ASSEMBLER_BODY_LINE) {
-            output_text(output, body, &b_idx, &start_addr, pc_reg);
+            if (output_text(output, body, &b_idx, &start_addr, pc_reg)) {
+              return true;
+            }
           }
 
           body[b_idx++] = nibble_to_hex(msn(val));
 
           if(b_idx >= ASSEMBLER_BODY_LINE) {
-            output_text(output, body, &b_idx, &start_addr, pc_reg);
+            if (output_text(output, body, &b_idx, &start_addr, pc_reg)) {
+              return true;
+            }
           }
 
           body[b_idx++] = nibble_to_hex(lsn(val));
@@ -312,21 +350,27 @@ void assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
   }
 
   if(b_idx > 0) {
-    output_text(output, body, &b_idx, &start_addr, pc_reg);
+    if (output_text(output, body, &b_idx, &start_addr, pc_reg)) {
+      return true;
+    }
   }
 
   free(body);
+  return false;
 }
 
-void assemble_end(const InstrVector *instrs, FILE *output) {
-  fprintf(output, "E%06lx\n", instrs->first_addr);
+bool assemble_end(const InstrVector *instrs, FILE *output) {
+  int out_bytes = fprintf(output, "E%06lx\n", instrs->first_addr);
+
+  return out_bytes == 0;
 }
 
-void output_text(FILE *output, uint8_t *body, size_t *b_idx, uint64_t *start_addr, const uint32_t pc_reg) {
+bool output_text(FILE *output, uint8_t *body, size_t *b_idx, uint64_t *start_addr, const uint32_t pc_reg) {
   body[*b_idx] = '\0';
-  fprintf(output, "T%06lx%02lx%s\n", *start_addr, pc_reg - *start_addr, body);
+  int out_bytes = fprintf(output, "T%06lx%02lx%s\n", *start_addr, pc_reg - *start_addr, body);
   *start_addr = pc_reg;
   *b_idx = 0;
+  return out_bytes == 0;
 }
 
 uint8_t nibble_to_hex(const uint8_t nibble) {

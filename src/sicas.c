@@ -96,13 +96,20 @@ int main(int argc, char **argv) {
     }
 
     out = fopen(prog_name,"w");
-    assemble_instructions(&instrs, &symbols, out);
+    err_val = assemble_instructions(&instrs, &symbols, out);
+    fclose(out);
 
+    if(err_val) {
+      LOG_ERR("Error writting to file '%s'.\n", prog_name);
+      if(out != stdout && out != stderr) {
+        remove(prog_name);
+      }
+    }
+
+    free(prog_name);
     tokvec_free(&vec);
     symtab_free(&symbols);
     instrvec_free(&instrs);
-    fclose(out);
-    free(prog_name);
   }
 
   exit(0);

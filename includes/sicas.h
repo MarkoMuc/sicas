@@ -2,6 +2,11 @@
 #include "assembler.h"
 #endif
 
+#ifndef STD_IO
+#define STD_IO
+#include <stdio.h>
+#endif
+
 #ifndef STD_SYS_STAT
 #define STD_SYS_STAT
 #include <sys/stat.h>
