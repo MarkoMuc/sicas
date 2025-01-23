@@ -40,8 +40,13 @@ int main(int argc, char **argv) {
     TokenVector vec = {0};
     tokvec_init(&vec);
 
-    fill(f, &vec);
+    bool err_val = fill(f, &vec);
     fclose(f);
+
+    if(err_val) {
+      tokvec_free(&vec);
+      break;
+    }
 
 #if defined(TOKENIZER_DEBUG_MODE) || defined(DEBUG_MODE)
     tokvec_print(&vec);

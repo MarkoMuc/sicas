@@ -186,7 +186,7 @@ typedef struct {
 // mfunc
 
 Token gen_token(char *str, const Location loc);
-void fill(FILE *f, TokenVector *vec);
+bool fill(FILE *f, TokenVector *vec);
 
 // ufunc
 

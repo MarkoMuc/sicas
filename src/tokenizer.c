@@ -3,7 +3,7 @@
 #include "../includes/tokenizer.h"
 #endif
 
-void fill(FILE *f, TokenVector *vec) {
+bool fill(FILE *f, TokenVector *vec) {
   size_t read_c;
   char *buffer;
   char *str;
@@ -334,6 +334,8 @@ void fill(FILE *f, TokenVector *vec) {
 
   free(str);
   free(buffer);
+
+  return vec->count == 0;
 }
 
 void tokvec_init(TokenVector *v) {
