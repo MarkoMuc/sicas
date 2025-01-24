@@ -3,7 +3,10 @@
 #include <stdlib.h>
 #endif
 
-// macros
+#ifndef SICAS_LOGGER
+#define SICAS_LOGGER
+#include "logger.h"
+#endif
 
 // structs
 
@@ -42,4 +45,4 @@ void csicstr_cmpr(CSicstr *cstr1, CSicstr *cstr2);
 void csicstr_create(CSicstr *cstr, Sicstr *sicstr);
 void csicstr_get(CSicstr *cstr, size_t idx);
 
-Slice slice(Sicstr sicstr);
+Slice slice(Sicstr *sicstr);
