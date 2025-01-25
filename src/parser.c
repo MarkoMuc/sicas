@@ -8,7 +8,7 @@ Regs* parse_regs(const TokenVector *tokens, Instruction *instr, size_t *idx) {
   Regs *regs = malloc(sizeof(*regs));
 
   if(!regs){
-    LOG_PANIC("Could not allocate memory for regs struct.\n");
+    LOG_PANIC("Could not allocate memory for regs struct.");
   }
 
   check_next_token(i, tokens, instr->loc, "Missing first register for instruction of format 2.\n");
@@ -1060,7 +1060,7 @@ uint64_t symtab_check_get_addr(const SymTable *table, const char *symbol, const 
   const SymValue *val = symtab_get_symbol(table, symbol);
 
   if(!val) {
-    LOG_PANIC("Symbol exist but is not present in the symbol table.\n");
+    LOG_PANIC("Symbol exist but is not present in the symbol table.");
   }
 
   if(val->set == false) {

@@ -65,7 +65,7 @@ uint8_t mnemonic_get_opcode(const enum ttype operation){
     case TIXR: return 0xB8;
     case WD: return 0xDC;
   default:
-    LOG_PANIC("Invalid instruction.\n");
+    LOG_PANIC("Invalid instruction.");
   }
 }
 
@@ -89,6 +89,6 @@ uint8_t mnemonic_get_reg(const char *reg){
     }else if(!strcasecmp(reg, "F")){
       return 0x9;
     }else{
-      LOG_PANIC("Invalid register.\n");
+      LOG_PANIC("Invalid register.");
     }
 }

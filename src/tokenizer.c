@@ -22,12 +22,12 @@ bool fill(FILE *f, TokenVector *vec) {
 
   buffer = malloc(sizeof((*buffer)) * TOKENIZER_START_BUFFER_SIZE);
   if (!buffer) {
-    LOG_PANIC("Error during inital buffer alloc for token.\n");
+    LOG_PANIC("Error during inital buffer alloc for token.");
   }
 
   str = malloc(sizeof((*str)) * TOKENIZER_START_STRING_SIZE);
   if (!str) {
-    LOG_PANIC("Error during inital string alloc for token.\n");
+    LOG_PANIC("Error during inital string alloc for token.");
   }
 
   while ((read_c = fread(buffer, sizeof(char), TOKENIZER_START_BUFFER_SIZE, f)) > 1) {
@@ -158,7 +158,7 @@ bool fill(FILE *f, TokenVector *vec) {
           if (el.str) {
             str = malloc(sizeof((*str)) * TOKENIZER_START_STRING_SIZE);
             if (!str) {
-              LOG_PANIC("Error during string alloc after identifer.\n");
+              LOG_PANIC("Error during string alloc after identifer.");
             }
           }
 
@@ -214,7 +214,7 @@ bool fill(FILE *f, TokenVector *vec) {
           if (str) {
             str = malloc(sizeof((*str)) * TOKENIZER_START_STRING_SIZE);
             if (!str) {
-              LOG_PANIC("Error during string alloc after number.\n");
+              LOG_PANIC("Error during string alloc after number.");
             }
           }
 
@@ -344,13 +344,13 @@ void tokvec_init(TokenVector *v) {
   v->items = malloc(sizeof(*v->items) * v->capacity);
 
   if (!v->items) {
-    LOG_PANIC("Error during token vector init.\n");
+    LOG_PANIC("Error during token vector init.");
   }
 }
 
 void tokvec_free(TokenVector *v) {
   if (!v) {
-    LOG_PANIC("Error while deallocating the token vector.\n");
+    LOG_PANIC("Error while deallocating the token vector.");
   }
 
   v->count = 0;
@@ -360,7 +360,7 @@ void tokvec_free(TokenVector *v) {
 
 void tokvec_free_destructive(TokenVector *v) {
   if (!v) {
-    LOG_PANIC("Error while deallocating the token vector.\n");
+    LOG_PANIC("Error while deallocating the token vector.");
   }
 
   const size_t count = v->count;
@@ -378,7 +378,7 @@ void tokvec_free_destructive(TokenVector *v) {
 
 void tokvec_add(TokenVector *v, const Token *el) {
   if (!v || !el) {
-    LOG_PANIC("Error while adding an element to the token vector.\n");
+    LOG_PANIC("Error while adding an element to the token vector.");
   }
 
   if (v->count >= v->capacity) {
@@ -396,7 +396,7 @@ void tokvec_add(TokenVector *v, const Token *el) {
 
 void tokvec_replace(TokenVector *v, const Token *el, const size_t idx) {
   if (!v || !el || idx < 0) {
-    LOG_PANIC("Error while replacing an element in the token vector.\n");
+    LOG_PANIC("Error while replacing an element in the token vector.");
   }
 
   if (idx >= v->count) {
@@ -418,7 +418,7 @@ void tokvec_replace(TokenVector *v, const Token *el, const size_t idx) {
 
 void tokvec_rm(TokenVector *v, const size_t idx) {
   if (!v || idx < 0) {
-    LOG_PANIC("Error while removing an element from the token vector.\n");
+    LOG_PANIC("Error while removing an element from the token vector.");
   }
 
   if (idx >= v->capacity) {
@@ -437,7 +437,7 @@ void tokvec_rm(TokenVector *v, const size_t idx) {
 
 Token *tokvec_get(const TokenVector *v, const size_t idx) {
   if (!v || idx < 0) {
-    LOG_PANIC("Error while adding an element to the token vector.\n");
+    LOG_PANIC("Error while adding an element to the token vector.");
   }
 
   if (idx >= v->count) {

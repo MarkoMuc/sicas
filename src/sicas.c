@@ -85,14 +85,14 @@ int main(int argc, char **argv) {
 
       prog_name = malloc(sizeof(*prog_name) * (name_size));
       if(!prog_name){
-        LOG_PANIC("Could not allocate program name.\n");
+        LOG_PANIC("Could not allocate program name.");
       }
 
       sprintf(prog_name, "%s.obj", instrs.prog_name);
       prog_name[name_size - 1] = '\0';
       out = fopen(prog_name,"w");
     }else{
-      LOG_PANIC("Output file has no name.\n");
+      LOG_PANIC("Output file has no name.");
     }
 
     out = fopen(prog_name,"w");

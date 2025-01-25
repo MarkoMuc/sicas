@@ -45,7 +45,7 @@ bool assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
   bool reserved = false;
 
   if(!body) {
-    LOG_PANIC("Failed to allocate memory for a string.\n");
+    LOG_PANIC("Failed to allocate memory for a string.");
   }
 
   if(instr_count < 1) {
@@ -58,7 +58,7 @@ bool assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
   uint64_t carry_bits = 0;
 
   if(!instr){
-    LOG_PANIC("Input contains no instructions but it has not been caught yet.\n");
+    LOG_PANIC("Input contains no instructions but it has not been caught yet.");
   }
 
   start_addr = instr->addr;
@@ -406,6 +406,6 @@ uint8_t escapeseq_to_char(const uint8_t c){
     case 'v':
       return '\v';
     default:
-      LOG_PANIC("Invalid escape sequence, this character should not be here.\n");
+      LOG_PANIC("Invalid escape sequence, this character should not be here.");
   }
 }
