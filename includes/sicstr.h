@@ -28,7 +28,6 @@ typedef struct {
 typedef struct {
   const char* str;
   const size_t count;
-  const size_t size;
 } CSicstr;
 
 typedef struct {
@@ -56,3 +55,5 @@ bool csicstr_cmpr(CSicstr *cstr1, CSicstr *cstr2);
 char csicstr_get(CSicstr *cstr, size_t idx);
 
 Slice slice(Sicstr *sicstr);
+
+bool __sicstr_cmpr(const char *str1, const size_t count1, const char *str2, const size_t count2);

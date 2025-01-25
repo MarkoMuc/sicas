@@ -3,6 +3,10 @@
 #include "../includes/sicstr.h"
 #endif
 
+bool sicstr_cmpr(Sicstr *sicstr1, Sicstr *sicstr2) {
+  return __sicstr_cmpr(sicstr1->str, sicstr1->count, sicstr2->str, sicstr2->count);
+}
+
 void sicstr_free(Sicstr *sicstr) {
   if(!sicstr) {
     LOG_PANIC("Possible double free on sicstr.");
@@ -22,9 +26,7 @@ CSicstr* csicstr_create(Sicstr *sicstr) {
   }
 
   CSicstr temp = (CSicstr) {
-        .str = sicstr->str,
-        .count = sicstr->count,
-        .size = sicstr->count + 1};
+        .str = sicstr->str, .count = sicstr->count};
   memcpy(cstr, &temp, sizeof(temp));
 
   return cstr;
@@ -38,26 +40,7 @@ CSicstr* csicstr_create_destructive(Sicstr *sicstr) {
 }
 
 bool csicstr_cmpr(CSicstr *cstr1, CSicstr *cstr2) {
-  if(!cstr1->str || !cstr2->str ||
-    !cstr1->count|| !cstr2->count) {
-    LOG_PANIC("Accesing out of bounds.");
-  }
-
-  if(cstr1->count != cstr2->count) {
-    return false;
-  }
-
-  const size_t size = cstr1->size;
-  const char* str1 = cstr1->str;
-  const char* str2 = cstr2->str;
-
-  for(size_t i = 0; i < size; i++) {
-    if(str1[i] != str2[i]) {
-      return false;
-    }
-  }
-
-  return true;
+  return __sicstr_cmpr(cstr1->str, cstr1->count, cstr2->str, cstr2->count);
 }
 
 char csicstr_get(CSicstr *cstr, size_t idx) {
@@ -73,4 +56,22 @@ Slice slice(Sicstr *sicstr) {
     LOG_PANIC("Creating a slice out of an empty string.");
   }
   return (Slice){.start = sicstr->str, .end = sicstr->str + sicstr->count};
+}
+
+bool __sicstr_cmpr(const char *str1, const size_t count1, const char *str2, const size_t count2) {
+  if(!str1 || !str2 || !count1 || !count2) {
+    LOG_PANIC("Failed during string comparison, one or more strings is empty.");
+  }
+
+  if(count1 != count2) {
+    return false;
+  }
+
+  for(size_t i = 0; i < count1; i++) {
+    if(str1[i] != str2[i]) {
+      return false;
+    }
+  }
+
+  return true;
 }
