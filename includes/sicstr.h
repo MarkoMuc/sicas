@@ -3,6 +3,16 @@
 #include <stdlib.h>
 #endif
 
+#ifndef STD_BOOL
+#define STD_BOOL
+#include <stdbool.h>
+#endif
+
+#ifndef STD_STRING
+#define STD_STRING
+#include <string.h>
+#endif
+
 #ifndef SICAS_LOGGER
 #define SICAS_LOGGER
 #include "logger.h"
@@ -18,8 +28,7 @@ typedef struct {
 typedef struct {
   const char* str;
   const size_t count;
-  //FIXME: In theory capacity should be equal to count
-  const size_t capacity;
+  const size_t size;
 } CSicstr;
 
 typedef struct {
@@ -41,8 +50,9 @@ void sicstr_rm_char(Sicstr *sicstr, char c);
 void sicstr_rm_substr(Sicstr *sicstr, char c);
 void sicstr_merge(Sicstr *sicstr1, Sicstr *sicstr2);
 
-void csicstr_cmpr(CSicstr *cstr1, CSicstr *cstr2);
-void csicstr_create(CSicstr *cstr, Sicstr *sicstr);
-void csicstr_get(CSicstr *cstr, size_t idx);
+CSicstr* csicstr_create(Sicstr *sicstr);
+CSicstr* csicstr_create_destructive(Sicstr *sicstr);
+bool csicstr_cmpr(CSicstr *cstr1, CSicstr *cstr2);
+char csicstr_get(CSicstr *cstr, size_t idx);
 
 Slice slice(Sicstr *sicstr);
