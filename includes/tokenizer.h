@@ -194,7 +194,7 @@ void tokvec_init(TokenVector *v);
 void tokvec_free(TokenVector *v);
 void tokvec_free_destructive(TokenVector *v);
 void tokvec_add(TokenVector *v, const Token *el);
-void tokvec_replace(TokenVector *v, const Token *el, const size_t idx);
+void tokvec_add_at(TokenVector *v, const Token *el, const size_t idx);
 void tokvec_rm(TokenVector *v, const size_t idx);
 Token *tokvec_get(const TokenVector *v, const size_t idx);
 

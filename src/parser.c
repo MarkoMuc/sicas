@@ -870,7 +870,7 @@ void instrvec_add(InstrVector *v, Instruction *el){
   v->items[v->count++] = el;
 }
 
-void instrvec_replace(InstrVector *v, Instruction *el, const size_t idx){
+void instrvec_add_at(InstrVector *v, Instruction *el, const size_t idx){
   if (!v || !el || idx < 0) {
     LOG_PANIC("Error while replacing element in the instruction vector.");
   }
@@ -897,12 +897,12 @@ void instrvec_rm(InstrVector *v, const size_t idx){
     LOG_PANIC("Error while removing an instruction from the vector.");
   }
 
-  if (idx >= v->capacity) {
-    LOG_PANIC("Error while removing instruction from instruction vector at index %ld capacity is %ld.\n", idx,
-            v->capacity);
+  if (idx >= v->count) {
+    LOG_PANIC("Error while removing instruction from instruction vector at index %ld count is %ld.\n", idx,
+            v->count);
   }
 
-  const int count = v->count;
+  const size_t count = v->count;
   for (size_t i = idx + 1; i < count; i++) {
     v->items[i - 1] = v->items[i];
   }

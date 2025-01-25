@@ -143,7 +143,7 @@ uint64_t long_ceil(uint64_t num1, uint64_t div);
 void instrvec_init(InstrVector *v);
 void instrvec_free(InstrVector *v);
 void instrvec_add(InstrVector *v, Instruction *el);
-void instrvec_replace(InstrVector *v, Instruction *el, size_t idx);
+void instrvec_add_at(InstrVector *v, Instruction *el, size_t idx);
 void instrvec_rm(InstrVector *v, const size_t idx);
 Instruction *instrvec_get(const InstrVector *v, const size_t idx);
 

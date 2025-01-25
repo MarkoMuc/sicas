@@ -394,7 +394,7 @@ void tokvec_add(TokenVector *v, const Token *el) {
   v->items[v->count++] = *el;
 }
 
-void tokvec_replace(TokenVector *v, const Token *el, const size_t idx) {
+void tokvec_add_at(TokenVector *v, const Token *el, const size_t idx) {
   if (!v || !el || idx < 0) {
     LOG_PANIC("Error while replacing an element in the token vector.");
   }
