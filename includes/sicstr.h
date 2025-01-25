@@ -18,6 +18,13 @@
 #include "logger.h"
 #endif
 
+// macros
+
+#define SICSTR_RESIZE_MULTIPLIER 2
+#define SICSTR_INITIAL_CAPACITY (size_t) 256
+
+#define sicstr_fin(sicstr) sicstr_build((sicstr), '\0')
+
 // structs
 
 typedef struct {
@@ -36,18 +43,20 @@ typedef struct {
   size_t capacity;
 } Sicstr;
 
+// ufuncs
+
+Sicstr* sicstr_create(char *str, size_t count, size_t capacity);
+bool sicstr_cmpr(Sicstr *sicstr1, Sicstr *sicstr2);
+char sicstr_get(Sicstr *sicstr, size_t idx);
 void sicstr_build(Sicstr *sicstr, char c);
-void sicstr_cmpr(Sicstr *sicstr1, Sicstr *sicstr2);
-void sicstr_create(Sicstr *sicstr, char *str);
 void sicstr_free(Sicstr *sicstr);
 void sicstr_free_destructive(Sicstr *sicstr);
-void sicstr_get(Sicstr *sicstr, size_t idx);
 void sicstr_init(Sicstr *sicstr);
+void sicstr_merge(Sicstr *sicstr1, Sicstr *sicstr2);
 void sicstr_replace(Sicstr *sicstr, char c, size_t idx);
 void sicstr_rm(Sicstr *sicstr, size_t idx);
 void sicstr_rm_char(Sicstr *sicstr, char c);
 void sicstr_rm_substr(Sicstr *sicstr, char c);
-void sicstr_merge(Sicstr *sicstr1, Sicstr *sicstr2);
 
 CSicstr* csicstr_create(Sicstr *sicstr);
 CSicstr* csicstr_create_destructive(Sicstr *sicstr);
