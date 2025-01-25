@@ -53,7 +53,7 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
   bool indexing_illegal = 0;
 
   if(!mem){
-    LOG_PANIC("Could not allocate memory for mem struct.\n");
+    LOG_PANIC("Could not allocate memory for mem struct.");
   }
 
   mem->indexed = false;
@@ -89,7 +89,7 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
       }
       // If there is a literal, go forward.
     case LITERAL:
-      LOG_PANIC("LITERALS not implemented yet.\n");
+      LOG_PANIC("LITERALS not implemented yet.");
 
       check_next_token(i, tokens, instr->loc, "No constant following a literal.\n");
       tk = tokvec_get(tokens, i++);
@@ -239,7 +239,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->instr = malloc(sizeof(MInstr));
 
     if(!instr->instr){
-      LOG_PANIC("Failed to malloc minstr.\n");
+      LOG_PANIC("Failed to malloc minstr.");
     }
     DIRECT_INSTR(instr)->op = tk->type;
     DIRECT_INSTR(instr)->oper = parse_mem_addr(tokens, instr, sym, &i, 0);
@@ -257,7 +257,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->instr = malloc(sizeof(MInstr));
 
     if(!instr->instr){
-      LOG_PANIC("Failed to malloc minstr.\n");
+      LOG_PANIC("Failed to malloc minstr.");
     }
 
     DIRECT_INSTR(instr)->op = tk->type;
@@ -280,7 +280,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->instr = malloc(sizeof(MInstr));
 
     if(!instr->instr){
-      LOG_PANIC("Failed to malloc minstr.\n");
+      LOG_PANIC("Failed to malloc minstr.");
     }
 
     DIRECT_INSTR(instr)->op = tk->type;
@@ -299,7 +299,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->instr = malloc(sizeof(MInstr));
 
     if(!instr->instr){
-      LOG_PANIC("Failed to malloc minstr.\n");
+      LOG_PANIC("Failed to malloc minstr.");
     }
 
     DIRECT_INSTR(instr)->op = tk->type;
@@ -323,7 +323,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     DIRECT_INSTR(instr)->oper = malloc(sizeof(Regs));
 
     if(!DIRECT_INSTR(instr)->oper){
-      LOG_PANIC("Failed to malloc regs struct.\n");
+      LOG_PANIC("Failed to malloc regs struct.");
     }
 
     DIRECT_REGS(instr)->reg1 = mnemonic_get_reg(tk->str);
@@ -347,7 +347,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->instr = malloc(sizeof(MInstr));
 
     if(!instr->instr){
-      LOG_PANIC("Failed to malloc minstr.\n");
+      LOG_PANIC("Failed to malloc minstr.");
     }
 
     DIRECT_INSTR(instr)->op = tk->type;
@@ -364,14 +364,14 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->instr = malloc(sizeof(MInstr));
 
     if(!instr->instr) {
-      LOG_PANIC("Failed to malloc minstr.\n");
+      LOG_PANIC("Failed to malloc minstr.");
     }
 
     DIRECT_INSTR(instr)->op = tk->type;
 
     DIRECT_INSTR(instr)->oper = malloc(sizeof(Mem));
     if(!DIRECT_INSTR(instr)->oper) {
-      LOG_PANIC("Could not allocate memory for mem struct.\n");
+      LOG_PANIC("Could not allocate memory for mem struct.");
     }
 
     DIRECT_MEM(instr)->indexed = false;
@@ -379,7 +379,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     DIRECT_MEM(instr)->tk = malloc(sizeof(Token));
 
     if(!DIRECT_MEM(instr)->tk) {
-      LOG_PANIC("Could not allocate memory for token struct.\n");
+      LOG_PANIC("Could not allocate memory for token struct.");
     }
 
     DIRECT_MEM(instr)->tk->type = NUM;
@@ -402,14 +402,14 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->instr = malloc(sizeof(MInstr));
 
     if(!instr->instr){
-      LOG_PANIC("Failed to malloc minstr.\n");
+      LOG_PANIC("Failed to malloc minstr.");
     }
 
     DIRECT_INSTR(instr)->op = tk->type;
     DIRECT_INSTR(instr)->oper = malloc(sizeof(Regs));
 
     if(!DIRECT_INSTR(instr)->oper){
-      LOG_PANIC("Failed to malloc regs struct.\n");
+      LOG_PANIC("Failed to malloc regs struct.");
     }
 
     check_next_token(i, tokens, instr->loc, "Missing first register for instruction of format 2.\n");
@@ -452,13 +452,13 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->instr = malloc(sizeof(MInstr));
 
     if(!instr->instr){
-      LOG_PANIC("Failed to malloc minstr.\n");
+      LOG_PANIC("Failed to malloc minstr.");
     }
 
     DIRECT_INSTR(instr)->oper = malloc(sizeof(Regs));
 
     if(!DIRECT_INSTR(instr)->oper){
-      LOG_PANIC("Failed to malloc regs struct.\n");
+      LOG_PANIC("Failed to malloc regs struct.");
     }
 
     DIRECT_INSTR(instr)->op = tk->type;
@@ -499,7 +499,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->instr = malloc(sizeof(Directive));
 
     if(!instr->instr){
-      LOG_PANIC("Failed to malloc directive.\n");
+      LOG_PANIC("Failed to malloc directive.");
     }
 
     if(*loc_ctr != 0) {
@@ -543,7 +543,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->instr = malloc(sizeof(Directive));
 
     if(!instr->instr){
-      LOG_PANIC("Failed to malloc directive.\n");
+      LOG_PANIC("Failed to malloc directive.");
     }
 
     if(instrs->first_addr != 0) {
@@ -576,7 +576,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->instr = malloc(sizeof(Directive));
 
     if(!instr->instr){
-      LOG_PANIC("Failed to malloc directive.\n");
+      LOG_PANIC("Failed to malloc directive.");
     }
 
     DIRECT_DIR(instr)->directive = tk->type;
@@ -609,7 +609,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->instr = malloc(sizeof(InitMemory));
 
     if(!instr->instr){
-      LOG_PANIC("Failed to malloc initialized memory.\n");
+      LOG_PANIC("Failed to malloc initialized memory.");
     }
 
     DIRECT_IMEM(instr)->type = tk->type;
@@ -663,7 +663,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->instr = malloc(sizeof(ResMemory));
 
     if(!instr->instr){
-      LOG_PANIC("Failed to malloc reserved memory.\n");
+      LOG_PANIC("Failed to malloc reserved memory.");
     }
 
     DIRECT_RMEM(instr)->type = tk->type;
@@ -743,7 +743,7 @@ bool parse_vector(const TokenVector *vec, InstrVector *instrs, SymTable *sym) {
 Instruction *instr_create() {
   Instruction *instr = malloc(sizeof(*instr));
   if (!instr) {
-    LOG_PANIC("Failed to allocate memory for the instruction.\n");
+    LOG_PANIC("Failed to allocate memory for the instruction.");
   }
 
   instr->type = INSTR;
@@ -763,7 +763,7 @@ uint64_t token_to_long(const Token *tk){
   } else if (tk->type == BIN){
       res = strtol(tk->str, NULL, 2);
   } else {
-    LOG_PANIC("Passing non integer type token.\n");
+    LOG_PANIC("Passing non integer type token.");
   }
 
   return res;
@@ -803,13 +803,13 @@ void instrvec_init(InstrVector *v){
   v->items = malloc(sizeof(*(v->items)) * v->capacity);
 
   if (!v->items) {
-    LOG_PANIC("Error during instruction vector init.\n");
+    LOG_PANIC("Error during instruction vector init.");
   }
 }
 
 void instrvec_free(InstrVector *v){
   if (!v) {
-    LOG_PANIC("Error while deallocating the instruction vector.\n");
+    LOG_PANIC("Error while deallocating the instruction vector.");
   }
   const size_t count = v->count;
   for(size_t i = 0; i < count; i++) {
@@ -827,7 +827,7 @@ void instrvec_free(InstrVector *v){
 
 void instrvec_free_destructive(InstrVector *v){
   if (!v) {
-    LOG_PANIC("Error while deallocating the instruction vector.\n");
+    LOG_PANIC("Error while deallocating the instruction vector.");
   }
 
   const size_t count = v->count;
@@ -855,7 +855,7 @@ void instrvec_free_destructive(InstrVector *v){
 
 void instrvec_add(InstrVector *v, Instruction *el){
   if (!v || !el) {
-    LOG_PANIC("Error while adding an element to the instruction vector.\n");
+    LOG_PANIC("Error while adding an element to the instruction vector.");
   }
 
   if (v->count >= v->capacity) {
@@ -872,7 +872,7 @@ void instrvec_add(InstrVector *v, Instruction *el){
 
 void instrvec_replace(InstrVector *v, Instruction *el, const size_t idx){
   if (!v || !el || idx < 0) {
-    LOG_PANIC("Error while replacing element in the instruction vector.\n");
+    LOG_PANIC("Error while replacing element in the instruction vector.");
   }
 
   if (idx >= v->count) {
@@ -894,7 +894,7 @@ void instrvec_replace(InstrVector *v, Instruction *el, const size_t idx){
 
 void instrvec_rm(InstrVector *v, const size_t idx){
   if (!v|| idx < 0) {
-    LOG_PANIC("Error while removing an instruction from the vector.\n");
+    LOG_PANIC("Error while removing an instruction from the vector.");
   }
 
   if (idx >= v->capacity) {
@@ -912,7 +912,7 @@ void instrvec_rm(InstrVector *v, const size_t idx){
 
 Instruction *instrvec_get(const InstrVector *v, const size_t idx){
   if (!v || idx < 0) {
-    LOG_PANIC("Error while adding an element to the instruction vector.\n");
+    LOG_PANIC("Error while adding an element to the instruction vector.");
   }
 
   if (idx >= v->count) {
@@ -945,7 +945,7 @@ void symtab_init(SymTable *table){
   table->map = malloc(sizeof(*(table->map)) * table->capacity);
 
   if(!table->map){
-    LOG_PANIC("Error during symtable init.\n");
+    LOG_PANIC("Error during symtable init.");
   }
 
   for(size_t i = 0; i < SYMTABLE_INITIAL_CAPACITY; i++){
@@ -955,7 +955,7 @@ void symtab_init(SymTable *table){
 
 void symtab_free(SymTable *table){
   if (!table) {
-    LOG_PANIC("Error while deallocating the SymTable.\n");
+    LOG_PANIC("Error while deallocating the SymTable.");
   }
 
   free(table->map);
@@ -963,7 +963,7 @@ void symtab_free(SymTable *table){
 
 void symtab_free_destructive(SymTable *table){
   if (!table) {
-    LOG_PANIC("Error while deallocating the SymTable.\n");
+    LOG_PANIC("Error while deallocating the SymTable.");
   }
 
   for(size_t i = 0; i < SYMTABLE_INITIAL_CAPACITY; i++){
