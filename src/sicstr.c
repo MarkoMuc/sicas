@@ -46,6 +46,14 @@ char sicstr_get(const Sicstr *sicstr, const size_t idx) {
   return sicstr->str[idx];
 }
 
+char* sicstr_dump(const Sicstr *sicstr) {
+  if(!sicstr || !sicstr->str) {
+    LOG_PANIC("String is not initalized.");
+  }
+
+  return sicstr->sic;
+}
+
 void sicstr_build(Sicstr *sicstr, const char c) {
   if(!sicstr) {
     LOG_PANIC("Failed to add character '%c', sicstr is NULL.", c);
