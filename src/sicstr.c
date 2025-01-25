@@ -23,6 +23,17 @@ Sicstr* sicstr_create(char *str, const size_t count, const size_t capacity) {
   return sicstr;
 }
 
+Sicstr* sicstr_full_init() {
+  Sicstr *sicstr = malloc(sizeof(*sicstr));
+  if(!sicstr) {
+    LOG_PANIC("Failed to allocate sicstr.");
+  }
+
+  sicstr_init(sicstr);
+
+  return sicstr;
+}
+
 bool sicstr_cmpr(const Sicstr *sicstr1, const Sicstr *sicstr2) {
   return __sicstr_cmpr(sicstr1->str, sicstr1->count, sicstr2->str, sicstr2->count);
 }
@@ -88,6 +99,10 @@ void sicstr_init(Sicstr *sicstr) {
     .count = 0,
     .capacity = SICSTR_INITIAL_CAPACITY
   };
+
+  if(!sicstr->str) {
+    LOG_PANIC("Failed to allocate string.");
+  }
 }
 
 void sicstr_merge(Sicstr *sicstr1, Sicstr *sicstr2) {
