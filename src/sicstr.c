@@ -3,7 +3,7 @@
 #include "../includes/sicstr.h"
 #endif
 
-Sicstr* sicstr_create(char *str, size_t count, size_t capacity) {
+Sicstr* sicstr_create(char *str, const size_t count, const size_t capacity) {
   if(!str || !count || !capacity) {
     LOG_PANIC("Failed to create sicstr directly, string is null.");
   }
@@ -23,11 +23,11 @@ Sicstr* sicstr_create(char *str, size_t count, size_t capacity) {
   return sicstr;
 }
 
-bool sicstr_cmpr(Sicstr *sicstr1, Sicstr *sicstr2) {
+bool sicstr_cmpr(const Sicstr *sicstr1, const Sicstr *sicstr2) {
   return __sicstr_cmpr(sicstr1->str, sicstr1->count, sicstr2->str, sicstr2->count);
 }
 
-char sicstr_get(Sicstr *sicstr, size_t idx) {
+char sicstr_get(const Sicstr *sicstr, const size_t idx) {
   if(idx >= sicstr->count) {
     LOG_PANIC("Accesing out of bounds.");
   }
@@ -35,7 +35,7 @@ char sicstr_get(Sicstr *sicstr, size_t idx) {
   return sicstr->str[idx];
 }
 
-void sicstr_build(Sicstr *sicstr, char c) {
+void sicstr_build(Sicstr *sicstr, const char c) {
   if(!sicstr) {
     LOG_PANIC("Failed to add character '%c', sicstr is NULL.", c);
   }
@@ -110,7 +110,7 @@ void sicstr_merge(Sicstr *sicstr1, Sicstr *sicstr2) {
   sicstr_free_destructive(sicstr2);
 }
 
-void sicstr_replace(Sicstr *sicstr, char c, size_t idx) {
+void sicstr_replace(Sicstr *sicstr, const char c, const size_t idx) {
   if (!sicstr || idx < 0) {
     LOG_PANIC("Error while replacing character in sicstring.");
   }
@@ -120,7 +120,6 @@ void sicstr_replace(Sicstr *sicstr, char c, size_t idx) {
               idx, sicstr->count);
   }
 
-  char old = sicstr->str[idx];
   sicstr->str[idx] = c;
 }
 
@@ -143,13 +142,8 @@ void sicstr_rm(Sicstr *sicstr, const size_t idx) {
 }
 
 void sicstr_rm_char(Sicstr *sicstr, const char c) {
-  if (!sicstr|| idx < 0) {
+  if (!sicstr) {
     LOG_PANIC("Error while removing a char from sicstr.");
-  }
-
-  if (idx >= sicstr->count) {
-    LOG_PANIC("Error while removing a char at index %ld capacity is %ld.\n",
-              idx, sicstr->count);
   }
 
   const size_t count = sicstr->count;
@@ -164,11 +158,12 @@ void sicstr_rm_char(Sicstr *sicstr, const char c) {
 
   sicstr->count -= disp;
 }
-void sicstr_rm_substr(Sicstr *sicstr, char c) {
+
+void sicstr_rm_substr(Sicstr *sicstr, const char *c) {
   LOG_PANIC("Function not yet implemented.");
 }
 
-CSicstr* csicstr_create(Sicstr *sicstr) {
+CSicstr* csicstr_create(const Sicstr *sicstr) {
   if(!sicstr->str || !sicstr->count) {
     LOG_PANIC("Accesing out of bounds.");
   }
@@ -192,11 +187,11 @@ CSicstr* csicstr_create_destructive(Sicstr *sicstr) {
   return cstr;
 }
 
-bool csicstr_cmpr(CSicstr *cstr1, CSicstr *cstr2) {
+bool csicstr_cmpr(const CSicstr *cstr1, const CSicstr *cstr2) {
   return __sicstr_cmpr(cstr1->str, cstr1->count, cstr2->str, cstr2->count);
 }
 
-char csicstr_get(CSicstr *cstr, size_t idx) {
+char csicstr_get(const CSicstr *cstr, const size_t idx) {
   if(idx >= cstr->count) {
     LOG_PANIC("Accesing out of bounds.");
   }
@@ -204,7 +199,7 @@ char csicstr_get(CSicstr *cstr, size_t idx) {
   return cstr->str[idx];
 }
 
-Slice slice(Sicstr *sicstr) {
+Slice slice(const Sicstr *sicstr) {
   if(!sicstr->str || !sicstr->count) {
     LOG_PANIC("Creating a slice out of an empty string.");
   }

@@ -45,24 +45,24 @@ typedef struct {
 
 // ufuncs
 
-Sicstr* sicstr_create(char *str, size_t count, size_t capacity);
-bool sicstr_cmpr(Sicstr *sicstr1, Sicstr *sicstr2);
-char sicstr_get(Sicstr *sicstr, size_t idx);
-void sicstr_build(Sicstr *sicstr, char c);
+Sicstr* sicstr_create(char *str, const size_t count, const size_t capacity);
+bool sicstr_cmpr(const Sicstr *sicstr1, const Sicstr *sicstr2);
+char sicstr_get(const Sicstr *sicstr, const size_t idx);
+void sicstr_build(Sicstr *sicstr, const char c);
 void sicstr_free(Sicstr *sicstr);
 void sicstr_free_destructive(Sicstr *sicstr);
 void sicstr_init(Sicstr *sicstr);
 void sicstr_merge(Sicstr *sicstr1, Sicstr *sicstr2);
-void sicstr_replace(Sicstr *sicstr, char c, size_t idx);
-void sicstr_rm(Sicstr *sicstr, size_t idx);
-void sicstr_rm_char(Sicstr *sicstr, char c);
-void sicstr_rm_substr(Sicstr *sicstr, char c);
+void sicstr_replace(Sicstr *sicstr, const char c, const size_t idx);
+void sicstr_rm(Sicstr *sicstr, const size_t idx);
+void sicstr_rm_char(Sicstr *sicstr, const char c);
+void sicstr_rm_substr(Sicstr *sicstr, const char *c);
 
-CSicstr* csicstr_create(Sicstr *sicstr);
+CSicstr* csicstr_create(const Sicstr *sicstr);
 CSicstr* csicstr_create_destructive(Sicstr *sicstr);
-bool csicstr_cmpr(CSicstr *cstr1, CSicstr *cstr2);
-char csicstr_get(CSicstr *cstr, size_t idx);
+bool csicstr_cmpr(const CSicstr *cstr1, const CSicstr *cstr2);
+char csicstr_get(const CSicstr *cstr, const size_t idx);
 
-Slice slice(Sicstr *sicstr);
+Slice slice(const Sicstr *sicstr);
 
 bool __sicstr_cmpr(const char *str1, const size_t count1, const char *str2, const size_t count2);
