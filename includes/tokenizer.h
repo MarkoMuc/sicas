@@ -179,7 +179,7 @@ typedef struct {
 
 typedef struct {
   enum ttype type;
-  Sicstr *str;
+  Sicstr str;
   Location location;
 } Token;
 
