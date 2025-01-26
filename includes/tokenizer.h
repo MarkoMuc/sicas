@@ -33,6 +33,11 @@
 #include "logger.h"
 #endif
 
+#ifndef SICAS_STRING
+#define SICAS_STRING
+#include "sicstr.h"
+#endif
+
 // macros
 
 #define TOKENIZER_START_BUFFER_SIZE (size_t) 256
@@ -40,6 +45,7 @@
 #define TOKVEC_INITIAL_CAPACITY (size_t) 256
 #define TOKVEC_RESIZE_MULTIPLIER 2
 #define TOKENIZER_TAB_WIDTH (uint8_t) 4
+#define LOCATION_LOG "[%ld,%ld]:[%ld,%ld] "
 
 #define token_check_null(tk) \
         do{                       \
@@ -173,7 +179,7 @@ typedef struct {
 
 typedef struct {
   enum ttype type;
-  char *str;
+  Sicstr *str;
   Location location;
 } Token;
 
@@ -185,18 +191,18 @@ typedef struct {
 
 // mfunc
 
-Token gen_token(char *str, const Location loc);
+Token gen_token(Sicstr *sicstr, const Location loc);
 bool fill(FILE *f, TokenVector *vec);
 
 // ufunc
 
-void tokvec_init(TokenVector *v);
-void tokvec_free(TokenVector *v);
-void tokvec_free_destructive(TokenVector *v);
+Token *tokvec_get(const TokenVector *v, const size_t idx);
 void tokvec_add(TokenVector *v, const Token *el);
 void tokvec_add_at(TokenVector *v, const Token *el, const size_t idx);
+void tokvec_free(TokenVector *v);
+void tokvec_free_destructive(TokenVector *v);
+void tokvec_init(TokenVector *v);
 void tokvec_rm(TokenVector *v, const size_t idx);
-Token *tokvec_get(const TokenVector *v, const size_t idx);
 
 // debug
 

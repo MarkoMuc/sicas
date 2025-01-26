@@ -6,10 +6,9 @@
 bool fill(FILE *f, TokenVector *vec) {
   size_t read_c;
   char *buffer;
-  char *str;
+  Sicstr *sicstr;
   uint64_t row = 1;
   uint64_t col = 0;
-  size_t idx = 0;
   bool num = false;
   bool identf = false;
   bool comment = false;
@@ -25,16 +24,12 @@ bool fill(FILE *f, TokenVector *vec) {
     LOG_PANIC("Error during inital buffer alloc for token.");
   }
 
-  str = malloc(sizeof((*str)) * TOKENIZER_START_STRING_SIZE);
-  if (!str) {
-    LOG_PANIC("Error during inital string alloc for token.");
-  }
+  sicstr = sicstr_full_init();
 
   while ((read_c = fread(buffer, sizeof(char), TOKENIZER_START_BUFFER_SIZE, f)) > 1) {
     for (size_t i = 0; i < read_c; i++) {
       char c = buffer[i];
       col++;
-      idx++;
 
       if (c >= 'A' && c <= 'Z') {
         c = c + 32;
@@ -48,17 +43,16 @@ bool fill(FILE *f, TokenVector *vec) {
         special = FLOATP_T;
       } else if (special == NON_T && c == 'b' && !num && !comment) {
         special = BINP_T;
-      } else if (special % 2 != 0 && idx == 1 && c == '\'') {
+      } else if (special % 2 != 0 && sicstr->count == 1 && c == '\'') {
         special++;
-        idx = -1;
+        sicstr_reset(sicstr);
         identf = false;
         continue;
       }
 
       if (special % 2 == 0 && special) {
         if (c == '\'') {
-          str[idx] = '\0';
-          Location loc = { .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col - 1};
+          sicstr_fin(sicstr);
           enum ttype type = HEX;
 
           if (special > HEX_T) {
@@ -66,43 +60,38 @@ bool fill(FILE *f, TokenVector *vec) {
             type = special == BIN_T ? BIN : type;
           }
 
-          if(idx < 1 && special != CHAR_T) {
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] Only a char or string can be empty.\n", s_row, s_col, row, col);
+          if(sicstr->count < 1 && special != CHAR_T) {
+            LOG_XERR(LOCATION_LOG "Only a char or string can be empty.\n", s_row, s_col, row, col);
           }
 
           if(type == STRING && special_char){
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] '%s' string or char has an invalid escape sequence.\n", s_row, s_col, row, col, str);
-          }else if (type == FNUM && (fraction < 0 || str[idx-1] == '.')) {
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] '%s' float missing fractional part.\n", s_row, s_col, row, col, str);
+            LOG_XERR(LOCATION_LOG "'%s' string or char has an invalid escape sequence.\n", s_row, s_col, row, col, sicstr_dump(sicstr));
+          }else if (type == FNUM && (fraction < 0 || sicstr_get(sicstr, sicstr_lst(sicstr)) == '.')) {
+            LOG_XERR(LOCATION_LOG "'%s' float missing fractional part.\n", s_row, s_col, row, col, sicstr_dump(sicstr));
           }
 
-          Token el = {.str = str, .type = type, .location = loc};
+          Token el = {.str = sicstr, .type = type, .location = 
+            {.s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col - 1}};
+
           tokvec_add(vec, &el);
 
-          if (el.str) {
-            str = malloc(sizeof((*str)) * TOKENIZER_START_STRING_SIZE);
-            if (!str) {
-              LOG_PANIC("[%ld,%ld]:[%ld,%ld] Error allocating string for token.\n", s_row, s_col, row, col);
-            }
-          }
-
-          idx = 0;
+          sicstr = sicstr_full_init();
           special = NON_T;
           num_delimiter = 0;
           fraction = -1;
           continue;
         } else {
-          if(special != CHAR_T && idx >= 1 && c == '_') {
-            idx--;
+          //FIXME: What happens if sicstr->count == 0?
+          if(special != CHAR_T && sicstr->count >= 1 && c == '_') {
             continue;
           } else if (special == HEX_T && !is_numeric(c) && !(c >= 'a' && c <= 'f')) {
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] '%c' is not a valid hex symbol.\n", s_row, s_col, row, col, buffer[i]);
+            LOG_XERR(LOCATION_LOG "'%c' is not a valid hex symbol.\n", s_row, s_col, row, col, buffer[i]);
           } else if (special == FLOAT_T && !is_numeric(c) && !(c == '.')) {
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] '%c' is not a valid float symbol.\n", s_row, s_col, row, col, buffer[i]);
+            LOG_XERR(LOCATION_LOG "'%c' is not a valid float symbol.\n", s_row, s_col, row, col, buffer[i]);
           } else if (special == BIN_T && !(c == '0' || c == '1')) {
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] '%c' is not a valid binary symbol.\n", s_row, s_col, row, col, buffer[i]);
+            LOG_XERR(LOCATION_LOG "'%c' is not a valid binary symbol.\n", s_row, s_col, row, col, buffer[i]);
           } else if (special == CHAR_T && special_char && !is_specialchar(c)){
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] '%c' is not a valid special character.\n", s_row, s_col, row, col, buffer[i]);
+            LOG_XERR(LOCATION_LOG "'%c' is not a valid special character.\n", s_row, s_col, row, col, buffer[i]);
           }
 
           if (fraction > -1) {
@@ -117,20 +106,20 @@ bool fill(FILE *f, TokenVector *vec) {
 
           if (special == FLOAT_T) {
             if(c == '.') {
-              if(fraction == -1 && idx < 1) {
-                str[idx] = '\0';
-                LOG_XERR("[%ld,%ld]:[%ld,%ld] Float is missing the decimal part.\n", s_row, s_col, row, col);
+              if(fraction == -1 && sicstr->count < 1) {
+                sicstr_fin(sicstr);
+                LOG_XERR(LOCATION_LOG "Float is missing the decimal part.\n", s_row, s_col, row, col);
               }
               num_delimiter += 1;
               fraction += 1;
               if (num_delimiter > 1) {
-                str[idx] = '\0';
-                LOG_XERR("[%ld,%ld]:[%ld,%ld] '%s' float is not in correct format, one too many seperators.\n", s_row, s_col, row, col, str);
+                sicstr_fin(sicstr);
+                LOG_XERR(LOCATION_LOG "'%s' float is not in correct format, one too many seperators.\n", s_row, s_col, row, col, sicstr_dump(sicstr));
               }
             }
           }
 
-          str[idx] = buffer[i];
+          sicstr_build(sicstr, buffer[i]);
           continue;
         }
       }
@@ -144,29 +133,23 @@ bool fill(FILE *f, TokenVector *vec) {
       if (!comment && !num && !identf && (is_alphabetic(c) || c == '_')) {
         s_row = row;
         s_col = col;
-        idx = 0;
+        sicstr_reset(sicstr);
         identf = true;
       }
 
       if (identf) {
         if (!is_alphanumeric(c) && c != '_') {
-          str[idx] = '\0';
+          sicstr_fin(sicstr);
           Location loc = { .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col - 1};
-          Token el = gen_token(str, loc);
+          Token el = gen_token(sicstr, loc);
           tokvec_add(vec, &el);
 
-          if (el.str) {
-            str = malloc(sizeof((*str)) * TOKENIZER_START_STRING_SIZE);
-            if (!str) {
-              LOG_PANIC("Error during string alloc after identifer.");
-            }
-          }
+          sicstr = sicstr_full_init();
 
-          idx = 0;
           identf = false;
           special = NON_T;
         } else {
-          str[idx] = buffer[i];
+          sicstr_build(sicstr, buffer[i]);
           continue;
         }
       }
@@ -174,51 +157,43 @@ bool fill(FILE *f, TokenVector *vec) {
       if (!comment && !num && !identf && is_numeric(c)) {
         s_row = row;
         s_col = col;
-        idx = 0;
+        sicstr_reset(sicstr);
         num = true;
       }
 
       if (num) {
         if (!is_numeric(c) &&
-            !(c == '_' && idx >= 1) &&
-            !(str[0] == '0' && c == 'x' && idx == 1) &&
-            !(str[0] == '0' && c == 'b' && idx == 1) &&
+            !(c == '_' && sicstr->count >= 1) &&
+            !(sicstr_fst(sicstr) == '0' && c == 'x' && sicstr->count == 1) &&
+            !(sicstr_fst(sicstr) == '0' && c == 'b' && sicstr->count == 1) &&
             !(num_delimiter == -1 && c >= 'a' && c <= 'f') &&
-            !(str[0] == '0' && c == 'f' && idx == 1) &&
+            !(sicstr_fst(sicstr) == '0' && c == 'f' && sicstr->count == 1) &&
             !(num_delimiter == 1 && c == '.')) {
-          str[idx] = '\0';
+          sicstr_fin(sicstr);
           enum ttype type = NUM;
           if (num_delimiter != 0) {
             type = num_delimiter == -1 ? HEX : FNUM;
             type = num_delimiter == -2 ? BIN : type;
           }
 
-          if(idx < 1){
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] Only characters or strings can be empty.\n", s_row, s_col, row, col);
+          if(sicstr->count < 1){
+            LOG_XERR(LOCATION_LOG "Only characters or strings can be empty.\n", s_row, s_col, row, col);
           }
 
           if (type == FNUM ) {
             if (c == '.' && num_delimiter >= 1) {
-              LOG_XERR("[%ld,%ld]:[%ld,%ld] '%s' Float not in correct format, one too many seperators.\n", s_row, s_col, row, col, str);
+              LOG_XERR(LOCATION_LOG "'%s' Float not in correct format, one too many seperators.\n", s_row, s_col, row, col, sicstr_dump(sicstr));
             } else if(fraction <= 0){
-              LOG_XERR("[%ld,%ld]:[%ld,%ld] '%s' Float missing fractional part.\n", s_row, s_col, row, col, str);
+              LOG_XERR(LOCATION_LOG "'%s' Float missing fractional part.\n", s_row, s_col, row, col, sicstr_dump(sicstr));
             }
           }
 
-          Token el = {
-              .type = type,
-              .str = str,
-              .location = { .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col - 1}};
+          Token el = { .type = type, .str = sicstr, .location = 
+            { .s_row = s_row, .s_col = s_col, .e_row = row, .e_col = col - 1}};
           tokvec_add(vec, &el);
 
-          if (str) {
-            str = malloc(sizeof((*str)) * TOKENIZER_START_STRING_SIZE);
-            if (!str) {
-              LOG_PANIC("Error during string alloc after number.");
-            }
-          }
+          sicstr = sicstr_full_init();
 
-          idx = 0;
           num = false;
           num_delimiter = 0;
           fraction = -1;
@@ -226,27 +201,27 @@ bool fill(FILE *f, TokenVector *vec) {
             comment = false;
           }
         } else {
-          if(idx >= 1 && c == '_') {
-            idx--;
+          //FIXME: What if sicstr->count == 0?
+          if(sicstr->count >= 1 && c == '_') {
             continue;
           }
 
-          if (idx == 1 && str[0] == '0' && c == 'x') {
+          if (sicstr->count == 1 && sicstr_fst(sicstr) == '0' && c == 'x') {
             num_delimiter = -1;
-            idx = -1;
+            sicstr_reset(sicstr);
             continue;
-          } else if (idx == 1 && str[0] == '0' && c == 'f') {
+          } else if (sicstr->count == 1 && sicstr_fst(sicstr) == '0' && c == 'f') {
             num_delimiter++;
-            idx = -1;
+            sicstr_reset(sicstr);
             continue;
-          } else if (idx == 1 && str[0] == '0' && c == 'b') {
+          } else if (sicstr->count == 1 && sicstr_fst(sicstr) == '0' && c == 'b') {
             num_delimiter = -2;
-            idx = -1;
+            sicstr_reset(sicstr);
             continue;
           }
 
           if (num_delimiter == -2 && (c != '0' && c != '1')) {
-            LOG_XERR("[%ld,%ld]:[%ld,%ld] '%c' is not a valid binary symbol.\n", s_row, s_col, row, col, buffer[i]);
+            LOG_XERR(LOCATION_LOG "'%c' is not a valid binary symbol.\n", s_row, s_col, row, col, buffer[i]);
           }
 
           if (fraction > -1) {
@@ -254,16 +229,16 @@ bool fill(FILE *f, TokenVector *vec) {
           }
 
           if (num_delimiter > 0 && c == '.') {
-            if(num_delimiter == 1 && idx < 1) {
-                str[idx] = '\0';
-                LOG_XERR("[%ld,%ld]:[%ld,%ld] Float is missing the decimal part.\n", s_row, s_col, row, col);
+            if(num_delimiter == 1 && sicstr->count < 1) {
+                sicstr_fin(sicstr);
+                LOG_XERR(LOCATION_LOG "Float is missing the decimal part.\n", s_row, s_col, row, col);
             }
             num_delimiter++;
             fraction += 1;
             comment = false;
           }
 
-          str[idx] = buffer[i];
+          sicstr_build(sicstr, buffer[i]);
           continue;
         }
       }
@@ -277,23 +252,26 @@ bool fill(FILE *f, TokenVector *vec) {
         break;
       case ',': {
         Token el = {
-            .type = COMMA, .str = NULL,
+            .type = COMMA, .str = sicstr,
             .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
         tokvec_add(vec, &el);
+        sicstr = sicstr_full_init();
         break;
       }
       case '=': {
         Token el = {
-            .type = LITERAL, .str = NULL,
+            .type = LITERAL, .str = sicstr,
             .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
         tokvec_add(vec, &el);
+        sicstr = sicstr_full_init();
         break;
       }
       case '#': {
         Token el = {
-            .type = HASH, .str = NULL,
+            .type = HASH, .str = sicstr,
             .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
         tokvec_add(vec, &el);
+        sicstr = sicstr_full_init();
         break;
       }
       case '\n': {
@@ -304,23 +282,26 @@ bool fill(FILE *f, TokenVector *vec) {
       }
       case '+': {
         Token el = {
-            .type = PLUS, .str = NULL,
+            .type = PLUS, .str = sicstr,
             .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
         tokvec_add(vec, &el);
+        sicstr = sicstr_full_init();
         break;
       }
       case '-': {
         Token el = {
-            .type = MINUS, .str = NULL,
+            .type = MINUS, .str = sicstr,
             .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
         tokvec_add(vec, &el);
+        sicstr = sicstr_full_init();
         break;
       }
       case '@': {
         Token el = {
-            .type = AT, .str = NULL,
+            .type = AT, .str = sicstr,
             .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
         tokvec_add(vec, &el);
+        sicstr = sicstr_full_init();
         break;
       }
       default:
@@ -332,7 +313,10 @@ bool fill(FILE *f, TokenVector *vec) {
     }
   }
 
-  free(str);
+  if(sicstr) {
+    sicstr_free_destructive(sicstr);
+  }
+
   free(buffer);
 
   return vec->count == 0;
@@ -368,6 +352,7 @@ void tokvec_free_destructive(TokenVector *v) {
     Token token = v->items[i];
     if (token.str != NULL) {
       free(token.str);
+      sicstr_free_destructive(token.str);
     }
   }
 
@@ -454,14 +439,14 @@ Token *tokvec_get(const TokenVector *v, const size_t idx) {
 }
 
 //FIXME: This can literally just be a comparison, why am I using a function?
-Token gen_token(char *str, const Location loc) {
+Token gen_token(Sicstr *sicstr, const Location loc) {
   Token token = {0};
   uint8_t not_keyword = 0;
   enum ttype typ;
+  char* str = sicstr->str;
   if (!strncasecmp(str, "a", 1)) {
     if (strlen(str) == 1) {
       typ = REGISTER;
-      token.str = str;
     } else if (!strcasecmp(str, "add")) {
       typ = ADD;
     } else if (!strcasecmp(str, "addf")) {
@@ -480,7 +465,6 @@ Token gen_token(char *str, const Location loc) {
       typ = BYTE;
     } else if (!strcasecmp(str, "b")) {
       typ = REGISTER;
-      token.str = str;
     }else{
       not_keyword = 1;
     }
@@ -495,7 +479,6 @@ Token gen_token(char *str, const Location loc) {
       typ = COMPR;
     } else if (!strcasecmp(str, "cc")) {
       typ = REGISTER;
-      token.str = str;
     } else {
       not_keyword = 1;
     }
@@ -512,7 +495,6 @@ Token gen_token(char *str, const Location loc) {
   } else if (!strncasecmp(str, "f", 1)) {
     if (strlen(str) == 1) {
       typ = REGISTER;
-      token.str = str;
     } else if (!strcasecmp(str, "fix")) {
       typ = FIX;
     } else if (!strcasecmp(str, "float")) {
@@ -574,7 +556,6 @@ Token gen_token(char *str, const Location loc) {
     typ = OR;
   } else if (!strcasecmp(str, "pc")) {
     typ = REGISTER;
-    token.str = str;
   } else if (!strncasecmp(str, "r", 1)) {
     if (!strcasecmp(str, "rd")) {
       typ = RD;
@@ -592,10 +573,8 @@ Token gen_token(char *str, const Location loc) {
   } else if (!strncasecmp(str, "s", 1)) {
     if (strlen(str) == 1) {
       typ = REGISTER;
-      token.str = str;
     } else if (!strncasecmp(str, "sw", 2)) {
       typ = REGISTER;
-      token.str = str;
     } else if (!strcasecmp(str, "shiftl")) {
       typ = SHIFTL;
     } else if (!strcasecmp(str, "shiftr")) {
@@ -640,7 +619,6 @@ Token gen_token(char *str, const Location loc) {
   } else if (!strncasecmp(str, "t", 1)) {
     if (strlen(str) == 1) {
       typ = REGISTER;
-      token.str = str;
     } else if (!strcasecmp(str, "td")) {
       typ = TD;
     } else if (!strcasecmp(str, "tio")) {
@@ -662,15 +640,14 @@ Token gen_token(char *str, const Location loc) {
     }
   } else if (!strcasecmp(str, "x")) {
     typ = REGISTER;
-    token.str = str;
   } else if (!strcasecmp(str, "end")) {
     typ = END;
   } else {
     not_keyword = 1;
   }
 
+  token.str = sicstr;
   if (not_keyword) {
-    token.str = str;
     typ = ID;
   }
 
@@ -690,13 +667,15 @@ void tokvec_print(TokenVector *v) {
 }
 #endif
 void token_print(Token t) {
-  token_type_print(t.type);
+  printf(LOCATION_LOG ,t.location.s_row, t.location.s_col, t.location.e_row, t.location.e_col);
+
   if(t.type == NUM || t.type == FNUM || t.type == BIN || t.type == ID ||
      t.type == HEX || t.type == STRING ||t.type == REGISTER){
-    printf(" '%s", t.str);
+    token_type_print(t.type);
+    printf(" '%s' ", t.str->str);
+  } else {
+    printf("%s", t.str->str);
   }
-
-  printf("' [%ld:%ld] [%ld:%ld]",t.location.s_row, t.location.s_col, t.location.e_row, t.location.e_col);
 }
 
 void token_type_print(enum ttype tk_type){
@@ -713,216 +692,6 @@ void token_type_print(enum ttype tk_type){
   case ID:
     printf("ID");
     break;
-  case ADD:
-    printf("ADD");
-    break;
-  case ADDF:
-    printf("ADDF");
-    break;
-  case ADDR:
-    printf("ADDR");
-    break;
-  case AND:
-    printf("AND");
-    break;
-  case CLEAR:
-    printf("CLEAR");
-    break;
-  case COMP:
-    printf("COMP");
-    break;
-  case COMPF:
-    printf("COMPF");
-    break;
-  case COMPR:
-    printf("COMPR");
-    break;
-  case DIV:
-    printf("DIV");
-    break;
-  case DIVF:
-    printf("DIVF");
-    break;
-  case DIVR:
-    printf("DIVR");
-    break;
-  case FIX:
-    printf("FIX");
-    break;
-  case FLOAT:
-    printf("FLOAT");
-    break;
-  case HIO:
-    printf("HIO");
-    break;
-  case J:
-    printf("J");
-    break;
-  case JEQ:
-    printf("JEQ");
-    break;
-  case JGT:
-    printf("JGT");
-    break;
-  case JLT:
-    printf("JLT");
-    break;
-  case JSUB:
-    printf("JSUB");
-    break;
-  case LDA:
-    printf("LDA");
-    break;
-  case LDB:
-    printf("LDB");
-    break;
-  case LDCH:
-    printf("LDCH");
-    break;
-  case LDF:
-    printf("LDF");
-    break;
-  case LDL:
-    printf("LDL");
-    break;
-  case LDS:
-    printf("LDS");
-    break;
-  case LDT:
-    printf("LDT");
-    break;
-  case LDX:
-    printf("LDX");
-    break;
-  case LPS:
-    printf("LPS");
-    break;
-  case MUL:
-    printf("MUL");
-    break;
-  case MULF:
-    printf("MULF");
-    break;
-  case MULR:
-    printf("MULR");
-    break;
-  case NORM:
-    printf("NORM");
-    break;
-  case OR:
-    printf("OR");
-    break;
-  case RD:
-    printf("RD");
-    break;
-  case RMO:
-    printf("RMO");
-    break;
-  case RSUB:
-    printf("RSUB");
-    break;
-  case SHIFTL:
-    printf("SHIFTL");
-    break;
-  case SHIFTR:
-    printf("SHIFTR");
-    break;
-  case SIO:
-    printf("SIO");
-    break;
-  case SSK:
-    printf("SSK");
-    break;
-  case STA:
-    printf("STA");
-    break;
-  case STB:
-    printf("STB");
-    break;
-  case STCH:
-    printf("STCH");
-    break;
-  case STF:
-    printf("STF");
-    break;
-  case STI:
-    printf("STI");
-    break;
-  case STL:
-    printf("STL");
-    break;
-  case STS:
-    printf("STS");
-    break;
-  case STSW:
-    printf("STSW");
-    break;
-  case STT:
-    printf("STT");
-    break;
-  case STX:
-    printf("STX");
-    break;
-  case SUB:
-    printf("SUB");
-    break;
-  case SUBF:
-    printf("SUBF");
-    break;
-  case SUBR:
-    printf("SUBR");
-    break;
-  case SVC:
-    printf("SVC");
-    break;
-  case TD:
-    printf("TD");
-    break;
-  case TIO:
-    printf("TIO");
-    break;
-  case TIX:
-    printf("TIX");
-    break;
-  case TIXR:
-    printf("TIXR");
-    break;
-  case WD:
-    printf("WD");
-    break;
-  case START:
-    printf("START");
-    break;
-  case END:
-    printf("END");
-    break;
-  case BASE:
-    printf("BASE");
-    break;
-  case BYTE:
-    printf("BYTE");
-    break;
-  case WORD:
-    printf("WORD");
-    break;
-  case RESB:
-    printf("RESB");
-    break;
-  case RESW:
-    printf("RESW");
-    break;
-  case COMMA:
-    printf("COMMA");
-    break;
-  case LITERAL:
-    printf("LITERAL");
-    break;
-  case PLUS:
-    printf("PLUS");
-    break;
-  case MINUS:
-    printf("MINUS");
-    break;
   case HEX:
     printf("HEX");
     break;
@@ -932,14 +701,8 @@ void token_type_print(enum ttype tk_type){
   case REGISTER:
     printf("REGISTER");
     break;
-  case AT:
-    printf("AT");
-    break;
-  case HASH:
-    printf("HASH");
-    break;
   default:
-      LOG_ERR("UNKNOWN");
+    LOG_PANIC("Wrong token type");
     break;
   }
 }
