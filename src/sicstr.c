@@ -96,6 +96,17 @@ void sicstr_free_destructive(Sicstr *sicstr) {
   free(sicstr->str);
   free(sicstr);
 }
+void sicstr_free_destructive_stack(Sicstr *sicstr) {
+  if(!sicstr) {
+    LOG_PANIC("Possible double free on sicstr.");
+  }
+
+  if(!sicstr->str) {
+    LOG_PANIC("Possible double free on contents of sicstr.");
+  }
+
+  free(sicstr->str);
+}
 
 void sicstr_init(Sicstr *sicstr) {
   if(!sicstr) {

@@ -55,6 +55,7 @@ char* sicstr_dump(const Sicstr *sicstr);
 void sicstr_build(Sicstr *sicstr, const char c);
 void sicstr_free(Sicstr *sicstr);
 void sicstr_free_destructive(Sicstr *sicstr);
+void sicstr_free_destructive_stack(Sicstr *sicstr);
 void sicstr_init(Sicstr *sicstr);
 void sicstr_merge(Sicstr *sicstr1, Sicstr *sicstr2);
 void sicstr_replace(Sicstr *sicstr, const char c, const size_t idx);
