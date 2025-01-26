@@ -24,6 +24,8 @@
 #define SICSTR_INITIAL_CAPACITY (size_t) 256
 
 #define sicstr_fin(sicstr) sicstr_build((sicstr), '\0')
+#define sicstr_lst(sicstr) sicstr_get((sicstr), (sicstr)->count - 1)
+#define sicstr_fst(sicstr) sicstr_get((sicstr), 0)
 
 // structs
 
@@ -56,6 +58,7 @@ void sicstr_free_destructive(Sicstr *sicstr);
 void sicstr_init(Sicstr *sicstr);
 void sicstr_merge(Sicstr *sicstr1, Sicstr *sicstr2);
 void sicstr_replace(Sicstr *sicstr, const char c, const size_t idx);
+void sicstr_reset(Sicstr *sicstr);
 void sicstr_rm(Sicstr *sicstr, const size_t idx);
 void sicstr_rm_char(Sicstr *sicstr, const char c);
 void sicstr_rm_substr(Sicstr *sicstr, const char *c);

@@ -51,7 +51,7 @@ char* sicstr_dump(const Sicstr *sicstr) {
     LOG_PANIC("String is not initalized.");
   }
 
-  return sicstr->sic;
+  return sicstr->str;
 }
 
 void sicstr_build(Sicstr *sicstr, const char c) {
@@ -144,6 +144,14 @@ void sicstr_replace(Sicstr *sicstr, const char c, const size_t idx) {
   }
 
   sicstr->str[idx] = c;
+}
+
+void sicstr_reset(Sicstr *sicstr) {
+  if(!sicstr) {
+    LOG_PANIC("Sicstr is not initalized.");
+  }
+
+  sicstr->count = 0;
 }
 
 void sicstr_rm(Sicstr *sicstr, const size_t idx) {
