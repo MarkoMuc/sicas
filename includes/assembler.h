@@ -3,6 +3,11 @@
 #include "stdbool.h"
 #endif
 
+#ifndef SICAS_SICSTR
+#define SICAS_SICSTR
+#include "sicstr.h"
+#endif
+
 #ifndef SICAS_LOGGER
 #define SICAS_LOGGER
 #include "logger.h"

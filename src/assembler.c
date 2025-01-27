@@ -21,10 +21,10 @@ bool assemble_header(const InstrVector *instrs, const SymTable *sym, FILE *outpu
     return true;
   }
 
-  if(instrs->prog_name) {
-      out_bytes = fprintf(output, "%-6.6s", instrs->prog_name);
+  if(!instrs->prog_name.count) {
+      out_bytes = fprintf(output, "%-6.6s", sicstr_dump(&instrs->prog_name));
   } else {
-      out_bytes = fprintf(output, "%-6.6s", "sic");
+      out_bytes = fprintf(output, "%-6.6s", "a");
   }
   if(out_bytes == 0) {
     return true;
@@ -65,7 +65,6 @@ bool assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
   pc_reg = start_addr;
 
   while(true) {
-
      if(reserved || instr->type == RMEM) {
        if(b_idx != 0) {
          if (output_text(output, body, &b_idx, &start_addr, pc_reg)) {
@@ -103,7 +102,7 @@ bool assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
       if(d->directive == BASE) {
         const enum ttype type = d->tk->type;
         if(type == ID) {
-          base_reg = symtab_check_get_addr(sym, d->tk->str, instr);
+          base_reg = symtab_check_get_addr(sym, sicstr_dump(&d->tk->str), instr);
         } else {
           base_reg = token_to_long(d->tk);
         }
@@ -127,7 +126,7 @@ bool assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
         uint32_t disp_val = 0;
 
         if(mem->tk->type == ID) {
-          disp_val = symtab_check_get_addr(sym, mem->tk->str, instr);
+          disp_val = symtab_check_get_addr(sym, sicstr_dump(&mem->tk->str), instr);
         } else {
           disp_val = token_to_long(mem->tk);
         }
@@ -247,12 +246,10 @@ bool assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
       }
 
       if(init->tk->type == HEX || init->tk->type == STRING) {
-        const char *str = init->tk->str;
-        size_t idx = 0;
         bool special = false;
-
-        while(str[idx] != '\0') {
-          uint8_t val = str[idx++];
+        const size_t count = init->tk->str.count;
+        for(size_t i = 0; i < count; i++) {
+          uint8_t val = sicstr_get(&init->tk->str, i);
 
           if(b_idx >= ASSEMBLER_BODY_LINE) {
             if (output_text(output, body, &b_idx, &start_addr, pc_reg)) {
@@ -293,7 +290,7 @@ bool assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
           pc_reg++;
         }
 
-        if(idx == 0) {
+        if(count == 0) {
           if(b_idx >= ASSEMBLER_BODY_LINE) {
             if (output_text(output, body, &b_idx, &start_addr, pc_reg)) {
               return true;
