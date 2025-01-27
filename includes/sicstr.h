@@ -53,6 +53,7 @@ bool sicstr_cmpr(const Sicstr *sicstr1, const Sicstr *sicstr2);
 char sicstr_get(const Sicstr *sicstr, const size_t idx);
 char* sicstr_dump(const Sicstr *sicstr);
 void sicstr_build(Sicstr *sicstr, const char c);
+void sicstr_build_str(Sicstr *sicstr, const char* c);
 void sicstr_free(Sicstr *sicstr);
 void sicstr_free_destructive(Sicstr *sicstr);
 void sicstr_free_destructive_stack(Sicstr *sicstr);

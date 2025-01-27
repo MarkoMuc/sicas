@@ -39,7 +39,7 @@ bool sicstr_cmpr(const Sicstr *sicstr1, const Sicstr *sicstr2) {
 }
 
 char sicstr_get(const Sicstr *sicstr, const size_t idx) {
-  if(idx >= sicstr->count) {
+  if(idx > sicstr->count) {
     LOG_PANIC("Accesing out of bounds.");
   }
 
@@ -73,6 +73,13 @@ void sicstr_build(Sicstr *sicstr, const char c) {
 
   if(c != '\0') {
     sicstr->count++;
+  }
+}
+void sicstr_build_str(Sicstr *sicstr, const char* c) {
+  size_t count = 0;
+  char chr;
+  while((chr = c[count++]) != '\0') {
+    sicstr_build(sicstr, chr);
   }
 }
 
@@ -125,23 +132,22 @@ void sicstr_init(Sicstr *sicstr) {
 }
 
 void sicstr_merge(Sicstr *sicstr1, Sicstr *sicstr2) {
-  if(!sicstr1 || !sicstr1->str || !sicstr2 || !sicstr2->str ||
-    !sicstr1->count || !sicstr2->count) {
+  if(!sicstr1 || !sicstr1->str || !sicstr2 || !sicstr2->str) {
     LOG_PANIC("Failed to merge strings, one or more string is null.");
   }
 
-  if(sicstr1->str[sicstr1->count] != '\0' || sicstr2->str[sicstr2->count] != '\0') {
-    LOG_PANIC("Failed to merge, one or more strings are not finished.");
+  if(sicstr2->count) {
+    if(sicstr2->str[sicstr2->count] != '\0') {
+      LOG_PANIC("Failed to merge, second string is not finished.");
+    }
+
+    if((sicstr2->count + sicstr1->count - 1) > sicstr1->capacity) {
+      sicstr1->capacity += (sicstr2->count + sicstr1->count - 1) - sicstr1->capacity;
+      sicstr1->str = realloc(sicstr1->str, sizeof(*sicstr1->str) * sicstr1->capacity);
+    }
+
+    memcpy(&(sicstr1->str[sicstr1->count]), sicstr2->str, sizeof(*sicstr2->str) * sicstr2->count);
   }
-
-  if((sicstr2->count + sicstr1->count - 1) > sicstr1->capacity) {
-    sicstr1->capacity += (sicstr2->count + sicstr1->count - 1) - sicstr1->capacity;
-    sicstr1->str = realloc(sicstr1->str, sizeof(*sicstr1->str) * sicstr1->capacity);
-  }
-
-  memcpy(&(sicstr1->str[sicstr1->count]), sicstr2->str, sizeof(*sicstr2->str) * sicstr2->count);
-
-  sicstr_free_destructive(sicstr2);
 }
 
 void sicstr_replace(Sicstr *sicstr, const char c, const size_t idx) {
@@ -234,7 +240,7 @@ bool csicstr_cmpr(const CSicstr *cstr1, const CSicstr *cstr2) {
 }
 
 char csicstr_get(const CSicstr *cstr, const size_t idx) {
-  if(idx >= cstr->count) {
+  if(idx > cstr->count) {
     LOG_PANIC("Accesing out of bounds.");
   }
 
