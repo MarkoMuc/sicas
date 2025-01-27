@@ -13,6 +13,11 @@
 #include "stdbool.h"
 #endif
 
+#ifndef SICAS_SICSTR
+#define SICAS_SICSTR
+#include "sicstr.h"
+#endif
+
 #ifndef SICAS_LOGGER
 #define SICAS_LOGGER
 #include "logger.h"
@@ -96,6 +101,7 @@ typedef struct {
   Location loc;
   uint64_t addr;
   void *instr;
+  Sicstr str;
 } Instruction;
 
 typedef struct {
@@ -104,7 +110,7 @@ typedef struct {
   uint64_t first_addr;
   uint64_t start_addr;
   uint64_t end_addr;
-  char *prog_name;
+  Sicstr prog_name;
   Instruction **items;
 } InstrVector;
 
