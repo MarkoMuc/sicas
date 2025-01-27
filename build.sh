@@ -5,7 +5,7 @@ set -xe
 INCLUDES="-I ./includes/"
 DBG_CFLAGS=" -Wall -ggdb -fanalyzer -pedantic -std=c99"
 REL_CFLAGS="-O2"
-DEBUG_FLAG="-D""TOKENIZER_DEBUG_MODE"
+DEBUG_FLAG="-D""DEBUG_MODE"
 
 mode=${1:-"dbg"}
 execute=${2:-""}

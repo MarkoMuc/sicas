@@ -78,9 +78,8 @@ int main(int argc, char **argv) {
 #endif
     FILE *out;
     char *prog_name;
-    if(instrs.prog_name){
-      size_t name_size = 0;
-      while(instrs.prog_name[name_size++] != '\0');
+    if(instrs.prog_name.count){
+      size_t name_size = instrs.prog_name.count;
       name_size += 5;
 
       prog_name = malloc(sizeof(*prog_name) * (name_size));
@@ -88,7 +87,7 @@ int main(int argc, char **argv) {
         LOG_PANIC("Could not allocate program name.");
       }
 
-      sprintf(prog_name, "%s.obj", instrs.prog_name);
+      sprintf(prog_name, "%s.obj", sicstr_dump(&instrs.prog_name));
       prog_name[name_size - 1] = '\0';
       out = fopen(prog_name,"w");
     }else{
