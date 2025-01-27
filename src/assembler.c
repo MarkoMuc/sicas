@@ -21,7 +21,7 @@ bool assemble_header(const InstrVector *instrs, const SymTable *sym, FILE *outpu
     return true;
   }
 
-  if(!instrs->prog_name.count) {
+  if(instrs->prog_name.count) {
       out_bytes = fprintf(output, "%-6.6s", sicstr_dump(&instrs->prog_name));
   } else {
       out_bytes = fprintf(output, "%-6.6s", "a");

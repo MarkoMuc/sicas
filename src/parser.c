@@ -1095,7 +1095,7 @@ uint64_t symtab_check_get_addr(const SymTable *table, const char *symbol, const 
 
 #if defined(PARSER_DEBUG_MODE) || defined(DEBUG_MODE)
 void instruction_print(Instruction *instr) {
-  printf("[%ld, %ld]:[%ld, %ld] ", instr->loc.s_row, instr->loc.s_col, instr->loc.e_row, instr->loc.e_col);\
+  printf(LOCATION_LOG, instr->loc.s_row, instr->loc.s_col, instr->loc.e_row, instr->loc.e_col);\
 
   switch(instr->type) {
     case INSTR:
@@ -1159,7 +1159,7 @@ void instruction_print(Instruction *instr) {
     }
     case IMEM:{
       InitMemory *m = instr->instr;
-      printf("%08lx + %08lx (%08lx) ", m->start_addr, m->reserved, m->raw);
+      printf("%08lx (%08lx) ", m->reserved, m->raw);
       token_print(*m->tk);
       break;
     }
@@ -1175,6 +1175,14 @@ void instruction_print(Instruction *instr) {
   printf("\n");
 }
 
+void instrvec_print(InstrVector *instrs) {
+    printf("Instructions [%08lx:%08lx][%08lx]:\n", instrs->start_addr, instrs->end_addr, instrs->first_addr);
+    for(size_t i = 0; i < instrs->count; i++){
+      Instruction *instr = instrvec_get(instrs, i);
+      instruction_print(instr);
+    }
+}
+
 void symtab_print(SymTable *table) {
   printf("Symtable[%ld|%ld]:\n", table->count, table->capacity);
   for(size_t i = 0; i < SYMTABLE_INITIAL_CAPACITY; i++){
@@ -1187,7 +1195,7 @@ void symtab_print(SymTable *table) {
       if(j > 0){
         printf(", ");
       }
-      printf("(%s,%08lx)",table->map[i].values[j].symbol,  table->map[i].values[j].addr);
+      printf("(%08lx) '%s'", table->map[i].values[j].addr, table->map[i].values[j].symbol);
     }
     printf("\n");
   }

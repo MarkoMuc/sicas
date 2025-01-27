@@ -67,13 +67,7 @@ int main(int argc, char **argv) {
     }
 
 #if defined(PARSER_DEBUG_MODE) || defined(DEBUG_MODE)
-     printf("Instructions [%08lx:%08lx][%08lx]:\n", instrs.start_addr, instrs.end_addr, instrs.first_addr);
-     for(size_t i = 0; i < instrs.count; i++){
-       Instruction *instr = instrvec_get(&instrs, i);
-       instruction_print(instr);
-     }
-
-     printf("Symbols:\n");
+    instrvec_print(&instrs);
     symtab_print(&symbols);
 #endif
     FILE *out;
@@ -87,7 +81,7 @@ int main(int argc, char **argv) {
         LOG_PANIC("Could not allocate program name.");
       }
 
-      sprintf(prog_name, "%s.obj", sicstr_dump(&instrs.prog_name));
+      sprintf(prog_name, "%s.o", sicstr_dump(&instrs.prog_name));
       prog_name[name_size - 1] = '\0';
       out = fopen(prog_name,"w");
     }else{

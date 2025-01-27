@@ -166,5 +166,6 @@ uint64_t symtab_check_get_addr(const SymTable *table, const char *symbol, const 
 
 #if defined(PARSER_DEBUG_MODE) || defined(DEBUG_MODE)
 void instruction_print(Instruction *instr);
+void instrvec_print(InstrVector *instrs);
 void symtab_print(SymTable *table);
 #endif
