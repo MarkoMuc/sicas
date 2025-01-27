@@ -251,6 +251,8 @@ bool fill(FILE *f, TokenVector *vec) {
         col += TOKENIZER_TAB_WIDTH - (col % TOKENIZER_TAB_WIDTH);
         break;
       case ',': {
+        sicstr_build(&sicstr, buffer[i]);
+        sicstr_fin(&sicstr);
         Token el = {
             .type = COMMA, .str = sicstr,
             .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
@@ -259,6 +261,8 @@ bool fill(FILE *f, TokenVector *vec) {
         break;
       }
       case '=': {
+        sicstr_build(&sicstr, buffer[i]);
+        sicstr_fin(&sicstr);
         Token el = {
             .type = LITERAL, .str = sicstr,
             .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
@@ -267,6 +271,8 @@ bool fill(FILE *f, TokenVector *vec) {
         break;
       }
       case '#': {
+        sicstr_build(&sicstr, buffer[i]);
+        sicstr_fin(&sicstr);
         Token el = {
             .type = HASH, .str = sicstr,
             .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
@@ -281,6 +287,8 @@ bool fill(FILE *f, TokenVector *vec) {
         break;
       }
       case '+': {
+        sicstr_build(&sicstr, buffer[i]);
+        sicstr_fin(&sicstr);
         Token el = {
             .type = PLUS, .str = sicstr,
             .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
@@ -289,6 +297,8 @@ bool fill(FILE *f, TokenVector *vec) {
         break;
       }
       case '-': {
+        sicstr_build(&sicstr, buffer[i]);
+        sicstr_fin(&sicstr);
         Token el = {
             .type = MINUS, .str = sicstr,
             .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
@@ -297,6 +307,8 @@ bool fill(FILE *f, TokenVector *vec) {
         break;
       }
       case '@': {
+        sicstr_build(&sicstr, buffer[i]);
+        sicstr_fin(&sicstr);
         Token el = {
             .type = AT, .str = sicstr,
             .location = { .s_row = row, .s_col = col, .e_row = row, .e_col = col }};
@@ -675,32 +687,31 @@ void token_print(Token t) {
   }
 }
 
-void token_type_print(enum ttype tk_type){
- switch (tk_type) {
-  case NUM:
-    printf("NUM");
-    break;
-  case FNUM:
-    printf("FNUM");
-    break;
-  case BIN:
-    printf("BIN");
-    break;
-  case ID:
-    printf("ID");
-    break;
-  case HEX:
-    printf("HEX");
-    break;
-  case STRING:
-    printf("STRING");
-    break;
-  case REGISTER:
-    printf("REGISTER");
-    break;
-  default:
-    LOG_PANIC("Wrong token type");
-    break;
+bool token_type_print(enum ttype tk_type){
+  switch (tk_type) {
+    case NUM:
+      printf("NUM");
+      return true;
+    case FNUM:
+      printf("FNUM");
+      return true;
+    case BIN:
+      printf("BIN");
+      return true;
+    case ID:
+      printf("ID");
+      return true;
+    case HEX:
+      printf("HEX");
+      return true;
+    case STRING:
+      printf("STRING");
+      return true;
+    case REGISTER:
+      printf("REGISTER");
+      return true;
+    default:
+      return false;
   }
 }
 
