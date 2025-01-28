@@ -646,6 +646,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     uint64_t res_bytes = 0;
     if (IS_NUMBER(tk->type)){
         if(tk->type == FNUM) {
+          res_bytes = dec_to_float48(tk);
           LOG_PANIC("FNUM not implemented yet");
         }
         res_bytes = long_ceil(long_log2(token_to_long(tk)), 8);
@@ -777,6 +778,45 @@ Instruction *instr_create() {
   return instr;
 }
 
+uint64_t dec_to_float48(const Token *tk) {
+  uint64_t integer_part = 0;
+  uint64_t fraction_part = 0;
+  uint64_t fraction = 0;
+
+  const Sicstr str = tk->str;
+  size_t i = 0;
+  char c = 0;
+
+  while((c = sicstr_get(&str, i++)) != '.') {
+    integer_part = (integer_part * 10 ) + c - '0';
+  }
+
+  //uint64_t exponent = long_log2(integer_part);
+  fraction = integer_part;
+
+  while(i < str.count) {
+    c = sicstr_get(&str, i++);
+    fraction_part = (fraction_part * 10 ) + c - '0';
+  }
+
+  if(integer_part == 0 && fraction_part == 0) {
+    return 0;
+  }
+
+  uint8_t res = 0;
+  uint8_t precision = SICXE_FLOAT_PRECISION;
+  uint32_t max = pow_of(10, long_log10(fraction_part));
+
+  while(precision-- && fraction_part) {
+    fraction_part = fraction_part * 2;
+    res = fraction_part / max;
+    fraction_part = fraction_part % max;
+    fraction = (fraction << 1) | res;
+  }
+  printf("%lx\n", fraction);
+  return fraction;
+}
+
 uint64_t token_to_long(const Token *tk){
   uint64_t res = 0;
   if(tk->str.count < 1) {
@@ -796,6 +836,13 @@ uint64_t token_to_long(const Token *tk){
   return res;
 }
 
+uint64_t pow_of(uint64_t a, uint64_t b) {
+  if(b == 0) {
+    return 1;
+  }
+  return a * pow_of(a, --b);
+}
+
 uint64_t long_ceil(uint64_t num1, uint64_t div){
   if(num1 == 0) {
     return 1;
@@ -806,6 +853,20 @@ uint64_t long_ceil(uint64_t num1, uint64_t div){
   }
 
   return num1/div;
+}
+
+uint64_t long_log10(uint64_t num){
+  if(num <= 10){
+    return 1;
+  }
+
+  uint64_t ctr = 0;
+  while(num > 0){
+    num = num / 10;
+    ctr++;
+  }
+
+  return ctr;
 }
 
 uint64_t long_log2(uint64_t num){

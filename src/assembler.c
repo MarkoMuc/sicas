@@ -317,7 +317,6 @@ bool assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
         uint64_t bytes = init->raw;
 
         while(bytes){
-
           uint8_t val = (uint8_t)(init_val & ((uint64_t)0xFF << (bytes - 1))) >> (bytes - 1);
 
           if(b_idx >= ASSEMBLER_BODY_LINE) {

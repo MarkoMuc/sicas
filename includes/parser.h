@@ -42,6 +42,7 @@
 #define hash_func djb2_hash
 #define SICAS_BYTE_SIZE 1
 #define SICAS_WORD_SIZE SICAS_BYTE_SIZE * 3
+#define SICXE_FLOAT_PRECISION 36
 
 #define DIRECT_INSTR(instr) ((MInstr*)((instr)->instr))
 #define DIRECT_DIR(instr) ((Directive*)((instr)->instr))
@@ -145,7 +146,10 @@ bool parse_vector(const TokenVector *vec, InstrVector *instrs, SymTable *sym);
 Instruction* instr_create();
 
 size_t djb2_hash(const char* key);
+uint64_t dec_to_float48(const Token *tk);
 uint64_t long_log2(uint64_t num);
+uint64_t long_log10(uint64_t num);
+uint64_t pow_of(uint64_t a, uint64_t b);
 uint64_t token_to_long(const Token *tk);
 uint64_t long_ceil(uint64_t num1, uint64_t div);
 
