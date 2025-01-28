@@ -107,7 +107,11 @@ bool assemble_body(const InstrVector *instrs, const SymTable *sym, FILE *output)
           base_reg = token_to_long(d->tk);
         }
       }
- 
+
+      if(i >= instr_count) {
+        break;
+      }
+
       instr = instrvec_get(instrs, i++);
       continue;
     }
