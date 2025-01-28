@@ -80,10 +80,12 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
       token_check_null(tk);
 
       indexing_illegal = true;
-      if(tk->type == ID || tk->type == NUM || tk->type == HEX || tk->type == BIN || tk->type == STRING){
+      if(tk->type == ID || IS_CONSTANT(tk->type)){
         mem->tk = tk;
         sicstr_merge(&instr->str, &tk->str);
-        if(tk->type == ID){
+        if(!float_instr || tk->type == FNUM) {
+          LOG_XLERR(instr->loc, tk->location, "Instruction does not accept floating point operands.\n");
+        }else if(tk->type == ID){
           symtab_add_symbol(sym, sicstr_dump(&tk->str));
         }
 
@@ -105,7 +107,7 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
         }
 
         //tokvec_add(instr->vec, tk);
-      } else if (tk->type == NUM || tk->type == HEX || tk->type == BIN || tk->type == STRING) {
+      } else if (IS_CONSTANT(tk->type)) {
         //tokvec_add(instr->vec, tk);
       } else {
         LOG_XLERR(instr->loc, tk->location, "Literal missing constant.\n");
@@ -120,10 +122,10 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
     case BIN:
     case STRING:
     case FNUM:
-      //FIXME: does float_instr even matter here?
-      if(tk->type == FNUM && float_instr){
+      if(tk->type == FNUM && !float_instr){
         LOG_XLERR(instr->loc, tk->location, "Float constant not allowed here.\n");
       }
+
       mem->tk = tk;
       break;
 
@@ -530,7 +532,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->loc.e_row = tk->location.e_row;
     instr->loc.e_col = tk->location.e_col;
 
-    if(tk->type == NUM || tk->type == HEX || tk->type == BIN) {
+    if(IS_DECIMAL(tk->type)) {
         *loc_ctr = token_to_long(tk);
     }else{
       LOG_XLERR(instr->loc, instr->loc, "Missing value after START directive or the value is not a constant.\n");
@@ -558,7 +560,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     }
 
     if(instrs->first_addr != 0) {
-      LOG_XLERR(instr->loc, instr->loc, "Duplicate START directive or START is not the first instruction.\n");
+      LOG_XLERR(instr->loc, instr->loc, "Duplicate END directive or END is not the last instruction.\n");
     }
 
     DIRECT_DIR(instr)->directive = tk->type;
@@ -572,9 +574,11 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->loc.e_row = tk->location.e_row;
     instr->loc.e_col = tk->location.e_col;
 
-    if (tk->type == NUM || tk->type == HEX || tk->type == BIN ){
+    if (IS_DECIMAL(tk->type)){
         instrs->first_addr = token_to_long(tk);
-    } else if (tk->type != ID){
+    } else if(tk->type == ID) {
+      LOG_XLERR(instr->loc, instr->loc, "Using label with END has not been implemented.\n");
+    } else {
       LOG_XLERR(instr->loc, instr->loc, "Missing value after END directive or the value is not a constant/symbol.\n");
     }
 
@@ -601,7 +605,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->loc.e_row = tk->location.e_row;
     instr->loc.e_col = tk->location.e_col;
 
-    if(tk->type == NUM || tk->type == HEX || tk->type == BIN || tk->type == ID) {
+    if(IS_DECIMAL(tk->type) || tk->type == ID) {
       if(tk->type == ID){
         symtab_add_symbol(sym, sicstr_dump(&tk->str));
       }
@@ -640,7 +644,10 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->loc.e_col = tk->location.e_col;
 
     uint64_t res_bytes = 0;
-    if (tk->type == NUM || tk->type == HEX || tk->type == BIN ){
+    if (IS_NUMBER(tk->type)){
+        if(tk->type == FNUM) {
+          LOG_PANIC("FNUM not implemented yet");
+        }
         res_bytes = long_ceil(long_log2(token_to_long(tk)), 8);
     } else if (tk->type == STRING) {
         bool escape = false;
@@ -693,7 +700,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     instr->loc.e_row = tk->location.e_row;
     instr->loc.e_col = tk->location.e_col;
 
-    if (tk->type == NUM || tk->type == HEX || tk->type == BIN ){
+    if (IS_DECIMAL(tk->type)){
         offset = token_to_long(tk);
     } else{
       LOG_XLERR(tk->location, tk->location, "Missing value after RESW / RESB or the value is not a constant.\n");

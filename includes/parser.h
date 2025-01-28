@@ -50,6 +50,11 @@
 #define DIRECT_MEM(instr) ((Mem*)DIRECT_INSTR(instr)->oper)
 #define DIRECT_REGS(instr) ((Regs*)DIRECT_INSTR(instr)->oper)
 
+#define IS_DECIMAL(type) ((type) == NUM || (type) == BIN || (type) == HEX)
+#define IS_NUMBER(type) (IS_DECIMAL(type) || (type) == FNUM)
+#define IS_CONSTANT(type) (IS_NUMBER(type) || (type) == STRING)
+#define IS_DCONST(type) (IS_DECIMAL(type) || (type) == STRING)
+
 // enums
 
 enum itype { INSTR, DIRECTIVE, RMEM, IMEM, CEXPR };
