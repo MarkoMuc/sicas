@@ -646,7 +646,8 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     uint64_t res_bytes = 0;
     if (IS_NUMBER(tk->type)){
         if(tk->type == FNUM) {
-          res_bytes = dec_to_float48(tk);
+          uint64_t exmp = dec_to_float48(tk, &res_bytes);
+          printf("%lx * 2^(%ld - 1024).", res_bytes, exmp);
           LOG_PANIC("FNUM not implemented yet");
         }
         res_bytes = long_ceil(long_log2(token_to_long(tk)), 8);
@@ -778,7 +779,7 @@ Instruction *instr_create() {
   return instr;
 }
 
-uint64_t dec_to_float48(const Token *tk) {
+uint32_t dec_to_float48(const Token *tk, uint64_t *value) {
   uint64_t integer_part = 0;
   uint64_t fraction_part = 0;
   uint64_t fraction = 0;
@@ -791,7 +792,7 @@ uint64_t dec_to_float48(const Token *tk) {
     integer_part = (integer_part * 10 ) + c - '0';
   }
 
-  //uint64_t exponent = long_log2(integer_part);
+  uint64_t exponent = long_log2(integer_part);
   fraction = integer_part;
 
   while(i < str.count) {
@@ -813,8 +814,9 @@ uint64_t dec_to_float48(const Token *tk) {
     fraction_part = fraction_part % max;
     fraction = (fraction << 1) | res;
   }
-  printf("%lx\n", fraction);
-  return fraction;
+
+  *value = fraction;
+  return exponent + 1024;
 }
 
 uint64_t token_to_long(const Token *tk){

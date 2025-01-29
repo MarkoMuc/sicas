@@ -146,7 +146,7 @@ bool parse_vector(const TokenVector *vec, InstrVector *instrs, SymTable *sym);
 Instruction* instr_create();
 
 size_t djb2_hash(const char* key);
-uint64_t dec_to_float48(const Token *tk);
+uint32_t dec_to_float48(const Token *tk, uint64_t *value);
 uint64_t long_log2(uint64_t num);
 uint64_t long_log10(uint64_t num);
 uint64_t pow_of(uint64_t a, uint64_t b);
