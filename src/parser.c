@@ -49,7 +49,7 @@ Regs* parse_regs(const TokenVector *tokens, Instruction *instr, size_t *idx) {
   return regs;
 }
 
-Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx, const uint8_t float_instr) {
+Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx) {
   Mem *mem = malloc(sizeof(*mem));
   size_t i = *idx;
   bool indexing_illegal = 0;
@@ -80,12 +80,10 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
       token_check_null(tk);
 
       indexing_illegal = true;
-      if(tk->type == ID || IS_CONSTANT(tk->type)){
+      if(tk->type == ID || IS_DCONST(tk->type)){
         mem->tk = tk;
         sicstr_merge(&instr->str, &tk->str);
-        if(!float_instr || tk->type == FNUM) {
-          LOG_XLERR(instr->loc, tk->location, "Instruction does not accept floating point operands.\n");
-        }else if(tk->type == ID){
+        if(tk->type == ID){
           symtab_add_symbol(sym, sicstr_dump(&tk->str));
         }
 
@@ -101,13 +99,7 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
       tk = tokvec_get(tokens, i++);
       token_check_null(tk);
 
-      if (tk->type == FNUM) {
-        if (float_instr == 0) {
-          LOG_XLERR(instr->loc, tk->location, "Floats not allowed here.\n");
-        }
-
-        //tokvec_add(instr->vec, tk);
-      } else if (IS_CONSTANT(tk->type)) {
+      if (IS_DCONST(tk->type)) {
         //tokvec_add(instr->vec, tk);
       } else {
         LOG_XLERR(instr->loc, tk->location, "Literal missing constant.\n");
@@ -121,10 +113,6 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
     case HEX:
     case BIN:
     case STRING:
-    case FNUM:
-      if(tk->type == FNUM && !float_instr){
-        LOG_XLERR(instr->loc, tk->location, "Float constant not allowed here.\n");
-      }
 
       mem->tk = tk;
       break;
@@ -255,7 +243,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
       LOG_PANIC("Failed to malloc minstr.");
     }
     DIRECT_INSTR(instr)->op = tk->type;
-    DIRECT_INSTR(instr)->oper = parse_mem_addr(tokens, instr, sym, &i, 0);
+    DIRECT_INSTR(instr)->oper = parse_mem_addr(tokens, instr, sym, &i);
 
     offset = format;
     break;
@@ -274,7 +262,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     }
 
     DIRECT_INSTR(instr)->op = tk->type;
-    DIRECT_INSTR(instr)->oper = parse_mem_addr(tokens, instr, sym, &i, 1);
+    DIRECT_INSTR(instr)->oper = parse_mem_addr(tokens, instr, sym, &i);
 
     offset = format;
     break;
