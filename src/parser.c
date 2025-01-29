@@ -635,7 +635,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     if (IS_NUMBER(tk->type)){
         if(tk->type == FNUM) {
           uint64_t exmp = dec_to_float48(tk, &res_bytes);
-          printf("%lx * 2^(%ld - 1024).", res_bytes, exmp);
+          printf("%lx * 2^(%ld - 1024).\n", res_bytes, exmp);
           LOG_PANIC("FNUM not implemented yet");
         }
         res_bytes = long_ceil(long_log2(token_to_long(tk)), 8);
@@ -780,9 +780,6 @@ uint32_t dec_to_float48(const Token *tk, uint64_t *value) {
     integer_part = (integer_part * 10 ) + c - '0';
   }
 
-  uint64_t exponent = long_log2(integer_part);
-  fraction = integer_part;
-
   while(i < str.count) {
     c = sicstr_get(&str, i++);
     fraction_part = (fraction_part * 10 ) + c - '0';
@@ -792,19 +789,33 @@ uint32_t dec_to_float48(const Token *tk, uint64_t *value) {
     return 0;
   }
 
+  int32_t exponent = long_log2(integer_part) - 1;
+  fraction = integer_part & ~((uint8_t)1 << (exponent));
+
+  //FIXME: how to detect that the float is too large.
   uint8_t res = 0;
   uint8_t precision = SICXE_FLOAT_PRECISION;
   uint32_t max = pow_of(10, long_log10(fraction_part));
 
+  int32_t msb_fraction = -1;
   while(precision-- && fraction_part) {
     fraction_part = fraction_part * 2;
     res = fraction_part / max;
+    if(msb_fraction == -1 && res) {
+      msb_fraction = SICXE_FLOAT_PRECISION - precision;
+      res = 0;
+    }
+
     fraction_part = fraction_part % max;
     fraction = (fraction << 1) | res;
   }
 
   *value = fraction;
-  return exponent + 1024;
+  if(integer_part == 0) {
+    exponent = -(msb_fraction == 0? 1 : msb_fraction);
+  }
+
+  return 1024 + exponent;
 }
 
 uint64_t token_to_long(const Token *tk){
