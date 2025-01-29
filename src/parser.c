@@ -803,7 +803,6 @@ uint32_t dec_to_float48(const Token *tk, uint64_t *value) {
     res = fraction_part / max;
     if(msb_fraction == -1 && res) {
       msb_fraction = SICXE_FLOAT_PRECISION - precision;
-      res = 0;
     }
 
     fraction_part = fraction_part % max;
