@@ -251,7 +251,6 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
   instr->loc.e_row = tk->location.e_row;
   instr->loc.e_col = tk->location.e_col;
 
-  sicstr_merge(&instr->str, &tk->str);
   switch (tk->type) {
   case ADD:
   case AND:
