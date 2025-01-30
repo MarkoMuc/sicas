@@ -52,7 +52,8 @@ Regs* parse_regs(const TokenVector *tokens, Instruction *instr, size_t *idx) {
 Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym, size_t *idx) {
   Mem *mem = malloc(sizeof(*mem));
   size_t i = *idx;
-  bool indexing_illegal = 0;
+  bool indexing_illegal = false;
+  bool sign = false;
 
   if(!mem){
     LOG_PANIC("Could not allocate memory for mem struct.");
@@ -65,6 +66,14 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
   Token *tk = tokvec_get(tokens, i++);
   token_check_null(tk);
   sicstr_merge(&instr->str, &tk->str);
+
+  if(tk->type == PLUS || tk->type == MINUS) {
+    sign = true;
+    check_next_token(i, tokens, instr->loc, "No constant following sign.\n");
+    tk = tokvec_get(tokens, i++);
+    token_check_null(tk);
+    sicstr_merge(&instr->str, &tk->str);
+  }
 
   switch(tk->type) {
     case HASH:
@@ -79,8 +88,16 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
       tk = tokvec_get(tokens, i++);
       token_check_null(tk);
 
+      if(tk->type == PLUS || tk->type == MINUS) {
+        sign = true;
+        check_next_token(i, tokens, instr->loc, "No constant following sign.\n");
+        tk = tokvec_get(tokens, i++);
+        token_check_null(tk);
+        sicstr_merge(&instr->str, &tk->str);
+      }
+
       indexing_illegal = true;
-      if(tk->type == ID || IS_DCONST(tk->type)){
+      if(tk->type == ID || IS_DECIMAL(tk->type)){
         mem->tk = tk;
         sicstr_merge(&instr->str, &tk->str);
         if(tk->type == ID){
@@ -89,15 +106,27 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
 
         break;
       } else if(tk->type != LITERAL){
-        LOG_XLERR(instr->loc, tk->location, "Missing identifier or constant after indirect or immediate addressing.\n");
+        LOG_XLERR(instr->loc, tk->location, "Missing identifier or incorrect constant after indirect or immediate addressing: %s.\n", sicstr_dump(&instr->str));
       }
       // If there is a literal, go forward.
     case LITERAL:
       LOG_PANIC("LITERALS not implemented yet.");
 
+      if(sign) {
+        LOG_XLERR(instr->loc, tk->location, "Missplaced sign, it preceds a memory address operand.\n");
+      }
+
       check_next_token(i, tokens, instr->loc, "No constant following a literal.\n");
       tk = tokvec_get(tokens, i++);
       token_check_null(tk);
+
+      if(tk->type == PLUS || tk->type == MINUS) {
+        sign = true;
+        check_next_token(i, tokens, instr->loc, "No constant following sign.\n");
+        tk = tokvec_get(tokens, i++);
+        token_check_null(tk);
+        sicstr_merge(&instr->str, &tk->str);
+      }
 
       if (IS_DCONST(tk->type)) {
         //tokvec_add(instr->vec, tk);
@@ -113,6 +142,9 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
     case HEX:
     case BIN:
     case STRING:
+      if(sign && (tk->type == ID || tk->type == STRING)) {
+        LOG_XLERR(instr->loc, tk->location, "Missplaced sign, it preceds ID or STRING.\n");
+      }
 
       mem->tk = tk;
       break;
@@ -159,6 +191,7 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
 size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, size_t *idx, uint64_t *loc_ctr) {
   size_t i = *idx;
   bool prog_name = false;
+  bool sign = false;
   Token *id = NULL;
   uint64_t offset = 0;
   Token *tk = tokvec_get(tokens, i++);
@@ -590,6 +623,14 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     token_check_null(tk);
     sicstr_merge(&instr->str, &tk->str);
 
+    if(tk->type == PLUS || tk->type == MINUS) {
+        sign = true;
+        check_next_token(i, tokens, instr->loc, "No constant following sign.\n");
+        tk = tokvec_get(tokens, i++);
+        token_check_null(tk);
+        sicstr_merge(&instr->str, &tk->str);
+    }
+
     instr->loc.e_row = tk->location.e_row;
     instr->loc.e_col = tk->location.e_col;
 
@@ -628,6 +669,14 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     token_check_null(tk);
     sicstr_merge(&instr->str, &tk->str);
 
+    if(tk->type == PLUS || tk->type == MINUS) {
+        sign = true;
+        check_next_token(i, tokens, instr->loc, "No constant following sign.\n");
+        tk = tokvec_get(tokens, i++);
+        token_check_null(tk);
+        sicstr_merge(&instr->str, &tk->str);
+    }
+
     instr->loc.e_row = tk->location.e_row;
     instr->loc.e_col = tk->location.e_col;
 
@@ -640,6 +689,9 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
         }
         res_bytes = long_ceil(long_log2(token_to_long(tk)), 8);
     } else if (tk->type == STRING) {
+        if(sign) {
+          LOG_XLERR(instr->loc, instr->loc, "Sign preceding a STRING.\n");
+        }
         bool escape = false;
         const size_t count = tk->str.count;
         for(size_t i = 0; i < count; i++) {
