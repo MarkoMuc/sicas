@@ -26,6 +26,7 @@
 #define sicstr_fin(sicstr) sicstr_build((sicstr), '\0')
 #define sicstr_lst(sicstr) sicstr_get((sicstr), (sicstr)->count - 1)
 #define sicstr_fst(sicstr) sicstr_get((sicstr), 0)
+#define sicstr_sep(sicstr) do{sicstr_build((sicstr), ' '); sicstr_fin((sicstr));}while(0);
 
 // structs
 
