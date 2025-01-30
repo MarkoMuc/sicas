@@ -106,7 +106,8 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
 
         break;
       } else if(tk->type != LITERAL){
-        LOG_XLERR(instr->loc, tk->location, "Missing identifier or incorrect constant after indirect or immediate addressing: %s.\n", sicstr_dump(&instr->str));
+        LOG_XLERR(instr->loc, tk->location, "Missing identifier or incorrect constant after"
+                  "indirect or immediate addressing: %s\n", sicstr_dump(&instr->str));
       }
       // If there is a literal, go forward.
     case LITERAL:

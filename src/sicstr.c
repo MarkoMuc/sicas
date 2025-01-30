@@ -144,9 +144,13 @@ void sicstr_merge(Sicstr *sicstr1, Sicstr *sicstr2) {
     if((sicstr2->count + sicstr1->count - 1) > sicstr1->capacity) {
       sicstr1->capacity += (sicstr2->count + sicstr1->count - 1) - sicstr1->capacity;
       sicstr1->str = realloc(sicstr1->str, sizeof(*sicstr1->str) * sicstr1->capacity);
+      if(!sicstr1->str) {
+        LOG_PANIC("Failed to realloc.");
+      }
     }
 
     memcpy(&(sicstr1->str[sicstr1->count]), sicstr2->str, sizeof(*sicstr2->str) * sicstr2->count);
+    sicstr1->count += sicstr2->count;
   }
 }
 
