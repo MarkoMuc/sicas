@@ -13,6 +13,7 @@ bool fill(FILE *f, TokenVector *vec) {
   bool identf = false;
   bool comment = false;
   bool special_char = false;
+  bool num_init = false;
   enum special_token special = NON_T;
   int32_t num_delimiter = 0;
   int8_t fraction = -1;
@@ -81,7 +82,6 @@ bool fill(FILE *f, TokenVector *vec) {
           fraction = -1;
           continue;
         } else {
-          //FIXME: What happens if sicstr->count == 0?
           if(special != CHAR_T && sicstr.count >= 1 && c == '_') {
             continue;
           } else if (special == HEX_T && !is_numeric(c) && !(c >= 'a' && c <= 'f')) {
@@ -162,12 +162,12 @@ bool fill(FILE *f, TokenVector *vec) {
       }
 
       if (num) {
-        if (!is_numeric(c) &&
-            !(c == '_' && sicstr.count >= 1) &&
-            !(sicstr_fst(&sicstr) == '0' && c == 'x' && sicstr.count == 1) &&
-            !(sicstr_fst(&sicstr) == '0' && c == 'b' && sicstr.count == 1) &&
+        if (!is_numeric(c) && 
+            !(c == '_' && sicstr.count >= 1 && num_init) &&
+            !(!num_init && sicstr_fst(&sicstr) == '0' && c == 'x' && sicstr.count == 1) &&
+            !(!num_init && sicstr_fst(&sicstr) == '0' && c == 'b' && sicstr.count == 1) &&
+            !(!num_init && sicstr_fst(&sicstr) == '0' && c == 'f' && sicstr.count == 1) &&
             !(num_delimiter == -1 && c >= 'a' && c <= 'f') &&
-            !(sicstr_fst(&sicstr) == '0' && c == 'f' && sicstr.count == 1) &&
             !(num_delimiter == 1 && c == '.')) {
           sicstr_fin(&sicstr);
           enum ttype type = NUM;
@@ -200,23 +200,26 @@ bool fill(FILE *f, TokenVector *vec) {
           if(type == FNUM) {
             comment = false;
           }
+          num_init = false;
         } else {
-          //FIXME: What if sicstr.count == 0?
-          if(sicstr.count >= 1 && c == '_') {
+          if (!num_init && sicstr.count == 1 && sicstr_fst(&sicstr) == '0' && c == 'x') {
+            num_delimiter = -1;
+            sicstr_reset(&sicstr);
+            num_init = true;
+            continue;
+          } else if (!num_init && sicstr.count == 1 && sicstr_fst(&sicstr) == '0' && c == 'f') {
+            num_delimiter++;
+            sicstr_reset(&sicstr);
+            num_init = true;
+            continue;
+          } else if (!num_init && sicstr.count == 1 && sicstr_fst(&sicstr) == '0' && c == 'b') {
+            num_delimiter = -2;
+            sicstr_reset(&sicstr);
+            num_init = true;
             continue;
           }
 
-          if (sicstr.count == 1 && sicstr_fst(&sicstr) == '0' && c == 'x') {
-            num_delimiter = -1;
-            sicstr_reset(&sicstr);
-            continue;
-          } else if (sicstr.count == 1 && sicstr_fst(&sicstr) == '0' && c == 'f') {
-            num_delimiter++;
-            sicstr_reset(&sicstr);
-            continue;
-          } else if (sicstr.count == 1 && sicstr_fst(&sicstr) == '0' && c == 'b') {
-            num_delimiter = -2;
-            sicstr_reset(&sicstr);
+          if(sicstr.count >= 1 && c == '_') {
             continue;
           }
 
@@ -447,7 +450,6 @@ Token *tokvec_get(const TokenVector *v, const size_t idx) {
   return &(v->items[idx]);
 }
 
-//FIXME: This can literally just be a comparison, why am I using a function?
 Token gen_token(Sicstr *sicstr, const Location loc) {
   Token token = {0};
   uint8_t not_keyword = 0;
