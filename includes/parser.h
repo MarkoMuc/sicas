@@ -59,10 +59,18 @@
 // enums
 
 enum itype { INSTR, DIRECTIVE, RMEM, IMEM, CEXPR };
-enum ftype { ZERO = 0 , ONE = 1, TWO = 2 , THREE = 3, FOUR = 4};
-enum mtype { SIM, IMM, IND};
+enum ftype { ZERO = 0 , ONE = 1, TWO = 2 , THREE = 3, FOUR = 4 };
+enum mtype { SIM, IMM, IND };
+typedef enum ppass { PARSE_INSTRUCTION, PARSE_SYMBOL } pass;
 
 // structs
+
+typedef struct {
+  enum ttype type;
+  bool sign;
+  uint64_t value;
+  CSicstr sicstr;
+} NumConst;
 
 typedef struct {
   uint8_t reg1;
@@ -76,7 +84,6 @@ typedef struct {
 } Mem;
 
 typedef struct {
-  //FIXME: This field might not be needed
   enum ttype type;
   uint64_t start_addr;
   uint64_t reserved;
@@ -85,7 +92,6 @@ typedef struct {
 } InitMemory;
 
 typedef struct {
-  //FIXME: This field might not be needed
   enum ttype type;
   uint64_t start_addr;
   uint64_t reserved;

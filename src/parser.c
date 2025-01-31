@@ -3,6 +3,8 @@
 #include "../includes/parser.h"
 #endif
 
+static pass PARSER_CONTEXT;
+
 Regs* parse_regs(const TokenVector *tokens, Instruction *instr, size_t *idx) {
   size_t i = *idx;
   Regs *regs = malloc(sizeof(*regs));
@@ -822,11 +824,12 @@ bool parse_vector(const TokenVector *vec, InstrVector *instrs, SymTable *sym) {
   const long vec_size = vec->count;
   size_t i = 0;
   uint64_t loc_ctr = 0;
+  PARSER_CONTEXT = PARSE_SYMBOL;
 
-  while(i < vec_size){
-    //FIXME: Maybe return error idk something?
+  while(i < vec_size) {
     i = builder(vec, instrs, sym, &i, &loc_ctr);
   }
+
   instrs->end_addr = loc_ctr;
   instrs->first_addr = instrs->first_addr == 0? instrs->start_addr : instrs->first_addr;
   if(!instrs->prog_name.count) {
