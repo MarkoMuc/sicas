@@ -209,5 +209,6 @@ void tokvec_rm(TokenVector *v, const size_t idx);
 void token_print(Token t);
 bool token_type_print(enum ttype tk_type);
 #if defined(TOKENIZER_DEBUG_MODE) || defined(PARSER_DEBUG_MODE) || defined (DEBUG_MODE)
+void token_loc_print(Token t);
 void tokvec_print(TokenVector *v);
 #endif

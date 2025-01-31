@@ -668,18 +668,7 @@ Token gen_token(Sicstr *sicstr, const Location loc) {
   return token;
 }
 
-#if defined(TOKENIZER_DEBUG_MODE) || defined(PARSER_DEBUG_MODE) || defined(DEBUG_MODE)
-void tokvec_print(TokenVector *v) {
-  for(size_t i = 0; i < v->count; i++) {
-    Token t = v->items[i];
-    token_print(t);
-    printf("\n");
-  }
-}
-#endif
 void token_print(Token t) {
-  printf(LOCATION_LOG ,t.location.s_row, t.location.s_col, t.location.e_row, t.location.e_col);
-
   if(t.type == NUM || t.type == FNUM || t.type == BIN || t.type == ID ||
      t.type == HEX || t.type == STRING ||t.type == REGISTER){
     token_type_print(t.type);
@@ -717,3 +706,17 @@ bool token_type_print(enum ttype tk_type){
   }
 }
 
+#if defined(TOKENIZER_DEBUG_MODE) || defined(PARSER_DEBUG_MODE) || defined(DEBUG_MODE)
+void token_loc_print(Token t) {
+  printf(LOCATION_LOG ,t.location.s_row, t.location.s_col, t.location.e_row, t.location.e_col);
+  token_print(t);
+}
+
+void tokvec_print(TokenVector *v) {
+  for(size_t i = 0; i < v->count; i++) {
+    Token t = v->items[i];
+    token_loc_print(t);
+    printf("\n");
+  }
+}
+#endif
