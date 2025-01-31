@@ -67,7 +67,7 @@ bool fill(FILE *f, TokenVector *vec) {
 
           if(type == STRING && special_char){
             LOG_XERR(LOCATION_LOG "'%s' string or char has an invalid escape sequence.\n", s_row, s_col, row, col, sicstr_dump(&sicstr));
-          }else if (type == FNUM && (fraction < 0 || sicstr_get(&sicstr, sicstr_lst(&sicstr)) == '.')) {
+          }else if (type == FNUM && (fraction < 0 || sicstr_lst(&sicstr) == '.')) {
             LOG_XERR(LOCATION_LOG "'%s' float missing fractional part.\n", s_row, s_col, row, col, sicstr_dump(&sicstr));
           }
 
