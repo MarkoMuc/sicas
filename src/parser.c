@@ -5,17 +5,23 @@
 
 static pass PARSER_CONTEXT;
 
+Token *check_get_token(const size_t i, const TokenVector *tokens, Instruction *instr, const char* err) {
+  check_next_token(i, tokens, instr->loc, err);
+  Token *tk = tokvec_get(tokens, i);
+  token_check_null(tk);
+  return tk;
+}
+
 Regs* parse_regs(const TokenVector *tokens, Instruction *instr, size_t *idx) {
   size_t i = *idx;
+
   Regs *regs = malloc(sizeof(*regs));
 
   if(!regs){
     LOG_PANIC("Could not allocate memory for regs struct.");
   }
 
-  check_next_token(i, tokens, instr->loc, "Missing first register for instruction of format 2.\n");
-  Token *tk = tokvec_get(tokens, i++);
-  token_check_null(tk);
+  Token *tk = check_get_token(i++, tokens, instr, "Missing first register for instruction of format 2.\n");
   sicstr_sep(&instr->str);
   sicstr_merge(&instr->str, &tk->str);
 
@@ -23,9 +29,7 @@ Regs* parse_regs(const TokenVector *tokens, Instruction *instr, size_t *idx) {
   if (tk->type == REGISTER) {
     regs->reg1 = mnemonic_get_reg(sicstr_dump(&tk->str));
 
-    check_next_token(i, tokens, tk->location, "Missing separating comma for instruction of format 2.\n");
-    tk = tokvec_get(tokens, i++);
-    token_check_null(tk);
+    tk = check_get_token(i++, tokens, instr, "Missing separating comma for instruction of format 2.\n");
     sicstr_sep(&instr->str);
     sicstr_merge(&instr->str, &tk->str);
 
@@ -33,9 +37,7 @@ Regs* parse_regs(const TokenVector *tokens, Instruction *instr, size_t *idx) {
       LOG_XLERR(instr->loc, tk->location, "Instruction of type 2 is missing a separator between a registers.\n");
     }
 
-    check_next_token(i, tokens, tk->location,"Missing second register for instruction of type 2.\n");
-    tk = tokvec_get(tokens, i++);
-    token_check_null(tk);
+    tk = check_get_token(i++, tokens, instr, "Missing second register for instruction of type 2.\n");
     sicstr_sep(&instr->str);
     sicstr_merge(&instr->str, &tk->str);
 
@@ -70,17 +72,13 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
   mem->indexed = false;
   mem->mem_type = SIM;
 
-  check_next_token(i, tokens, instr->loc, "Instruction has no address operand.\n");
-  Token *tk = tokvec_get(tokens, i++);
-  token_check_null(tk);
+  Token *tk = check_get_token(i++, tokens, instr, "Instruction has no address operand.\n");
   sicstr_sep(&instr->str);
   sicstr_merge(&instr->str, &tk->str);
 
   if(tk->type == PLUS || tk->type == MINUS) {
     sign = true;
-    check_next_token(i, tokens, instr->loc, "No constant following sign.\n");
-    tk = tokvec_get(tokens, i++);
-    token_check_null(tk);
+    tk = check_get_token(i++, tokens, instr, "No constant following sign.\n");
     sicstr_merge(&instr->str, &tk->str);
   }
 
@@ -93,16 +91,12 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
         mem->mem_type = IMM;
       }
 
-      check_next_token(i, tokens, instr->loc, "Missing operand for indirect or immediate addressing.\n");
-      tk = tokvec_get(tokens, i++);
-      token_check_null(tk);
+      tk = check_get_token(i++, tokens, instr, "Missing operand for indirect or immediate addressing.\n");
       sicstr_merge(&instr->str, &tk->str);
 
       if(tk->type == PLUS || tk->type == MINUS) {
         sign = true;
-        check_next_token(i, tokens, instr->loc, "No constant following sign.\n");
-        tk = tokvec_get(tokens, i++);
-        token_check_null(tk);
+        tk = check_get_token(i++, tokens, instr, "No constant following sign.\n");
         sicstr_merge(&instr->str, &tk->str);
       }
 
@@ -127,17 +121,13 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
         LOG_XLERR(instr->loc, tk->location, "Missplaced sign, it preceds a memory address operand.\n");
       }
 
-      check_next_token(i, tokens, instr->loc, "No constant following a literal.\n");
-      tk = tokvec_get(tokens, i++);
-      token_check_null(tk);
+      tk = check_get_token(i++, tokens, instr, "No constant following a literal.\n");
       sicstr_sep(&instr->str);
       sicstr_merge(&instr->str, &tk->str);
 
       if(tk->type == PLUS || tk->type == MINUS) {
         sign = true;
-        check_next_token(i, tokens, instr->loc, "No constant following sign.\n");
-        tk = tokvec_get(tokens, i++);
-        token_check_null(tk);
+        tk = check_get_token(i++, tokens, instr, "No constant following sign.\n");
         sicstr_sep(&instr->str);
         sicstr_merge(&instr->str, &tk->str);
       }
@@ -182,9 +172,7 @@ Mem *parse_mem_addr(const TokenVector *tokens, Instruction *instr, SymTable *sym
         LOG_XLERR(instr->loc, tk->location, "Immediate and indirect addressing cannot be paired with indexed addressing.\n");
       }
 
-      check_next_token(i, tokens, instr->loc, "Indexed addressing is missing X after the comma.\n");
-      tk = tokvec_get(tokens, i++);
-      token_check_null(tk);
+      tk = check_get_token(i++, tokens, instr, "Indexed addressing is missing X after the comma.\n");
       sicstr_merge(&instr->str, &tk->str);
 
       if (tk->type != REGISTER && strncasecmp(sicstr_dump(&tk->str), "X", 1)) {
@@ -223,10 +211,11 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     if(symtab_add_symbol(sym, sicstr_dump(&tk->str))) {
       LOG_XLERR(tk->location, tk->location, "Symbol %s has multiple definitions.\n", sicstr_dump(&tk->str));
     }
+    instr->loc.s_row = id->location.s_row;
+    instr->loc.s_col = id->location.s_col;
 
-    check_next_token(i, tokens, tk->location, "Missing token after +.");
-    tk = tokvec_get(tokens, i++);
-    token_check_null(tk);
+    tk = check_get_token(i++, tokens, instr, "Missing token after +.");
+
     sicstr_merge(&instr->str, &tk->str);
   }
 
@@ -239,9 +228,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
       sicstr_sep(&instr->str);
     }
 
-    check_next_token(i, tokens, tk->location, "Missing token after +.");
-    tk = tokvec_get(tokens, i++);
-    token_check_null(tk);
+    tk = check_get_token(i++, tokens, instr, "Missing token after +.");
     sicstr_merge(&instr->str, &tk->str);
   }
 
@@ -355,9 +342,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
 
     DIRECT_INSTR(instr)->op = tk->type;
 
-    check_next_token(i, tokens, instr->loc, "Missing first register for instruction of format 2.\n");
-    tk = tokvec_get(tokens, i++);
-    token_check_null(tk);
+    tk = check_get_token(i++, tokens, instr, "Missing first register for instruction of format 2.\n");
     sicstr_sep(&instr->str);
     sicstr_merge(&instr->str, &tk->str);
 
@@ -459,9 +444,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
       LOG_PANIC("Failed to malloc regs struct.");
     }
 
-    check_next_token(i, tokens, instr->loc, "Missing first register for instruction of format 2.\n");
-    tk = tokvec_get(tokens, i++);
-    token_check_null(tk);
+    tk = check_get_token(i++, tokens, instr, "Missing first register for instruction of format 2.\n");
     sicstr_sep(&instr->str);
     sicstr_merge(&instr->str, &tk->str);
 
@@ -471,9 +454,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
 
     DIRECT_REGS(instr)->reg1 = mnemonic_get_reg(sicstr_dump(&tk->str));
 
-    check_next_token(i, tokens, instr->loc, "Missing COMMA for format 2.\n");
-    tk = tokvec_get(tokens, i++);
-    token_check_null(tk);
+    tk = check_get_token(i++, tokens, instr, "Missing COMMA for format 2.\n");
     sicstr_sep(&instr->str);
     sicstr_merge(&instr->str, &tk->str);
 
@@ -485,9 +466,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
       LOG_XLERR(instr->loc, tk->location, "Operand one should be a register.\n");
     }
 
-    check_next_token(i, tokens, instr->loc, "Missing integer following register.\n");
-    tk = tokvec_get(tokens, i++);
-    token_check_null(tk);
+    tk = check_get_token(i++, tokens, instr, "Missing integer following register.\n");
     sicstr_merge(&instr->str, &tk->str);
 
     instr->loc.e_row = tk->location.e_row;
@@ -523,9 +502,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
 
     DIRECT_INSTR(instr)->op = tk->type;
 
-    check_next_token(i, tokens, instr->loc, "Missing integer.\n");
-    tk = tokvec_get(tokens, i++);
-    token_check_null(tk);
+    tk = check_get_token(i++, tokens, instr, "Missing integer.\n");
     sicstr_sep(&instr->str);
     sicstr_merge(&instr->str, &tk->str);
 
@@ -575,9 +552,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
     DIRECT_DIR(instr)->tk = id;
     DIRECT_DIR(instr)->directive = tk->type;
 
-    check_next_token(i, tokens, instr->loc, "Missing value after START directive.\n");
-    tk = tokvec_get(tokens, i++);
-    token_check_null(tk);
+    tk = check_get_token(i++, tokens, instr, "Missing value after START directive.\n");
     sicstr_sep(&instr->str);
     sicstr_merge(&instr->str, &tk->str);
 
@@ -617,9 +592,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
 
     DIRECT_DIR(instr)->directive = tk->type;
 
-    check_next_token(i, tokens, instr->loc, "Missing value after END directive.\n");
-    tk = tokvec_get(tokens, i++);
-    token_check_null(tk);
+    tk = check_get_token(i++, tokens, instr, "Missing value after END directive.\n");
     sicstr_sep(&instr->str);
     sicstr_merge(&instr->str, &tk->str);
 
@@ -650,17 +623,13 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
 
     DIRECT_DIR(instr)->directive = tk->type;
 
-    check_next_token(i, tokens, instr->loc, "Missing value after BASE directive.\n");
-    tk = tokvec_get(tokens, i++);
-    token_check_null(tk);
+    tk = check_get_token(i++, tokens, instr, "Missing value after BASE directive.\n");
     sicstr_sep(&instr->str);
     sicstr_merge(&instr->str, &tk->str);
 
     if(tk->type == PLUS || tk->type == MINUS) {
         sign = true;
-        check_next_token(i, tokens, instr->loc, "No constant following sign.\n");
-        tk = tokvec_get(tokens, i++);
-        token_check_null(tk);
+        tk = check_get_token(i++, tokens, instr, "No constant following sign.\n");
         sicstr_merge(&instr->str, &tk->str);
     }
 
@@ -697,17 +666,13 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
       LOG_XLERR(instr->loc, instr->loc, "Missing program label before BYTE or WORD directive.\n");
     }
 
-    check_next_token(i, tokens, instr->loc, "Missing value after BYTE or WORD directive.\n");
-    tk = tokvec_get(tokens, i++);
-    token_check_null(tk);
+    tk = check_get_token(i++, tokens, instr, "Missing value after BYTE or WORD directive.\n");
     sicstr_sep(&instr->str);
     sicstr_merge(&instr->str, &tk->str);
 
     if(tk->type == PLUS || tk->type == MINUS) {
         sign = true;
-        check_next_token(i, tokens, instr->loc, "No constant following sign.\n");
-        tk = tokvec_get(tokens, i++);
-        token_check_null(tk);
+        tk = check_get_token(i++, tokens, instr, "No constant following sign.\n");
         sicstr_merge(&instr->str, &tk->str);
     }
 
@@ -768,9 +733,7 @@ size_t builder(const TokenVector *tokens, InstrVector *instrs, SymTable *sym, si
       LOG_XLERR(instr->loc, instr->loc, "Missing program label before RESB or RESW directive.\n");
     }
 
-    check_next_token(i, tokens, instr->loc, "Missing value after RESW or RESB directive.\n");
-    tk = tokvec_get(tokens, i++);
-    token_check_null(tk);
+    tk = check_get_token(i++, tokens, instr, "Missing value after RESW or RESB directive.\n");
     sicstr_sep(&instr->str);
     sicstr_merge(&instr->str, &tk->str);
 

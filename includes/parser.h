@@ -158,6 +158,7 @@ uint64_t long_log10(uint64_t num);
 uint64_t pow_of(uint64_t a, uint64_t b);
 uint64_t token_to_long(const Token *tk);
 uint64_t long_ceil(uint64_t num1, uint64_t div);
+Token *check_get_token(const size_t i, const TokenVector *tokens, Instruction *instr, const char* err);
 
 // ufunc
 
