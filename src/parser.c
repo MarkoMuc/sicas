@@ -3,7 +3,6 @@
 #include "../includes/parser.h"
 #endif
 
-static pass PARSER_CONTEXT;
 
 Token *check_get_token(const size_t i, const TokenVector *tokens, Instruction *instr, const char* err) {
   check_next_token(i, tokens, instr->loc, err);
@@ -787,7 +786,6 @@ bool parse_vector(const TokenVector *vec, InstrVector *instrs, SymTable *sym) {
   const long vec_size = vec->count;
   size_t i = 0;
   uint64_t loc_ctr = 0;
-  PARSER_CONTEXT = PARSE_SYMBOL;
 
   while(i < vec_size) {
     i = builder(vec, instrs, sym, &i, &loc_ctr);
@@ -799,8 +797,15 @@ bool parse_vector(const TokenVector *vec, InstrVector *instrs, SymTable *sym) {
     sicstr_build(&instrs->prog_name, 'a');
     sicstr_fin(&instrs->prog_name);
   }
+  if(instrs->count == 0) {
+    return true;
+  }
 
-  return instrs->count == 0;
+  // const size_t count = instrs->count;
+  // for(size_t idx; idx < count; idx++) {
+  // }
+
+  return false;
 }
 
 Instruction *instr_create() {

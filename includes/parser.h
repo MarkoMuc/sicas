@@ -61,7 +61,7 @@
 enum itype { INSTR, DIRECTIVE, RMEM, IMEM, CEXPR };
 enum ftype { ZERO = 0 , ONE = 1, TWO = 2 , THREE = 3, FOUR = 4 };
 enum mtype { SIM, IMM, IND };
-typedef enum ppass { PARSE_INSTRUCTION, PARSE_SYMBOL } pass;
+enum valltype { MEM_VAL_TOKEN, MEM_NUM_CONST};
 
 // structs
 
@@ -79,8 +79,10 @@ typedef struct {
 
 typedef struct {
   enum mtype mem_type;
+  // enum valtype val_type;
   bool indexed;
   Token *tk;
+  //void *value;
 } Mem;
 
 typedef struct {
