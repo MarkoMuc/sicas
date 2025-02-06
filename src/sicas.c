@@ -2,8 +2,11 @@
 
 char help[] = "sicas " SICAS_VERSION " the SIX/XE assembler.\n"
               "Usage:\n"
-              "\t sicas [file]\n"
-              "\t -h or --help for this message.\n";
+              "\t sicas file,.. [options]\n"
+              "\t Possible Options:\n"
+              "\t\t -a or --aarch \t architecture SIC or SIC/XE. Default: SIC/XE\n"
+              "\t\t -h or --help \t for this message.\n"
+              "\t\t -o or --output\t output file. Default: 'program name' if START exist otherwise 'a'\n";
 
 int main(int argc, char **argv) {
   if (argc == 1) {
